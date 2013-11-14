@@ -1,0 +1,17 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\..\Danmaku Test Project\Assets\Scripts\Bullet.js">
+    <Files>
+      <File FileName="..\..\Danmaku Test Project\Assets\Scripts\BulletPattern.js" Line="176" Column="1" />
+      <File FileName="Assets\Scripts\BulletPattern.cs" Line="163" Column="1" />
+      <File FileName="Assets\Scripts\Bullet.cs" Line="14" Column="32" />
+      <File FileName="Assets\Scripts\BulletManager.cs" Line="62" Column="39" />
+      <File FileName="Assets\Scripts\Global.cs" Line="79" Column="25" />
+      <File FileName="..\..\Danmaku Test Project\Assets\Scripts\Bullet.js" Line="294" Column="11" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

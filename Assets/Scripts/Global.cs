@@ -74,4 +74,13 @@ public static class Global
 			}
 		}
 	}
+
+	public static float SpellOverlayDelay;
+	public static int Rank;
+
+	public static uint Score;
+	public static uint PointValue;
+	public static GameState gameState;
 }
+
+public enum GameState {Start, In_Game, Game_Over}
