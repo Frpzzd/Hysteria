@@ -51,7 +51,7 @@ public class BulletPattern : MonoBehaviour
 	{
 	}
 
-	private void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper prw)
+	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper prw)
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex - 1];
@@ -85,7 +85,6 @@ public class BulletPattern : MonoBehaviour
 
 		switch(action.direction)
 		{
-			case (DirectionType.PlayerDirected):
 			case (DirectionType.Homing):
 				Quaternion originalRot = trans.rotation;
 				float dotHeading = Vector3.Dot( temp.bulletTransform.up, Player.playerTransform.position - temp.bulletTransform.position );
@@ -163,16 +162,16 @@ public class BulletPattern : MonoBehaviour
 			temp.param = Random.Range(action.paramRange.x, action.paramRange.y);
 		}
 
-		if(a.passPassedParam)
+		if(action.passPassedParam)
 		{
 			temp.param = param;
 		}
 		temp.master = this;
-		temp.Activate();
+		temp.bulletObject.SetActive(true);
 	}
 }
 
-public enum DirectionType { PlayerDirected, Homing, Absolute, Relative, Sequence }
+public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
 public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
 

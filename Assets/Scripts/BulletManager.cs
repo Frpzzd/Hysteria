@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class BulletManager : MonoBehaviour 
 {	
 	public GameObject blankPrefab;
-	public static Stack<Bullet> bulletPool;
+	public static Queue<Bullet> bulletPool;
 	public int initialSize;
 
 	public static GameObject instance;
@@ -17,7 +17,7 @@ public class BulletManager : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{ 
-		bulletPool = new Stack<Bullet>();
+		bulletPool = new Queue<Bullet>();
 		instance = gameObject;
 		manager = this;
 		for(int i = 0; i < initialSize; i++)

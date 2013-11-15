@@ -75,6 +75,10 @@ public static class Global
 		}
 	}
 
+	public static float TimePerFrame;
+
+	public static Transform MainCam;
+
 	public static float SpellOverlayDelay;
 	public static int Rank;
 
