@@ -56,7 +56,7 @@ public class Bullet : MonoBehaviour
 	{
 		if(bulletObject.activeSelf)
 		{
-			BulletManager.ReturnBullet(this);
+			GameObjectManager.Return(this);
 			bulletObject.SetActive(false);
 		}
 	}

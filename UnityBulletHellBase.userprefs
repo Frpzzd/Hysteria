@@ -1,14 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Bullet.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\GameObjectManager.cs">
     <Files>
-      <File FileName="Assets\Scripts\Bullet.cs" Line="118" Column="2" />
+      <File FileName="Assets\Scripts\GameObjectManager.cs" Line="24" Column="24" />
+      <File FileName="Assets\Scripts\Bullet.cs" Line="59" Column="35" />
       <File FileName="Assets\Scripts\BulletPattern.cs" Line="30" Column="3" />
-      <File FileName="..\..\Danmaku Test Project\Assets\Scripts\BulletPattern.js" Line="181" Column="17" />
-      <File FileName="Assets\Scripts\Bullet.cs" Line="303" Column="3" />
-      <File FileName="Assets\Scripts\BulletManager.cs" Line="7" Column="21" />
-      <File FileName="Assets\Scripts\Global.cs" Line="78" Column="35" />
-      <File FileName="..\..\Danmaku Test Project\Assets\Scripts\Bullet.js" Line="172" Column="2" />
+      <File FileName="Assets\Scripts\Global.cs" Line="91" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
