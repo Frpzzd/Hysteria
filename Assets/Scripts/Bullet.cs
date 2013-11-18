@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Bullet : MonoBehaviour 
+public class Bullet : PooledGameObject
 {
 	[HideInInspector]
 	public Transform bulletTransform;
@@ -19,7 +19,6 @@ public class Bullet : MonoBehaviour
 	public float verticalSpeed = 0.0f;
 	public bool useVertical = false;
 	public bool grazed;
-	public float lifetime = 0.0f;
 	public float param = 0.0f;
 	public int actionIndex = 0;
 
@@ -38,26 +37,24 @@ public class Bullet : MonoBehaviour
 		Vector2 targetVelocity = bulletTransform.forward * speed;
 		if(useVertical)
 		{
-			//targetVelocity += (Global.MainCam.up * verticalSpeed);
+			targetVelocity += (Global.MainCam.up.XY() * verticalSpeed);
 		}
 		Vector2 velocityChange = (targetVelocity - bulletRigidBody.velocity);
 		bulletRigidBody.AddForce(velocityChange);
 	}
 
-	public void Activate()
+	public override void Activate()
 	{
-		lifetime = 0.0f;
-		verticalSpeed = 0.0f;
-		useVertical = false;
-		prevRotation.prevRotationNull = true;
+		grazed = false;
+		bulletObject.SetActive(true);
+		RunActions();
 	}
 
 	public void Deactivate()
 	{
 		if(bulletObject.activeSelf)
 		{
-			GameObjectManager.Return(this);
-			bulletObject.SetActive(false);
+			GameObjectManager.Bullets.Return(this);
 		}
 	}
 
@@ -70,38 +67,58 @@ public class Bullet : MonoBehaviour
 			{
 				case(BulletActionType.Wait):			
 					if(actions[actionIndex].randomWait)
+					{
 						waitT = Random.Range(actions[actionIndex].waitTime.x, actions[actionIndex].waitTime.y);
+					}
 					else
+					{
 						waitT = actions[actionIndex].waitTime.x;
+					}
 					if(actions[actionIndex].rankWait)
+					{
 						waitT += Global.Rank * actions[actionIndex].waitTime.z;
+					}
 					waitT *= Global.TimePerFrame;
 					yield return new WaitForSeconds(waitT);
 					break;
 				case(BulletActionType.Change_Direction):
 					if(actions[actionIndex].waitForChange)
+					{
 						yield return ChangeDirection(actionIndex);
+					}
 					else
+					{
 						ChangeDirection(actionIndex);
+					}
 					break;
 				case(BulletActionType.Change_Speed):
 					if(actions[actionIndex].waitForChange)
+					{
 						yield return ChangeSpeed(actionIndex, false);
+					}
 					else
+					{
 						ChangeSpeed(actionIndex, false);
+					}
 					break;
 				case(BulletActionType.Start_Repeat):
 					yield return RunNestedActions();
 					break;
 				case(BulletActionType.Fire):
 					if(master != null)
+					{
 						master.Fire(bulletTransform, actions[actionIndex], param, prevRotation);
+					}
 					break;
 				case(BulletActionType.Vertical_Change_Speed):
 					if(actions[actionIndex].waitForChange)
+					{
 						yield return ChangeSpeed(actionIndex, true);
+					}
 					else
+					{
 						ChangeSpeed(actionIndex, true);
+					}
 					break;
 				case(BulletActionType.Deactivate):
 					Deactivate();
@@ -110,7 +127,6 @@ public class Bullet : MonoBehaviour
 		}
 	}
 
-	
 	public IEnumerator RunNestedActions()
 	{
 		int startIndex = actionIndex;
@@ -120,63 +136,81 @@ public class Bullet : MonoBehaviour
 		
 		float repeatC = actions[startIndex].repeatCount.x;
 		if(actions[startIndex].rankRepeat)
+		{
 			repeatC += actions[startIndex].repeatCount.y * Global.Rank;
+		}
 		repeatC = Mathf.Floor(repeatC);
 
-		for(var y = 0; y < repeatC; y++)
+		for(int y = 0; y < repeatC; y++)
 		{
 			while(actions[actionIndex].type != BulletActionType.End_Repeat)
 			{
 				switch(actions[actionIndex].type)
 				{
-				case(BulletActionType.Wait):
-					if(actions[actionIndex].randomWait)
-						waitT = Random.Range(actions[actionIndex].waitTime.x, actions[actionIndex].waitTime.y);
-					else
-						waitT = actions[actionIndex].waitTime.x;
-					if(actions[actionIndex].rankWait)
-						waitT += Global.Rank * actions[actionIndex].waitTime.z;
-					waitT *= Global.TimePerFrame;
-					yield return new WaitForSeconds(waitT);
-					break;
-				case(BulletActionType.Change_Direction):
-					if(actions[actionIndex].waitForChange)
-						yield return ChangeDirection(actionIndex);
-					else
-						ChangeDirection(actionIndex);
-					break;
-				case(BulletActionType.Change_Speed):
-					if(actions[actionIndex].waitForChange)
-						yield return ChangeSpeed(actionIndex, false);
-					else
-						ChangeSpeed(actionIndex, false);
-					break;
-				case(BulletActionType.Start_Repeat):
-					yield return RunNestedActions();
-					break;
-				case(BulletActionType.Fire):
-					if(master != null)
-						master.Fire(bulletTransform, actions[actionIndex], param, prevRotation);
-					break;
-				case(BulletActionType.Vertical_Change_Speed):
-					if(actions[actionIndex].waitForChange)
-						yield return ChangeSpeed(actionIndex, true);
-					else
-						ChangeSpeed(actionIndex, true);
-					break;
-				case(BulletActionType.Deactivate):
-					Deactivate();
-					break;
+					case(BulletActionType.Wait):
+						if(actions[actionIndex].randomWait)
+						{
+							waitT = Random.Range(actions[actionIndex].waitTime.x, actions[actionIndex].waitTime.y);
+						}
+						else
+						{
+							waitT = actions[actionIndex].waitTime.x;
+						}
+						if(actions[actionIndex].rankWait)
+						{
+							waitT += Global.Rank * actions[actionIndex].waitTime.z;
+						}
+						waitT *= Global.TimePerFrame;
+						yield return new WaitForSeconds(waitT);
+						break;
+					case(BulletActionType.Change_Direction):
+						if(actions[actionIndex].waitForChange)
+						{
+							yield return ChangeDirection(actionIndex);
+						}
+						else
+						{
+							ChangeDirection(actionIndex);
+						}
+						break;
+					case(BulletActionType.Change_Speed):
+						if(actions[actionIndex].waitForChange)
+						{
+							yield return ChangeSpeed(actionIndex, false);
+						}
+						else
+						{
+							ChangeSpeed(actionIndex, false);
+						}
+						break;
+					case(BulletActionType.Start_Repeat):
+						yield return RunNestedActions();
+						break;
+					case(BulletActionType.Fire):
+						if(master != null)
+						{
+							master.Fire(bulletTransform, actions[actionIndex], param, prevRotation);
+						}
+						break;
+					case(BulletActionType.Vertical_Change_Speed):
+						if(actions[actionIndex].waitForChange)
+						{
+							yield return ChangeSpeed(actionIndex, true);
+						}
+						else
+						{
+							ChangeSpeed(actionIndex, true);
+						}
+						break;
+					case(BulletActionType.Deactivate):
+						Deactivate();
+						break;
 				}
-				
 				actionIndex++;
-				
 			}
-			
 			endIndex = actionIndex;
 			actionIndex = startIndex+1;
 		}
-		
 		actionIndex = endIndex;
 	}
 
@@ -272,7 +306,7 @@ public class Bullet : MonoBehaviour
 			d += Global.Rank * actions[i].waitTime.z;
 		d *= Global.TimePerFrame;	
 		
-		var originalSpeed = speed;
+		float originalSpeed = speed;
 		
 		if(actions[i].randomSpeed)
 			newSpeed = Random.Range(actions[i].speed.x, actions[i].speed.y);
@@ -289,7 +323,6 @@ public class Bullet : MonoBehaviour
 				if(isVertical) verticalSpeed = s;
 				else speed = s;
 				t += Time.deltaTime;
-				
 				yield return new WaitForFixedUpdate();
 			}
 		}
@@ -298,11 +331,19 @@ public class Bullet : MonoBehaviour
 		else speed = newSpeed;
 	}
 
-
 	public void Cancel()
 	{
 		//Spawn Point Value at current location
 		Deactivate();
+	}
+
+	void OnTriggerExit(Collider col)
+	{
+		if(col.gameObject.CompareTag("Graze Hitbox") && !grazed)
+		{
+			Global.Graze++;
+			grazed = true;
+		}
 	}
 }
 

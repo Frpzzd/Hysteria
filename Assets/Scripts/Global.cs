@@ -82,8 +82,16 @@ public static class Global
 	public static float SpellOverlayDelay;
 	public static int Rank;
 
-	public static uint Score;
+	public static ulong Score;
 	public static uint PointValue;
+	public static uint Graze;
+
+	public static void Reset()
+	{
+		Score = Graze = 0;
+		PointValue = 5000;
+	}
+
 	public static GameState gameState;
 }
 

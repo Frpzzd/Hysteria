@@ -9,8 +9,8 @@ public class BulletPattern : MonoBehaviour
 	[HideInInspector]
 	public Transform BPtransform;
 	
-	FireTag[] fireTags;
-	BulletTag[] bulletTags;
+	public FireTag[] fireTags;
+	public BulletTag[] bulletTags;
 	
 	float sequenceSpeed = 0.0f;
 	
@@ -38,28 +38,148 @@ public class BulletPattern : MonoBehaviour
 	{
 		if(!started)
 		{
+			yield return new WaitForSeconds(1.0f);
 		}
 		started = true;
 
 		while(true)
 		{
-
+			yield return RunFire(0);
 		}
 	}
 
-	private void RunFire()
+	private IEnumerator RunFire(int i)
 	{
+		FireTag fireTag = fireTags[i];
+		IndexWrapper iw = new IndexWrapper();
+		float waitT;
+		int index;
+		
+		if(fireTag.actions.Length == 0)
+		{
+			Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+		}
+		else
+		{
+			for(iw.index = 0;iw.index < fireTag.actions.Length; iw.index++)
+			{
+				switch(fireTag.actions[iw.index].type)
+				{
+					case(FireActionType.Wait):
+						if(fireTag.actions[iw.index].randomWait)
+						{
+							waitT = Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
+						}
+						else
+						{
+							waitT = fireTag.actions[iw.index].waitTime.x;
+						}
+						if(fireTag.actions[iw.index].rankWait)
+						{
+							waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
+						}
+						waitT *= Global.TimePerFrame;
+						yield return new WaitForSeconds(waitT);
+						break;
+						
+					case(FireActionType.Fire):
+						Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+						break;
+						
+					case(FireActionType.CallFireTag	):
+						index = fireTag.actions[iw.index].fireTagIndex - 1;
+						
+						if(fireTag.actions[iw.index].passParam)
+							fireTags[index].param = Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
+						else if(fireTag.actions[iw.index].passPassedParam)
+							fireTags[index].param = fireTag.param;
+						
+						if(fireTags[index].actions.Length > 0)
+							yield return RunFire(index);
+						break;
+						
+					case(FireActionType.StartRepeat	):
+						yield return RunNestedFire(i, iw);
+						break;
+				}
+			}
+		}
 	}
 
-	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper prw)
+	public IEnumerator RunNestedFire(int i, IndexWrapper iw)
+	{
+		FireTag fireTag = fireTags[i];
+		int startIndex = iw.index;
+		int endIndex = 0;
+		int index;
+		float waitT;
+		
+		float repeatC = fireTag.actions[iw.index].repeatCount.x;
+		if(fireTag.actions[iw.index].rankRepeat)
+			repeatC += fireTag.actions[iw.index].repeatCount.y * Global.Rank;
+		repeatC = Mathf.Floor(repeatC);
+		
+		iw.index++;
+		
+		for(int y = 0; y < repeatC; y++)
+		{
+			while(fireTag.actions[iw.index].type != FireActionType.EndRepeat)
+			{
+				switch(fireTag.actions[iw.index].type)
+				{
+				case(FireActionType.Wait):
+					if(fireTag.actions[iw.index].randomWait)
+						waitT = Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
+					else
+						waitT = fireTag.actions[iw.index].waitTime.x;
+					if(fireTag.actions[iw.index].rankWait)
+						waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
+					waitT *= Global.TimePerFrame;
+					yield return new WaitForSeconds(waitT);
+					break;
+					
+				case(FireActionType.Fire):
+					Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+					break;
+					
+				case(FireActionType.CallFireTag	):
+					index = fireTag.actions[iw.index].fireTagIndex - 1;
+					
+					if(fireTag.actions[iw.index].passParam)
+						fireTags[index].param = Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
+					else if(fireTag.actions[iw.index].passPassedParam)
+						fireTags[index].param = fireTag.param;
+
+					if(fireTags[index].actions.Length > 0)
+						yield return RunFire(index);
+					break;
+					
+				case(FireActionType.StartRepeat	):
+					yield return RunNestedFire(i, iw);
+					break;
+				}
+				
+				iw.index++;
+				
+			}
+			
+			endIndex = iw.index;
+			iw.index = startIndex+1;
+		}
+		
+		iw.index = endIndex;
+
+	}
+
+	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper previousRotation)
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex - 1];
-		Bullet temp = BulletManager.GetBullet();
-		if(prw.prevRotationNull)
+		Bullet temp = GameObjectManager.Bullets.Get();
+		if(previousRotation.prevRotationNull)
 		{
-			prw.prevRotationNull = false;
-			prw.previousRotation = temp.bulletTransform.localRotation;
+			previousRotation.prevRotationNull = false;
+			previousRotation.previousRotation = temp.bulletTransform.localRotation;
 		}
 		temp.bulletTransform.position = trans.position;
 		temp.bulletTransform.rotation = trans.rotation;
@@ -110,10 +230,10 @@ public class BulletPattern : MonoBehaviour
 				break;
 				
 			case (DirectionType.Sequence):
-				temp.bulletTransform.localRotation = prw.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
+				temp.bulletTransform.localRotation = previousRotation.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
 				break;
 		}
-		prw.previousRotation = temp.bulletTransform.localRotation;
+		previousRotation.previousRotation = temp.bulletTransform.localRotation;
 		if(action.overwriteBulletSpeed)
 		{
 			if(action.randomSpeed)
@@ -175,11 +295,16 @@ public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
 public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
 
+public class IndexWrapper
+{
+	public int index;
+}
+
 public class FireTag
 {
 	public float param = 0.0f;
 	public PreviousRotationWrapper previousRotation;
-
+	public FireAction[] actions;
 }
 
 public class BulletTag
