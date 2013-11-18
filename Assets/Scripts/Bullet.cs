@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Bullet : MonoBehaviour 
+public class Bullet : PooledGameObject
 {
 	[HideInInspector]
 	public Transform bulletTransform;
@@ -44,7 +44,7 @@ public class Bullet : MonoBehaviour
 		bulletRigidBody.AddForce(velocityChange);
 	}
 
-	public void Activate()
+	public override void Activate()
 	{
 		lifetime = 0.0f;
 		verticalSpeed = 0.0f;
@@ -56,7 +56,7 @@ public class Bullet : MonoBehaviour
 	{
 		if(bulletObject.activeSelf)
 		{
-			GameObjectManager.Return(this);
+			GameObjectManager.Bullets.Return(this);
 			bulletObject.SetActive(false);
 		}
 	}

@@ -5,9 +5,17 @@ public class Player : MonoBehaviour
 {
 	[HideInInspector]
 	public static Transform playerTransform;
+
+	public GameObject optionPrefab;
+	public int maximumOptions;
+	public float optionDistance;
+
+	private GameObject[] options;
+	private float oldPower;
 	
 	public uint lives;
 	public uint bombs;
+	public float power;
 	public uint point;
 
 	public float unfocusedMovementSpeed;
@@ -81,6 +89,16 @@ public class Player : MonoBehaviour
 		ShotDamage = baseShotDamage + NeuroPsychOtism * ShotDamageTraitScaling;
 		Spread = baseSpread + IntroExtraVersion * SpreadTraitScaling;
 
+		options = new GameObject[maximumOptions];
+
+		for (int i = 0; i < maximumOptions; i++)
+		{
+			GameObject option = (GameObject)Instantiate(optionPrefab, playerTransform.position, Quaternion.identity);
+			option.transform.parent = playerTransform;
+			option.SetActive(false);
+			options[i] = option;
+		}
+
 		HitboxHandler.master = this;
 	}
 
@@ -133,6 +151,19 @@ public class Player : MonoBehaviour
 				invincible = false;
 			}
 		}
+
+		for(int i = 0; i < (int)power; i++)
+		{
+			float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
+			options[i].SetActive(true);
+			float angle = -(Mathf.PI / (power + 1)) * (i + 1);
+			Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
+			options[i].transform.localPosition = position;
+		}
+		for(int i = (int)power; i < options.Length; i++)
+		{
+			options[i].SetActive(false);
+		}
 	}
 
 	private void Bomb()
@@ -143,7 +174,7 @@ public class Player : MonoBehaviour
 
 	public void Die()
 	{
-		if(lives == 0)
+		if(lives <= 0)
 		{
 			Global.gameState = GameState.Game_Over;
 		}

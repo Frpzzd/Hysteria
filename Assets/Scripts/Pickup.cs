@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public enum PickupType { Power, Point, PointValue, Life, Bomb }
 
-public class Pickup : MonoBehaviour 
+public class Pickup : PooledGameObject
 {
 	public PickupType type;
 	public bool autoCollect;
@@ -20,6 +20,11 @@ public class Pickup : MonoBehaviour
 	{
 		gameObject.tag = "Pickup";
 		pickupTransform = transform;
+	}
+
+	public override void Activate()
+	{
+
 	}
 
 	void Update()

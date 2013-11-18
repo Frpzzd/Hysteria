@@ -55,7 +55,7 @@ public class BulletPattern : MonoBehaviour
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex - 1];
-		Bullet temp = BulletManager.GetBullet();
+		Bullet temp = GameObjectManager.Bullets.Get();
 		if(prw.prevRotationNull)
 		{
 			prw.prevRotationNull = false;
