@@ -7,7 +7,7 @@ public abstract class PooledGameObject : MonoBehaviour
 	public GameObject gameObj;
 	public Rigidbody2D rigBody;
 
-	public void Activate();
+	public abstract void Activate();
 }
 
 public class GameObjectManager : MonoBehaviour 
@@ -22,6 +22,9 @@ public class GameObjectManager : MonoBehaviour
 		public float Timer;
 
 		private T CreateNew()
+		{
+			return default(T);
+		}
 
 		public T Get()
 		{
@@ -42,46 +45,4 @@ public class GameObjectManager : MonoBehaviour
 
 	public static GameObject instance;
 	public static GameObjectManager manager;
-
-	// Use this for initialization
-	void Start () 
-	{ 
-		bulletPool = new Queue<Bullet>();
-		instance = gameObject;
-		manager = this;
-		for(int i = 0; i < initialSize; i++)
-		{
-			ReturnBullet(NewBullet());
-		}
-	}
-
-	void Update()
-	{
-		if(spawningBullets)
-		{
-			timer -= Time.deltaTime;
-			if(timer < 0)
-			{
-				timer = spawnTime;
-				ReturnBullet(NewBullet());
-			}
-			spawningBullets = bulletPool.Count < spawnTarget;
-		}
-	}
-
-	public static void RequestBullets(int i, float expectedTime)
-	{
-		if(i > bulletPool.Count)
-		{
-			spawningBullets = true;
-			spawnTime = timer = expectedTime / (i - bulletPool.Count);
-		}
-	}
-
-	private static Bullet NewBullet()
-	{
-		Bullet newBullet = ((GameObject)Instantiate(manager.blankPrefab)).GetComponent<Bullet>();
-		newBullet.transform.parent = instance.transform;
-		return newBullet;
-	}
 }

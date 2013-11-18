@@ -22,7 +22,7 @@ public class Pickup : PooledGameObject
 		pickupTransform = transform;
 	}
 
-	public override void Activate ()
+	public override void Activate()
 	{
 
 	}
