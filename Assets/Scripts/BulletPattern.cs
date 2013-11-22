@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
+using System.Collections.Generic;
 
 public class BulletPattern : MonoBehaviour 
 {
@@ -15,7 +17,14 @@ public class BulletPattern : MonoBehaviour
 	float sequenceSpeed = 0.0f;
 	
 	bool started = false;
-	float waitBeforeRepeating = 5.0f;
+	public float waitBeforeRepeating = 5.0f;
+
+	public bool ftFoldout = false;
+	public List<bool> ftFoldouts = new List<bool>();
+	public bool btFoldout = false;
+	public List<bool> btFoldouts = new List<bool>();
+	public List<ActionFoldouts> ftaFoldouts = new List<ActionFoldouts>();
+	public List<ActionFoldouts> btaFoldouts = new List<ActionFoldouts>();
 
 	void Awake()
 	{
@@ -354,4 +363,10 @@ public class BPAction
 public class FireAction : BPAction
 {
 	public FireActionType type = FireActionType.Wait; 
+}
+
+public class ActionFoldouts
+{
+	public bool main = false;
+	public List<bool> sub = new List<bool>();
 }

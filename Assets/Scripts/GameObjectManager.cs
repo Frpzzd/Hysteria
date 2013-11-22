@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public abstract class PooledGameObject : MonoBehaviour
 {
@@ -11,7 +12,8 @@ public abstract class PooledGameObject : MonoBehaviour
 }
 
 public class GameObjectManager : MonoBehaviour 
-{	
+{
+	[Serializable]
 	public class GameObjectPool<T> : Queue<T> where T : PooledGameObject
 	{
 		public GameObject blankPrefab;
@@ -40,8 +42,14 @@ public class GameObjectManager : MonoBehaviour
 			Enqueue(t);
 		}
 	}
-	public static GameObjectPool<Bullet> Bullets;
-	public static GameObjectPool<Pickup> Pickups;
+
+	[Serializable]
+	public class BulletPool : GameObjectPool<Bullet> { }
+	[Serializable]
+	public class PickupPool : GameObjectPool<Pickup> { }
+
+	public static BulletPool Bullets;
+	public static PickupPool Pickups;
 
 	public static GameObject instance;
 	public static GameObjectManager manager;

@@ -5,11 +5,14 @@ public class Player : MonoBehaviour
 {
 	[HideInInspector]
 	public static Transform playerTransform;
+	[HideInInspector]
+	public static Player instance;
 
 	public GameObject optionPrefab;
 	public int maximumOptions;
 	public float optionDistance;
 
+	[HideInInspector]
 	private GameObject[] options;
 	private float oldPower;
 	
@@ -71,23 +74,22 @@ public class Player : MonoBehaviour
 	public float SpreadTraitScaling = 0.5f;
 
 	public PlayerHitboxHandler HitboxHandler;
-
+	
 	public bool invincible;
 	[HideInInspector]
-	public float invincibilityTimer;
-	public float bombInvincibilityTime; //In Seconds
+	public bool bombDeployed;
+
+	public float deathInvincibilityTime;
+	public float bombInvincibilityTime;
+	public float invincibilityFlashInterval;
 
 	private bool bombPressed;
 
 	void Start () 
 	{
 		//Cache commonly accessed components of player
+		instance = this;
 		playerTransform = transform;
-
-		FireRate = baseFireRate + NeuroPsychOtism * FireRateTraitScaling;
-		Homing = baseHoming + (IntroExtraVersion + 2) / 2 * HomingTraitScaling;
-		ShotDamage = baseShotDamage + NeuroPsychOtism * ShotDamageTraitScaling;
-		Spread = baseSpread + IntroExtraVersion * SpreadTraitScaling;
 
 		options = new GameObject[maximumOptions];
 
@@ -124,7 +126,12 @@ public class Player : MonoBehaviour
 		{
 			movementVector.x += (focused) ? focusedMovementSpeed : unfocusedMovementSpeed;
 		}
-		playerTransform.localPosition += movementVector * deltat;
+		playerTransform.position += movementVector * deltat;
+	
+		FireRate = baseFireRate + NeuroPsychOtism * FireRateTraitScaling;
+		Homing = baseHoming + (IntroExtraVersion + 2) / 2 * HomingTraitScaling;
+		ShotDamage = baseShotDamage + NeuroPsychOtism * ShotDamageTraitScaling;
+		Spread = baseSpread + IntroExtraVersion * SpreadTraitScaling;
 
 		if(Input.GetKey(Global.Control.Bomb))
 		{
@@ -142,16 +149,6 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		if(invincible)
-		{
-			invincibilityTimer -= Time.deltaTime;
-			if(invincibilityTimer <= 0)
-			{
-				invincibilityTimer = 0;
-				invincible = false;
-			}
-		}
-
 		for(int i = 0; i < (int)power; i++)
 		{
 			float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
@@ -166,10 +163,49 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	private void Bomb()
+	void OnTrigger(Collider2D col)
+	{
+		if(col.gameObject.CompareTag("Enemy Bullet"))
+		{
+			Die ();
+			StartCoroutine(InvincibilityFlash(deathInvincibilityTime, invincibilityFlashInterval));
+		}
+	}
+
+	private IEnumerator InvincibilityFlash(float time, float intervalTime)
 	{
 		invincible = true;
-		invincibilityTimer = bombInvincibilityTime;
+		Material mat = GetComponent<MeshRenderer>().material;
+		Color[] colors = new Color[]{Color.clear, mat.color};
+		float elapsedTime = 0f;
+		int index = 0;
+		while(elapsedTime < time)
+		{
+			mat.color = colors[index % 2];
+			elapsedTime += Time.deltaTime;
+			index++;
+			yield return new WaitForSeconds(intervalTime);
+		}
+		mat.color = colors[1];
+		invincible = false;
+	}
+
+	private void Bomb()
+	{
+		if(!bombDeployed)
+		{
+			bombs--;
+			
+			StartCoroutine(InvincibilityFlash(deathInvincibilityTime, invincibilityFlashInterval));
+		}
+	}
+
+	public void Graze(Bullet bullet)
+	{
+		if(!invincible)
+		{
+			Global.Graze++;
+		}
 	}
 
 	public void Die()
@@ -182,7 +218,7 @@ public class Player : MonoBehaviour
 		GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
 		foreach(GameObject go in pickups)
 		{
-			go.GetComponent<Pickup>().autoCollect = false;
+			go.GetComponent<Pickup>().state = Pickup.PickupState.Normal;
 		}
 	}
 }
