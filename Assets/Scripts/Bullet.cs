@@ -5,54 +5,56 @@ using System.Collections.Generic;
 public class Bullet : PooledGameObject
 {
 	[HideInInspector]
-	public Transform bulletTransform;
-	[HideInInspector]
-	public GameObject bulletObject;
-	[HideInInspector]
-	public Rigidbody2D bulletRigidBody;
-
 	public BulletPattern master;
+	[HideInInspector]
 	public BulletAction[] actions;
+	[HideInInspector]
 	public PreviousRotationWrapper prevRotation= new PreviousRotationWrapper();
-
+	
+	[HideInInspector]
 	public float speed = 5.0f;
+	[HideInInspector]
 	public float verticalSpeed = 0.0f;
+	[HideInInspector]
 	public bool useVertical = false;
+	[HideInInspector]
 	public bool grazed;
+	[HideInInspector]
 	public float param = 0.0f;
+	[HideInInspector]
 	public int actionIndex = 0;
 
 	// Use this for initialization
 	void Start () 
 	{
 		gameObject.tag = "Enemy Bullet";
-		bulletTransform = transform;
-		bulletObject = gameObject;
-		bulletRigidBody = rigidbody2D;
+		trans = transform;
+		gameObj = gameObject;
+		rigBody = rigidbody2D;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () 
 	{
-		Vector2 targetVelocity = bulletTransform.forward * speed;
+		Vector2 targetVelocity = trans.forward * speed;
 		if(useVertical)
 		{
 			targetVelocity += (Global.MainCam.up.XY() * verticalSpeed);
 		}
-		Vector2 velocityChange = (targetVelocity - bulletRigidBody.velocity);
-		bulletRigidBody.AddForce(velocityChange);
+		Vector2 velocityChange = (targetVelocity - rigBody.velocity);
+		rigBody.AddForce(velocityChange);
 	}
 
 	public override void Activate()
 	{
 		grazed = false;
-		bulletObject.SetActive(true);
+		gameObj.SetActive(true);
 		RunActions();
 	}
 
 	public void Deactivate()
 	{
-		if(bulletObject.activeSelf)
+		if(gameObj.activeSelf)
 		{
 			GameObjectManager.Bullets.Return(this);
 		}
@@ -107,7 +109,7 @@ public class Bullet : PooledGameObject
 				case(BulletActionType.Fire):
 					if(master != null)
 					{
-						master.Fire(bulletTransform, actions[actionIndex], param, prevRotation);
+						master.Fire(trans, actions[actionIndex], param, prevRotation);
 					}
 					break;
 				case(BulletActionType.Vertical_Change_Speed):
@@ -189,7 +191,7 @@ public class Bullet : PooledGameObject
 					case(BulletActionType.Fire):
 						if(master != null)
 						{
-							master.Fire(bulletTransform, actions[actionIndex], param, prevRotation);
+							master.Fire(trans, actions[actionIndex], param, prevRotation);
 						}
 						break;
 					case(BulletActionType.Vertical_Change_Speed):
@@ -229,7 +231,7 @@ public class Bullet : PooledGameObject
 		
 		d *= Global.TimePerFrame;
 		
-		Quaternion originalRot = bulletTransform.localRotation;
+		Quaternion originalRot = trans.localRotation;
 		
 		// determine offset
 		if(actions[i].randomAngle)
@@ -243,12 +245,12 @@ public class Bullet : PooledGameObject
 		switch(actions[i].direction)
 		{
 		case (DirectionType.TargetPlayer):
-			float dotHeading = Vector3.Dot( bulletTransform.up, Player.playerTransform.position - bulletTransform.position );		
+			float dotHeading = Vector3.Dot( trans.up, Player.playerTransform.position - trans.position );		
 			if(dotHeading > 0)
 				dir = -1;
 			else
 				dir = 1;
-			float angleDif = Vector3.Angle(bulletTransform.forward, Player.playerTransform.position - bulletTransform.position);
+			float angleDif = Vector3.Angle(trans.forward, Player.playerTransform.position - trans.position);
 			newRot = originalRot * Quaternion.AngleAxis((dir * angleDif) - ang, Vector3.right); 
 			break;
 			
@@ -269,7 +271,7 @@ public class Bullet : PooledGameObject
 			
 			while(t < d)
 			{
-				bulletTransform.localRotation *= newRot;
+				trans.localRotation *= newRot;
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
 			}
@@ -279,12 +281,12 @@ public class Bullet : PooledGameObject
 		{
 			while(t < d)
 			{
-				bulletTransform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
+				trans.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
 			}
 			
-			bulletTransform.localRotation = newRot;
+			trans.localRotation = newRot;
 		}
 	}
 

@@ -126,8 +126,9 @@ public class BulletPatternEditor : Editor
 			GUILayout.Label("");
 			if (GUILayout.Button("Add Fire Tag", GUILayout.Width(100))) 
 			{
-				var ft = new FireTag();
+				FireTag ft = new FireTag();
 				ft.actions = new FireAction[1];
+				ft.actions[0] = new FireAction();
 				
 				fireTags.Add(ft);
 				bp.ftFoldouts.Add(true);
@@ -151,7 +152,7 @@ public class BulletPatternEditor : Editor
 		if (bp.fireTags[i].actions.Length == 0)
 			bp.fireTags[i].actions = new FireAction[1];
 		
-		var actions = new List<FireAction>(bp.fireTags[i].actions);
+		List<FireAction> actions = new List<FireAction>(bp.fireTags[i].actions);
 		
 		if (actions.Count != bp.ftaFoldouts[i].sub.Count)
 			bp.ftaFoldouts[i].sub = new List<bool>(new bool[actions.Count]);
@@ -162,7 +163,7 @@ public class BulletPatternEditor : Editor
 		{
 			bp.ftaFoldouts[i].main = !bp.ftaFoldouts[i].main;
 			
-			for(var zz = 0; zz < bp.ftaFoldouts[i].sub.Count;zz++)
+			for(int zz = 0; zz < bp.ftaFoldouts[i].sub.Count;zz++)
 				bp.ftaFoldouts[i].sub[zz] = bp.ftaFoldouts[i].main;		
 		}
 		GUILayout.EndHorizontal();
@@ -170,13 +171,13 @@ public class BulletPatternEditor : Editor
 		if (bp.ftaFoldouts[i].main ) 
 		{
 			EditorGUI.indentLevel++;
-			var removeIndex = -1;
-			var moveIndex = -1;
+			int removeIndex = -1;
+			int moveIndex = -1;
 			
-			for (var l=0; l<actions.Count; l++) 
+			for (int l=0; l<actions.Count; l++) 
 			{
 				GUILayout.BeginHorizontal();
-				var str = "Action " + (l+1);
+				string str = "Action " + (l+1);
 				bp.ftaFoldouts[i].sub[l] = EditorGUILayout.Foldout(bp.ftaFoldouts[i].sub[l], str);
 				
 				if (GUILayout.Button("Down", GUILayout.Width(50)))
@@ -191,7 +192,7 @@ public class BulletPatternEditor : Editor
 					
 					EditorGUI.indentLevel++;
 					
-					var ac = actions[l];
+					FireAction ac = actions[l];
 					
 					ac.type = (FireActionType)EditorGUILayout.EnumPopup("Action Type", ac.type);
 					
@@ -290,11 +291,11 @@ public class BulletPatternEditor : Editor
 			
 			if(moveIndex >= 0 && moveIndex != actions.Count-1)
 			{
-				var temp = actions[moveIndex];	
+				FireAction temp = actions[moveIndex];	
 				actions[moveIndex] = actions[moveIndex+1];
 				actions[moveIndex+1] = temp;
 				
-				var temp2 = bp.ftaFoldouts[i].sub[moveIndex];
+				bool temp2 = bp.ftaFoldouts[i].sub[moveIndex];
 				bp.ftaFoldouts[i].sub[moveIndex] = bp.ftaFoldouts[i].sub[moveIndex+1];
 				bp.ftaFoldouts[i].sub[moveIndex+1] = temp2;
 			}
@@ -328,7 +329,7 @@ public class BulletPatternEditor : Editor
 		if (bp.bulletTags == null)
 			bp.bulletTags = new BulletTag[0];
 		
-		var bulletTags = new List<BulletTag>(bp.bulletTags);
+		List<BulletTag> bulletTags = new List<BulletTag>(bp.bulletTags);
 		
 		if (bulletTags.Count != bp.btFoldouts.Count)
 			bp.btFoldouts = new List<bool>(new bool[bulletTags.Count]);
@@ -338,7 +339,7 @@ public class BulletPatternEditor : Editor
 			bp.btaFoldouts = new List<ActionFoldouts>(new ActionFoldouts[bulletTags.Count]);
 			if(bp.btaFoldouts.Count > 0)
 			{
-				for(var zz = 0; zz < bp.btaFoldouts.Count;zz++)
+				for(int zz = 0; zz < bp.btaFoldouts.Count;zz++)
 				{
 					bp.btaFoldouts[zz] = new ActionFoldouts();
 				}
@@ -359,13 +360,13 @@ public class BulletPatternEditor : Editor
 		if (bp.btFoldout) 
 		{
 			EditorGUI.indentLevel++;
-			var removeIndex = -1;
-			var moveIndex = -1;
+			int removeIndex = -1;
+			int moveIndex = -1;
 			
-			for (var l=0; l<bulletTags.Count; l++) 
+			for (int l=0; l<bulletTags.Count; l++) 
 			{
 				GUILayout.BeginHorizontal();
-				var str = "BulletTag " + (l+1);
+				string str = "BulletTag " + (l+1);
 				bp.btFoldouts[l] = EditorGUILayout.Foldout(bp.btFoldouts[l], str);
 				
 				if (GUILayout.Button("Down", GUILayout.Width(50)))
@@ -383,7 +384,7 @@ public class BulletPatternEditor : Editor
 					
 					EditorGUI.indentLevel++;
 					
-					var bt = bulletTags[l];
+					BulletTag bt = bulletTags[l];
 					
 					GUILayout.BeginHorizontal();
 					if(!bt.randomSpeed)
@@ -411,15 +412,15 @@ public class BulletPatternEditor : Editor
 			
 			if(moveIndex >= 0 && moveIndex != bulletTags.Count-1)
 			{
-				var temp = bulletTags[moveIndex];	
+				BulletTag temp = bulletTags[moveIndex];	
 				bulletTags[moveIndex] = bulletTags[moveIndex+1];
 				bulletTags[moveIndex+1] = temp;
 				
-				var temp2 = bp.btFoldouts[moveIndex];
+				bool temp2 = bp.btFoldouts[moveIndex];
 				bp.btFoldouts[moveIndex] = bp.btFoldouts[moveIndex+1];
 				bp.btFoldouts[moveIndex+1]= temp2;
 				
-				var temp3 = bp.btaFoldouts[moveIndex];
+				ActionFoldouts temp3 = bp.btaFoldouts[moveIndex];
 				bp.btaFoldouts[moveIndex] = bp.btaFoldouts[moveIndex+1];
 				bp.btaFoldouts[moveIndex+1] = temp3;
 			}
@@ -458,7 +459,7 @@ public class BulletPatternEditor : Editor
 		if (bp.bulletTags[i].actions == null)
 			bp.bulletTags[i].actions = new BulletAction[0];
 		
-		var actions = new List<BulletAction>(bp.bulletTags[i].actions);
+		List<BulletAction> actions = new List<BulletAction>(bp.bulletTags[i].actions);
 		
 		if (actions.Count != bp.btaFoldouts[i].sub.Count)
 			bp.btaFoldouts[i].sub = new List<bool>(new bool[actions.Count]);
@@ -469,7 +470,7 @@ public class BulletPatternEditor : Editor
 		{
 			bp.btaFoldouts[i].main = !bp.btaFoldouts[i].main;
 			
-			for(var zz = 0; zz < bp.btaFoldouts[i].sub.Count;zz++)
+			for(int zz = 0; zz < bp.btaFoldouts[i].sub.Count;zz++)
 				bp.btaFoldouts[i].sub[zz] = bp.btaFoldouts[i].main;		
 		}
 		GUILayout.EndHorizontal();
@@ -477,13 +478,13 @@ public class BulletPatternEditor : Editor
 		if (bp.btaFoldouts[i].main ) 
 		{
 			EditorGUI.indentLevel++;
-			var removeIndex = -1;
-			var moveIndex = -1;
+			int removeIndex = -1;
+			int moveIndex = -1;
 			
-			for (var l=0; l<actions.Count; l++) 
+			for (int l=0; l<actions.Count; l++) 
 			{
 				GUILayout.BeginHorizontal();
-				var str = "Action " + (l+1);
+				string str = "Action " + (l+1);
 				bp.btaFoldouts[i].sub[l] = EditorGUILayout.Foldout(bp.btaFoldouts[i].sub[l], str);
 				
 				if (GUILayout.Button("Down", GUILayout.Width(50)))
@@ -498,7 +499,7 @@ public class BulletPatternEditor : Editor
 					
 					EditorGUI.indentLevel++;
 					
-					var ac = actions[l];
+					BulletAction ac = actions[l];
 					
 					ac.type = (BulletActionType)EditorGUILayout.EnumPopup("Action Type", ac.type);
 					
@@ -639,11 +640,11 @@ public class BulletPatternEditor : Editor
 			
 			if(moveIndex >= 0 && moveIndex != actions.Count-1)
 			{
-				var temp = actions[moveIndex];	
+				BulletAction temp = actions[moveIndex];	
 				actions[moveIndex] = actions[moveIndex+1];
 				actions[moveIndex+1] = temp;
 				
-				var temp2 = bp.btaFoldouts[i].sub[moveIndex];
+				bool temp2 = bp.btaFoldouts[i].sub[moveIndex];
 				bp.btaFoldouts[i].sub[moveIndex] = bp.btaFoldouts[i].sub[moveIndex+1];
 				bp.btaFoldouts[i].sub[moveIndex+1] = temp2;
 			}

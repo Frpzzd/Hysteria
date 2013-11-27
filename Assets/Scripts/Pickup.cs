@@ -13,16 +13,12 @@ public class Pickup : PooledGameObject
 	public float maximumDownwardVelocity;
 	public float acceleration;
 	public float autoCollectSpeed;
-	private Rigidbody2D rigBody2D;
-
-	[HideInInspector]
-	public Transform pickupTransform;
 
 	void Start()
 	{
 		gameObject.tag = "Pickup";
-		pickupTransform = transform;
-		rigBody2D = rigidbody2D;
+		trans = transform;
+		rigBody = rigidbody2D;
 	}
 
 	public override void Activate()
@@ -35,14 +31,14 @@ public class Pickup : PooledGameObject
 		switch(state)
 		{
 			case PickupState.Normal:
-				pickupTransform.Translate(0, currentVelocity, 0);
+				trans.Translate(0, currentVelocity, 0);
 				currentVelocity = (currentVelocity >= maximumDownwardVelocity) ? currentVelocity + acceleration : currentVelocity;
 				break;
 			case PickupState.AutoCollect:
-				pickupTransform.Translate(Vector3.MoveTowards(pickupTransform.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
+				trans.Translate(Vector3.MoveTowards(trans.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
 				break;
 			case PickupState.ProximityCollect:
-				pickupTransform.Translate(Vector3.MoveTowards(pickupTransform.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
+				trans.Translate(Vector3.MoveTowards(trans.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
 				break;
 		}
 	}

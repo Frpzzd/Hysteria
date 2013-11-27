@@ -4,8 +4,11 @@ using System;
 
 public abstract class PooledGameObject : MonoBehaviour
 {
+	[HideInInspector]
 	public Transform trans;
+	[HideInInspector]
 	public GameObject gameObj;
+	[HideInInspector]
 	public Rigidbody2D rigBody;
 
 	public abstract void Activate();
@@ -41,6 +44,12 @@ public class GameObjectManager : MonoBehaviour
 			t.gameObj.SetActive (false);
 			Enqueue(t);
 		}
+	}
+
+	static GameObjectManager()
+	{
+		Bullets = new BulletPool();
+		Pickups = new PickupPool();
 	}
 
 	[Serializable]

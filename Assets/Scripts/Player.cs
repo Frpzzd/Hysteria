@@ -83,8 +83,6 @@ public class Player : MonoBehaviour
 	public float bombInvincibilityTime;
 	public float invincibilityFlashInterval;
 
-	private bool bombPressed;
-
 	void Start () 
 	{
 		//Cache commonly accessed components of player
@@ -96,56 +94,28 @@ public class Player : MonoBehaviour
 		for (int i = 0; i < maximumOptions; i++)
 		{
 			GameObject option = (GameObject)Instantiate(optionPrefab, playerTransform.position, Quaternion.identity);
-			option.transform.parent = playerTransform;
 			option.SetActive(false);
 			options[i] = option;
 		}
-
-		HitboxHandler.master = this;
 	}
 
 	void Update () 
 	{
 		//Movement
 		float deltat = Time.deltaTime;
-		bool focused = HitboxHandler.hitboxRenderer.enabled = Input.GetKey (Global.Control.Focus);
+		bool focused = HitboxHandler.hitboxRenderer.enabled = (Input.GetAxis("Focus") != 0);
 		Vector3 movementVector = Vector3.zero;
-		if(Input.GetKey(Global.Control.Up))
-		{
-			movementVector.y += (focused) ? focusedMovementSpeed : unfocusedMovementSpeed;
-		}
-		if(Input.GetKey(Global.Control.Down))
-		{
-			movementVector.y -= (focused) ? focusedMovementSpeed : unfocusedMovementSpeed;
-		}
-		if(Input.GetKey(Global.Control.Left))
-		{
-			movementVector.x -= (focused) ? focusedMovementSpeed : unfocusedMovementSpeed;
-		}
-		if(Input.GetKey(Global.Control.Right))
-		{
-			movementVector.x += (focused) ? focusedMovementSpeed : unfocusedMovementSpeed;
-		}
+		movementVector.x = Mathf.Sign(Input.GetAxis("Horizontal")) * ((focused) ? focusedMovementSpeed : unfocusedMovementSpeed);
+		movementVector.y = Mathf.Sign(Input.GetAxis("Vertical")) * ((focused) ? focusedMovementSpeed : unfocusedMovementSpeed);
 		playerTransform.position += movementVector * deltat;
-	
-		FireRate = baseFireRate + NeuroPsychOtism * FireRateTraitScaling;
-		Homing = baseHoming + (IntroExtraVersion + 2) / 2 * HomingTraitScaling;
-		ShotDamage = baseShotDamage + NeuroPsychOtism * ShotDamageTraitScaling;
-		Spread = baseSpread + IntroExtraVersion * SpreadTraitScaling;
 
-		if(Input.GetKey(Global.Control.Bomb))
+		if(Input.GetButtonDown("Bomb"))
 		{
-			if(!bombPressed)
+			if(!bombDeployed)
 			{
-				Bomb ();
-				bombPressed = true;
-			}
-		}
-		else
-		{
-			if(bombPressed)
-			{
-				bombPressed = false;
+				//Instantiate Bomb at character location
+				StartCoroutine(Invincibility(false, bombInvincibilityTime, Time.deltaTime));
+				bombDeployed = true;
 			}
 		}
 
@@ -167,37 +137,47 @@ public class Player : MonoBehaviour
 	{
 		if(col.gameObject.CompareTag("Enemy Bullet"))
 		{
-			Die ();
-			StartCoroutine(InvincibilityFlash(deathInvincibilityTime, invincibilityFlashInterval));
+			if(lives <= 0)
+			{
+				Global.gameState = GameState.Game_Over;
+			}
+			lives--;
+			GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
+			foreach(GameObject go in pickups)
+			{
+				go.GetComponent<Pickup>().state = Pickup.PickupState.Normal;
+			}
+			StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
 		}
 	}
 
-	private IEnumerator InvincibilityFlash(float time, float intervalTime)
+	private IEnumerator Invincibility(bool flash, float time, float intervalTime)
 	{
 		invincible = true;
-		Material mat = GetComponent<MeshRenderer>().material;
-		Color[] colors = new Color[]{Color.clear, mat.color};
 		float elapsedTime = 0f;
-		int index = 0;
-		while(elapsedTime < time)
+		if(flash)
 		{
-			mat.color = colors[index % 2];
-			elapsedTime += Time.deltaTime;
-			index++;
-			yield return new WaitForSeconds(intervalTime);
+			Material mat = GetComponent<MeshRenderer>().material;
+			Color[] colors = new Color[]{Color.clear, mat.color};
+			int index = 0;
+			while(elapsedTime < time)
+			{
+				mat.color = colors[index % 2];
+				elapsedTime += Time.deltaTime;
+				index++;
+				yield return new WaitForSeconds(intervalTime);
+			}
+			mat.color = colors[1];
 		}
-		mat.color = colors[1];
+		else
+		{
+			while(elapsedTime < time)
+			{
+				elapsedTime += Time.deltaTime;
+				yield return new WaitForSeconds(intervalTime);
+			}
+		}
 		invincible = false;
-	}
-
-	private void Bomb()
-	{
-		if(!bombDeployed)
-		{
-			bombs--;
-			
-			StartCoroutine(InvincibilityFlash(deathInvincibilityTime, invincibilityFlashInterval));
-		}
 	}
 
 	public void Graze(Bullet bullet)
@@ -205,20 +185,6 @@ public class Player : MonoBehaviour
 		if(!invincible)
 		{
 			Global.Graze++;
-		}
-	}
-
-	public void Die()
-	{
-		if(lives <= 0)
-		{
-			Global.gameState = GameState.Game_Over;
-		}
-		lives--;
-		GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
-		foreach(GameObject go in pickups)
-		{
-			go.GetComponent<Pickup>().state = Pickup.PickupState.Normal;
 		}
 	}
 }

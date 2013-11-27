@@ -188,10 +188,10 @@ public class BulletPattern : MonoBehaviour
 		if(previousRotation.prevRotationNull)
 		{
 			previousRotation.prevRotationNull = false;
-			previousRotation.previousRotation = temp.bulletTransform.localRotation;
+			previousRotation.previousRotation = temp.trans.localRotation;
 		}
-		temp.bulletTransform.position = trans.position;
-		temp.bulletTransform.rotation = trans.rotation;
+		temp.trans.position = trans.position;
+		temp.trans.rotation = trans.rotation;
 		if(action.useParam)
 		{
 			angle = param;
@@ -216,7 +216,7 @@ public class BulletPattern : MonoBehaviour
 		{
 			case (DirectionType.Homing):
 				Quaternion originalRot = trans.rotation;
-				float dotHeading = Vector3.Dot( temp.bulletTransform.up, Player.playerTransform.position - temp.bulletTransform.position );
+				float dotHeading = Vector3.Dot( temp.trans.up, Player.playerTransform.position - temp.trans.position );
 				
 				if(dotHeading > 0)
 				{
@@ -226,23 +226,23 @@ public class BulletPattern : MonoBehaviour
 				{
 					direction = 1;
 				}
-				angleDifference = Vector3.Angle(temp.bulletTransform.forward, Player.playerTransform.position - temp.bulletTransform.position);
-				temp.bulletTransform.rotation = originalRot * Quaternion.AngleAxis((direction * angleDifference) - angle, Vector3.right);
+				angleDifference = Vector3.Angle(temp.trans.forward, Player.playerTransform.position - temp.trans.position);
+				temp.trans.rotation = originalRot * Quaternion.AngleAxis((direction * angleDifference) - angle, Vector3.right);
 				break;
 				
 			case (DirectionType.Absolute):
-				temp.bulletTransform.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
+				temp.trans.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
 				break;
 				
 			case (DirectionType.Relative):
-				temp.bulletTransform.localRotation = trans.localRotation * Quaternion.AngleAxis (-angle, Vector3.right);
+				temp.trans.localRotation = trans.localRotation * Quaternion.AngleAxis (-angle, Vector3.right);
 				break;
 				
 			case (DirectionType.Sequence):
-				temp.bulletTransform.localRotation = previousRotation.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
+				temp.trans.localRotation = previousRotation.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
 				break;
 		}
-		previousRotation.previousRotation = temp.bulletTransform.localRotation;
+		previousRotation.previousRotation = temp.trans.localRotation;
 		if(action.overwriteBulletSpeed)
 		{
 			if(action.randomSpeed)
@@ -296,7 +296,7 @@ public class BulletPattern : MonoBehaviour
 			temp.param = param;
 		}
 		temp.master = this;
-		temp.bulletObject.SetActive(true);
+		temp.gameObj.SetActive(true);
 	}
 }
 
