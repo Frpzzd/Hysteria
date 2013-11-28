@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 using System.Collections;
 
 public class Player : MonoBehaviour 
@@ -11,18 +12,14 @@ public class Player : MonoBehaviour
 	public GameObject optionPrefab;
 	public int maximumOptions;
 	public float optionDistance;
-
-	[HideInInspector]
-	private GameObject[] options;
-	private float oldPower;
 	
 	public uint lives;
 	public uint bombs;
 	public float power;
 	public uint point;
 
-	public float unfocusedMovementSpeed;
-	public float focusedMovementSpeed;
+	public float unfocusedSpeed;
+	public float focusedSpeed;
 
 	// Based on Hans Eysenck's ideas of temprament
 	// Introversion vs Extraverison controls spread and power
@@ -54,69 +51,110 @@ public class Player : MonoBehaviour
 	public float IntroExtraVersion;
 	public float NeuroPsychOtism;
 
-	[HideInInspector]
-	public float FireRate;
-	[HideInInspector]
-	public float Homing;
-	[HideInInspector]
-	public float ShotDamage;
-	[HideInInspector]
-	public float Spread;
+	[Serializable]
+	public class Trait
+	{
+		public float baseValue;
+		public float scaling;
+		[HideInInspector]
+		public float value;
+	}
+
+	public Trait FireRate;
+	public Trait Homing;
+	public Trait Spread;
+	public Trait ShotDamage;
 
 	//Note Spread is in terms of PI
-	public float baseFireRate = 3;
+	/*public float baseFireRate = 3;
 	public float baseHoming = 0;
 	public float baseShotDamage = 10;
 	public float baseSpread = 0.5f;
 	public float FireRateTraitScaling = 2;
 	public float HomingTraitScaling = 1;
 	public float ShotDamageTraitScaling = 6;
-	public float SpreadTraitScaling = 0.5f;
-
-	public PlayerHitboxHandler HitboxHandler;
+	public float SpreadTraitScaling = 0.5f;*/
 	
-	public bool invincible;
-	[HideInInspector]
-	public bool bombDeployed;
+	public bool invincible = false;
 
 	public float deathInvincibilityTime;
 	public float bombInvincibilityTime;
 	public float invincibilityFlashInterval;
+	public AudioClip DeathClip;
+	public AudioClip GrazeClip;
+	public AudioClip PickupClip;
+	public AudioClip ExtendClip;
+	public AudioClip BombUpClip;
 
+	//Private Variables
+	private bool bombDeployed = false;
+	private bool shooting = false;
+	private Renderer hitboxRenderer;
+	private AudioSource audioSource;
+	private GameObject[] options;
+	private float oldPower;
+	
 	void Start () 
 	{
 		//Cache commonly accessed components of player
 		instance = this;
 		playerTransform = transform;
+		audioSource = audio;
+		hitboxRenderer = gameObject.GetComponentInChildren<Renderer>();
 
 		options = new GameObject[maximumOptions];
 
 		for (int i = 0; i < maximumOptions; i++)
 		{
 			GameObject option = (GameObject)Instantiate(optionPrefab, playerTransform.position, Quaternion.identity);
+			option.transform.parent = playerTransform;
 			option.SetActive(false);
 			options[i] = option;
 		}
 	}
 
+	private int Sign(float x)
+	{
+		return (x == 0) ? 0 : (x > 0) ? 1 : -1;
+	}
+
 	void Update () 
 	{
-		//Movement
 		float deltat = Time.deltaTime;
-		bool focused = HitboxHandler.hitboxRenderer.enabled = (Input.GetAxis("Focus") != 0);
+		bool focused = hitboxRenderer.enabled = (Input.GetAxis("Focus") != 0);
+
+		//Movement
 		Vector3 movementVector = Vector3.zero;
-		movementVector.x = Mathf.Sign(Input.GetAxis("Horizontal")) * ((focused) ? focusedMovementSpeed : unfocusedMovementSpeed);
-		movementVector.y = Mathf.Sign(Input.GetAxis("Vertical")) * ((focused) ? focusedMovementSpeed : unfocusedMovementSpeed);
+		movementVector.x = Sign(Input.GetAxis("Horizontal")) * ((focused) ? focusedSpeed : unfocusedSpeed);
+		movementVector.y = Sign(Input.GetAxis("Vertical")) * ((focused) ? focusedSpeed : unfocusedSpeed);
 		playerTransform.position += movementVector * deltat;
 
+		//Bombing
 		if(Input.GetButtonDown("Bomb"))
 		{
+			Debug.Log("Bomb Deployed");
 			if(!bombDeployed)
 			{
 				//Instantiate Bomb at character location
 				StartCoroutine(Invincibility(false, bombInvincibilityTime, Time.deltaTime));
 				bombDeployed = true;
 			}
+		}
+
+		//Shooting
+		if(Input.GetButtonDown("Shoot"))
+		{
+			Debug.Log ("Start Shooting");
+			shooting = true;
+		}
+		else if(Input.GetButtonUp("Shoot"))
+		{
+			Debug.Log ("Stop Shooting");
+			shooting = false;
+		}
+		if(shooting)
+		{
+
 		}
 
 		for(int i = 0; i < (int)power; i++)
@@ -133,21 +171,15 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	void OnTrigger(Collider2D col)
+	void OnTriggerEnter2D(Collider2D col)
 	{
-		if(col.gameObject.CompareTag("Enemy Bullet"))
+		switch(col.gameObject.layer)
 		{
-			if(lives <= 0)
-			{
-				Global.gameState = GameState.Game_Over;
-			}
-			lives--;
-			GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
-			foreach(GameObject go in pickups)
-			{
-				go.GetComponent<Pickup>().state = Pickup.PickupState.Normal;
-			}
-			StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
+			case 9:			//Enemy
+			case 11:		//Enemy Bullet
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -182,9 +214,53 @@ public class Player : MonoBehaviour
 
 	public void Graze(Bullet bullet)
 	{
-		if(!invincible)
+		if(!invincible && !bullet.grazed)
 		{
 			Global.Graze++;
+			bullet.grazed = true;
+		}
+	}
+
+	public void Pickup(PickupType type)
+	{
+		switch(type)
+		{
+			case PickupType.Point:
+				audioSource.PlayOneShot (PickupClip);
+				break;
+			case PickupType.PointValue:
+				audioSource.PlayOneShot (PickupClip);
+				break;
+			case PickupType.Power:
+				oldPower = power;
+				power += 0.01f;
+				audioSource.PlayOneShot (PickupClip);
+				break;
+			case PickupType.Bomb:
+				audioSource.PlayOneShot (BombUpClip);
+				break;
+			case PickupType.Life:
+				audioSource.PlayOneShot(ExtendClip);
+				break;
+		}
+	}
+
+	public void Die()
+	{
+		if(!invincible)
+		{
+			if(lives <= 0)
+			{
+				Global.gameState = GameState.Game_Over;
+			}
+			lives--;
+			audioSource.PlayOneShot(DeathClip);
+			GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
+			foreach(GameObject go in pickups)
+			{
+				go.GetComponent<Pickup>().state = global::Pickup.PickupState.Normal;
+			}
+			StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
 		}
 	}
 }

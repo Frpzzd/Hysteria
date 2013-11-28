@@ -20,20 +20,33 @@ public class GameObjectManager : MonoBehaviour
 	public class GameObjectPool<T> : Queue<T> where T : PooledGameObject
 	{
 		public GameObject blankPrefab;
-		public int InitialSize;
-		public bool Spawning;
-		public int SpawnTarget;
+		public int Preallocation = 5;
+		public int UponEmptySpawn = 1;
 		public float SpawnTime;
 		public float Timer;
 
 		private T CreateNew()
 		{
-			return default(T);
+			T newT =((GameObject)Instantiate (blankPrefab)).GetComponent<T>();
+			newT.gameObj.SetActive (false);
+			return newT;
+		}
+
+		private T CustomDequeue()
+		{
+			if(Count == 0)
+			{
+				for(int i = 0; i < UponEmptySpawn; i++)
+				{
+					Enqueue(CreateNew());
+				}
+			}
+			return Dequeue();
 		}
 
 		public T Get()
 		{
-			T newT = (Count != 0) ? Dequeue () : CreateNew ();
+			T newT = CustomDequeue();
 			newT.Activate ();
 			newT.gameObj.SetActive (true);
 			return newT;
@@ -46,20 +59,30 @@ public class GameObjectManager : MonoBehaviour
 		}
 	}
 
-	static GameObjectManager()
-	{
-		Bullets = new BulletPool();
-		Pickups = new PickupPool();
-	}
-
 	[Serializable]
 	public class BulletPool : GameObjectPool<Bullet> { }
 	[Serializable]
 	public class PickupPool : GameObjectPool<Pickup> { }
 
-	public static BulletPool Bullets;
-	public static PickupPool Pickups;
+	public BulletPool bullets;
+	public PickupPool pickups;
 
-	public static GameObject instance;
+	public static BulletPool Bullets
+	{
+		get { return manager.bullets; }
+	}
+
+	public static PickupPool Pickups
+	{
+		get { return manager.pickups; }
+	}
+
 	public static GameObjectManager manager;
+
+	void Start()
+	{
+		bullets = new BulletPool ();
+		pickups = new PickupPool ();
+		manager = this;
+	}
 }
