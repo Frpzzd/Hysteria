@@ -9,12 +9,12 @@ public class Player : MonoBehaviour
 	[HideInInspector]
 	public static Player instance;
 
-	public GameObject optionPrefab;
-	public int maximumOptions;
 	public float optionDistance;
-	
-	public uint lives;
-	public uint bombs;
+
+	public int maxLives;
+	public int maxBombs;
+	public int lives;
+	public int bombs;
 	public float power;
 	public uint point;
 
@@ -59,22 +59,13 @@ public class Player : MonoBehaviour
 		[HideInInspector]
 		public float value;
 	}
-
+	
+	//Note Spread is in terms of PI
 	public Trait FireRate;
 	public Trait Homing;
 	public Trait Spread;
 	public Trait ShotDamage;
 
-	//Note Spread is in terms of PI
-	/*public float baseFireRate = 3;
-	public float baseHoming = 0;
-	public float baseShotDamage = 10;
-	public float baseSpread = 0.5f;
-	public float FireRateTraitScaling = 2;
-	public float HomingTraitScaling = 1;
-	public float ShotDamageTraitScaling = 6;
-	public float SpreadTraitScaling = 0.5f;*/
-	
 	public bool invincible = false;
 
 	public float deathInvincibilityTime;
@@ -91,8 +82,11 @@ public class Player : MonoBehaviour
 	private bool shooting = false;
 	private Renderer hitboxRenderer;
 	private AudioSource audioSource;
-	private GameObject[] options;
+	[HideInInspector]
+	public Option[] options;
 	private float oldPower;
+	[HideInInspector]
+	public bool[] atMovementLimit;
 	
 	void Start () 
 	{
@@ -100,16 +94,13 @@ public class Player : MonoBehaviour
 		instance = this;
 		playerTransform = transform;
 		audioSource = audio;
-		hitboxRenderer = gameObject.GetComponentInChildren<Renderer>();
-
-		options = new GameObject[maximumOptions];
-
-		for (int i = 0; i < maximumOptions; i++)
+		hitboxRenderer = playerTransform.FindChild("Death Hitbox").renderer;
+		oldPower = power;
+		atMovementLimit = new bool[4];
+		options = playerTransform.GetComponentsInChildren<Option>();
+		foreach(Option o in options)
 		{
-			GameObject option = (GameObject)Instantiate(optionPrefab, playerTransform.position, Quaternion.identity);
-			option.transform.parent = playerTransform;
-			option.SetActive(false);
-			options[i] = option;
+			o.gamObj.SetActive(false);
 		}
 	}
 
@@ -120,20 +111,47 @@ public class Player : MonoBehaviour
 
 	void Update () 
 	{
-		float deltat = Time.deltaTime;
-		bool focused = hitboxRenderer.enabled = (Input.GetAxis("Focus") != 0);
+		bool focused, focusUp, focusDown, shootUp, shootDown;
+		float deltat, speed;
+		Vector3 movementVector;
 
+		deltat = Time.deltaTime;
+		focused = Input.GetButton("Focus");
+		focusUp = Input.GetButtonUp ("Focus");
+		focusDown = Input.GetButtonDown ("Focus");
+		shootUp = Input.GetButtonUp ("Shoot");
+		shootDown = Input.GetButtonDown ("Shoot");
+		speed = (focused) ? focusedSpeed : unfocusedSpeed;
+		
 		//Movement
-		Vector3 movementVector = Vector3.zero;
-		movementVector.x = Sign(Input.GetAxis("Horizontal")) * ((focused) ? focusedSpeed : unfocusedSpeed);
-		movementVector.y = Sign(Input.GetAxis("Vertical")) * ((focused) ? focusedSpeed : unfocusedSpeed);
+		movementVector = Vector3.zero;
+		movementVector.x = Sign(Input.GetAxisRaw("Horizontal")) * speed;
+		movementVector.y = Sign(Input.GetAxisRaw("Vertical")) * speed;
+		if((atMovementLimit[0] && movementVector.y > 0) ||
+		   (atMovementLimit[1] && movementVector.y < 0))
+		{
+			movementVector.y = 0;
+		}
+		if((atMovementLimit[2] && movementVector.x > 0) ||
+		   (atMovementLimit[3] && movementVector.x < 0))
+		{
+			movementVector.x = 0;
+		}
 		playerTransform.position += movementVector * deltat;
 
-		//Bombing
-		if(Input.GetButtonDown("Bomb"))
+		if(focusDown)
 		{
-			Debug.Log("Bomb Deployed");
-			if(!bombDeployed)
+			hitboxRenderer.enabled = true;
+		}
+		else if(focusUp)
+		{
+			hitboxRenderer.enabled = false;
+		}
+
+		//Bombing
+		if(!bombDeployed)
+		{
+			if(Input.GetButtonDown("Bomb"))
 			{
 				//Instantiate Bomb at character location
 				StartCoroutine(Invincibility(false, bombInvincibilityTime, Time.deltaTime));
@@ -142,44 +160,31 @@ public class Player : MonoBehaviour
 		}
 
 		//Shooting
-		if(Input.GetButtonDown("Shoot"))
+		if(shootDown)
 		{
-			Debug.Log ("Start Shooting");
 			shooting = true;
 		}
-		else if(Input.GetButtonUp("Shoot"))
+		else if(shootUp)
 		{
-			Debug.Log ("Stop Shooting");
 			shooting = false;
 		}
-		if(shooting)
-		{
 
-		}
-
-		for(int i = 0; i < (int)power; i++)
+		if(focusDown || focusUp || Mathf.FloorToInt(oldPower) != Mathf.FloorToInt(power))
 		{
-			float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
-			options[i].SetActive(true);
-			float angle = -(Mathf.PI / (power + 1)) * (i + 1);
-			Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
-			options[i].transform.localPosition = position;
-		}
-		for(int i = (int)power; i < options.Length; i++)
-		{
-			options[i].SetActive(false);
-		}
-	}
-
-	void OnTriggerEnter2D(Collider2D col)
-	{
-		switch(col.gameObject.layer)
-		{
-			case 9:			//Enemy
-			case 11:		//Enemy Bullet
-				break;
-			default:
-				break;
+			bool optActive;
+			for(int i = 0; i < options.Length; i++)
+			{
+				optActive = i < power;
+				options[i].gamObj.SetActive(optActive);
+				if(optActive)
+				{
+					float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
+					float angle = -(Mathf.PI / (Mathf.FloorToInt(power) + 1)) * (i + 1);
+					Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
+					options[i].trans.localPosition = position;
+				}
+			}
+			oldPower = power;
 		}
 	}
 
@@ -232,8 +237,7 @@ public class Player : MonoBehaviour
 				audioSource.PlayOneShot (PickupClip);
 				break;
 			case PickupType.Power:
-				oldPower = power;
-				power += 0.01f;
+				ChangePower(0.01f);
 				audioSource.PlayOneShot (PickupClip);
 				break;
 			case PickupType.Bomb:
@@ -243,6 +247,11 @@ public class Player : MonoBehaviour
 				audioSource.PlayOneShot(ExtendClip);
 				break;
 		}
+	}
+
+	private void ChangePower(float amount)
+	{
+		power = (power + amount < options.Length) ? power + amount : options.Length;
 	}
 
 	public void Die()
@@ -255,6 +264,7 @@ public class Player : MonoBehaviour
 			}
 			lives--;
 			audioSource.PlayOneShot(DeathClip);
+			ChangePower(-1.0f);
 			GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
 			foreach(GameObject go in pickups)
 			{

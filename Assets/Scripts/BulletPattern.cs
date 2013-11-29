@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +10,16 @@ public class BulletPattern : MonoBehaviour
 	public GameObject BPgameObject;
 	[HideInInspector]
 	public Transform BPtransform;
-	
+
+	public string bpName;
+	public int maxHealth;
+	public int currentHealth;
+	public int timeOut;
+	public int secondsRemaining;
+	public int bonus;
+	public int remainingBonus;
+	public bool timeOutBulletPattern;
+
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
 	
@@ -321,7 +330,7 @@ public class BulletTag
 	public Vector3 speed;
 	public bool randomSpeed = false;
 	public bool rankSpeed = false;
-	public int prefabIndex = 0;
+	public GameObject prefab = null;
 	public BulletAction[] actions;
 }
 
@@ -362,6 +371,7 @@ public class BPAction
 
 public class FireAction : BPAction
 {
+	public AudioClip audioClip = null;
 	public FireActionType type = FireActionType.Wait; 
 }
 

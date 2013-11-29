@@ -14,6 +14,11 @@ public class BulletPatternEditor : Editor
 	
 	public override void OnInspectorGUI() 
 	{
+		bp.name = EditorGUILayout.TextField ("Name", bp.name);
+		bp.maxHealth = EditorGUILayout.IntField ("Health", bp.maxHealth);
+		bp.timeOut = EditorGUILayout.IntField ("Time", bp.timeOut);
+		bp.bonus = EditorGUILayout.IntField ("Bonus", bp.bonus);
+		bp.timeOutBulletPattern = EditorGUILayout.Toggle ("Timeout Success?", bp.timeOutBulletPattern);
 		FireTagsGUI ();
 		BulletTagsGUI ();
 		
@@ -260,11 +265,13 @@ public class BulletPatternEditor : Editor
 						GUILayout.EndHorizontal();	
 						if(ac.passParam)
 							ac.paramRange = EditorGUILayout.Vector2Field("Param Range", ac.paramRange);
-						ac.bulletTagIndex = EditorGUILayout.IntSlider("BulletTag Index", ac.bulletTagIndex, 1, bp.bulletTags.Length);
+						if(bp.bulletTags.Length > 1)
+							ac.bulletTagIndex = EditorGUILayout.IntSlider("BulletTag Index", ac.bulletTagIndex, 1, bp.bulletTags.Length);
 						break;
 						
 					case(FireActionType.CallFireTag):
-						ac.fireTagIndex = EditorGUILayout.IntSlider("Fire Tag Idx", ac.fireTagIndex, 1, bp.fireTags.Length);
+						if(bp.fireTags.Length > 1)
+							ac.fireTagIndex = EditorGUILayout.IntSlider("Fire Tag Idx", ac.fireTagIndex, 1, bp.fireTags.Length);
 						GUILayout.BeginHorizontal();
 						ac.passParam = EditorGUILayout.Toggle("PassParam", ac.passParam);
 						if(!ac.passParam)
@@ -398,7 +405,7 @@ public class BulletPatternEditor : Editor
 					if(bt.rankSpeed)
 						bt.speed.z = EditorGUILayout.FloatField("RankSpeed", bt.speed.z);
 					GUILayout.EndHorizontal();
-					//TO-DO: Implement Bullet Prefab here
+					EditorGUILayout.ObjectField("Bullet Prefab ", bt.prefab, typeof(GameObject), false);
 					
 					if (GUI.changed) 
 						SceneView.RepaintAll();
