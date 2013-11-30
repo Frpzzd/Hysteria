@@ -30,7 +30,7 @@ public class Bullet : PooledGameObject
 		Vector2 targetVelocity = trans.forward * speed;
 		if(useVertical)
 		{
-			targetVelocity += (Global.MainCam.up.XY() * verticalSpeed);
+			targetVelocity += (Vector2.up * verticalSpeed);
 		}
 		Vector2 velocityChange = (targetVelocity - rigBody.velocity);
 		rigBody.AddForce(velocityChange);
@@ -71,7 +71,7 @@ public class Bullet : PooledGameObject
 					{
 						waitT += Global.Rank * actions[actionIndex].waitTime.z;
 					}
-					waitT *= Global.TimePerFrame;
+					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
 					break;
 				case(BulletActionType.Change_Direction):
@@ -153,7 +153,7 @@ public class Bullet : PooledGameObject
 						{
 							waitT += Global.Rank * actions[actionIndex].waitTime.z;
 						}
-						waitT *= Global.TimePerFrame;
+						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
 						break;
 					case(BulletActionType.Change_Direction):
@@ -220,7 +220,7 @@ public class Bullet : PooledGameObject
 		if(actions[i].rankWait)
 			d += Global.Rank * actions[i].waitTime.z;
 		
-		d *= Global.TimePerFrame;
+		d *= Time.deltaTime;
 		
 		Quaternion originalRot = trans.localRotation;
 		
@@ -297,7 +297,7 @@ public class Bullet : PooledGameObject
 			d = actions[i].waitTime.x;
 		if(actions[i].rankWait)
 			d += Global.Rank * actions[i].waitTime.z;
-		d *= Global.TimePerFrame;	
+		d *= Time.deltaTime;	
 		
 		float originalSpeed = speed;
 		

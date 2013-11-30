@@ -9,63 +9,39 @@ public class Pickup : PooledGameObject
 	public PickupState state;
 	public PickupType type;
 	public float initialVelocity;
+	[HideInInspector]
 	public float currentVelocity;
 	public float maximumDownwardVelocity;
 	public float acceleration;
 	public float autoCollectSpeed;
+	public float proximityCollectSpeed;
 
 	public override void Activate()
 	{
-		state = PickupState.Normal;
+		state = Global.defaultPickupState;
+		currentVelocity = initialVelocity;
 	}
 
-	void FixedUpdate()
+	void Update()
 	{
 		switch(state)
 		{
 			case PickupState.Normal:
-				trans.Translate(0, currentVelocity, 0);
-				currentVelocity = (currentVelocity >= maximumDownwardVelocity) ? currentVelocity + acceleration : currentVelocity;
-				break;
-			case PickupState.AutoCollect:
-				trans.Translate(Vector3.MoveTowards(trans.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
-				break;
-			case PickupState.ProximityCollect:
-				trans.Translate(Vector3.MoveTowards(trans.localPosition, Player.playerTransform.localPosition, autoCollectSpeed));
-				break;
-		}
-	}
-
-	void OnTrigger(Collider col)
-	{
-		switch(col.gameObject.tag)
-		{
-			case "Player":
-				switch(type)
+				trans.Translate(0, currentVelocity * Time.deltaTime, 0);
+				if(currentVelocity > maximumDownwardVelocity)
 				{
-					case PickupType.Point:
-						Global.Score += 1; 		//Filler for now, work out scoring function later
-						break;
-					case PickupType.PointValue:
-						Global.PointValue += 10;
-						break;
-					case PickupType.Power:
-						Player.instance.power += 0.01f;
-						Global.Score += 1;		//Reward a little few points of score to the player for power pickups
-						break;
-					case PickupType.Life:
-						Player.instance.lives++;
-						break;
-					case PickupType.Bomb:
-						Player.instance.bombs++;
-						break;
+					currentVelocity += acceleration * Time.deltaTime;
+					if(currentVelocity < maximumDownwardVelocity)
+					{
+						currentVelocity = maximumDownwardVelocity;
+					}
 				}
-				GameObjectManager.Pickups.Return(this);
-				return;
-			case "Proximity Collection Hitbox":
-				state = (state == PickupState.Normal) ? PickupState.ProximityCollect : state;
 				break;
-			default:
+		case PickupState.AutoCollect:
+				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * Time.deltaTime);
+				break;
+		case PickupState.ProximityCollect:
+				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * Time.deltaTime);
 				break;
 		}
 	}

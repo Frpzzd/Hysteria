@@ -4,11 +4,6 @@ using System.Collections;
 
 public static class Global
 {
-	public static float TimePerFrame;
-
-	public static Transform MainCam;
-
-	public static float SpellOverlayDelay;
 	public static int Rank;
 
 	public static ulong Score;
@@ -18,10 +13,11 @@ public static class Global
 	public static void Reset()
 	{
 		Score = Graze = 0;
-		PointValue = 5000;
+		PointValue = 10000;
 	}
 
 	public static GameState gameState;
+	public static Pickup.PickupState defaultPickupState = Pickup.PickupState.Normal;
 }
 
 public enum GameState {Start, In_Game, Game_Over}

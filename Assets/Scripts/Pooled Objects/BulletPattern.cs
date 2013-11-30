@@ -98,7 +98,7 @@ public class BulletPattern : MonoBehaviour
 						{
 							waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
 						}
-						waitT *= Global.TimePerFrame;
+						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
 						break;
 						
@@ -154,7 +154,7 @@ public class BulletPattern : MonoBehaviour
 						waitT = fireTag.actions[iw.index].waitTime.x;
 					if(fireTag.actions[iw.index].rankWait)
 						waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
-					waitT *= Global.TimePerFrame;
+					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
 					break;
 					

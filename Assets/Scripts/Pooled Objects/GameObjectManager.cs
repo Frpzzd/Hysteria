@@ -28,10 +28,11 @@ public class GameObjectManager : MonoBehaviour
 	{
 		public GameObject blankPrefab;
 		public GameObject container;
+		[NonSerialized]
+		public List<T> All = new List<T>();
 		public int Preallocation = 5;
 		public int UponEmptySpawn = 1;
 		private bool started = false;
-		private int total = 0;
 
 		public void Start ()
 		{
@@ -42,7 +43,6 @@ public class GameObjectManager : MonoBehaviour
 					Enqueue(CreateNew());
 				}
 				started = true;
-				Debug.Log("Total " + total);
 			}
 		}
 
@@ -53,7 +53,7 @@ public class GameObjectManager : MonoBehaviour
 			newT.gameObj = go;
 			go.SetActive (false);
 			go.transform.parent = container.transform;
-			total++;
+			All.Add (newT);
 			return newT;
 		}
 
@@ -65,7 +65,6 @@ public class GameObjectManager : MonoBehaviour
 				{
 					Enqueue(CreateNew());
 				}
-				Debug.Log("Total " + total);
 			}
 			return Dequeue();
 		}
