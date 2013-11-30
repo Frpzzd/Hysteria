@@ -1,12 +1,16 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\PlayerMovementLimit.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Player.cs">
     <Files>
-      <File FileName="Assets\Scripts\BulletPattern.cs" Line="14" Column="23" />
+      <File FileName="Assets\Scripts\Player.cs" Line="172" Column="4" />
+      <File FileName="Assets\Scripts\Pooled Objects\GameObjectManager.cs" Line="46" Column="5" />
+      <File FileName="Assets\Scripts\Pooled Objects\BulletPattern.cs" Line="1" Column="1" />
       <File FileName="Assets\Editor\BulletPatternEditor.cs" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\Option.cs" Line="1" Column="1" />
-      <File FileName="Assets\Scripts\Player.cs" Line="138" Column="20" />
-      <File FileName="Assets\PlayerMovementLimit.cs" Line="9" Column="3" />
+      <File FileName="Assets\Scripts\Pooled Objects\PlayerShot.cs" Line="12" Column="3" />
+      <File FileName="Assets\Scripts\Pooled Objects\Bullet.cs" Line="25" Column="29" />
+      <File FileName="Assets\Scripts\Pooled Objects\Pickup.cs" Line="15" Column="32" />
+      <File FileName="Assets\Scripts\Player Hitboxes\ProximityCollectHitbox.cs" Line="28" Column="1" />
+      <File FileName="Assets\Scripts\Pooled Objects\PooledObjectBoundary.cs" Line="10" Column="36" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

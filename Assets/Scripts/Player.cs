@@ -77,6 +77,9 @@ public class Player : MonoBehaviour
 	public AudioClip ExtendClip;
 	public AudioClip BombUpClip;
 
+	public float MainShotDelay;
+	public float MainShotTimer;
+
 	//Private Variables
 	private bool bombDeployed = false;
 	private bool shooting = false;
@@ -167,6 +170,24 @@ public class Player : MonoBehaviour
 		else if(shootUp)
 		{
 			shooting = false;
+		}
+
+		if(shooting)
+		{
+			MainShotTimer -= Time.deltaTime;
+			if(MainShotTimer <= 0)
+			{
+				Vector3 offset = new Vector3(1,0,0);
+				PlayerShot ps1 = GameObjectManager.MainPlayerShots.Get();
+				PlayerShot ps2 = GameObjectManager.MainPlayerShots.Get();
+				ps1.trans.position = playerTransform.position + offset;
+				ps2.trans.position = playerTransform.position - offset;
+				MainShotTimer = MainShotDelay;
+			}
+		}
+		else
+		{
+			MainShotTimer = 0;
 		}
 
 		if(focusDown || focusUp || Mathf.FloorToInt(oldPower) != Mathf.FloorToInt(power))

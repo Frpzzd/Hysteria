@@ -11,6 +11,7 @@ public class BulletPattern : MonoBehaviour
 	[HideInInspector]
 	public Transform BPtransform;
 
+	public bool bossPattern;
 	public string bpName;
 	public int maxHealth;
 	public int currentHealth;
@@ -18,7 +19,8 @@ public class BulletPattern : MonoBehaviour
 	public int secondsRemaining;
 	public int bonus;
 	public int remainingBonus;
-	public bool timeOutBulletPattern;
+	public bool survival;
+	public int bonusPerSecond;
 
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;

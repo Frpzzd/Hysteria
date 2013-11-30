@@ -23,15 +23,6 @@ public class Bullet : PooledGameObject
 	public float param = 0.0f;
 	[HideInInspector]
 	public int actionIndex = 0;
-
-	// Use this for initialization
-	void Start () 
-	{
-		gameObject.tag = "Enemy Bullet";
-		trans = transform;
-		gameObj = gameObject;
-		rigBody = rigidbody2D;
-	}
 	
 	// Update is called once per frame
 	void FixedUpdate () 

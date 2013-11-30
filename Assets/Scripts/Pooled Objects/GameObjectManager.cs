@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -11,6 +11,13 @@ public abstract class PooledGameObject : MonoBehaviour
 	[HideInInspector]
 	public Rigidbody2D rigBody;
 
+	public virtual void Awake()
+	{
+		trans = transform;
+		gameObj = gameObject;
+		rigBody = rigidbody2D;
+	}
+
 	public abstract void Activate();
 }
 
@@ -20,15 +27,33 @@ public class GameObjectManager : MonoBehaviour
 	public class GameObjectPool<T> : Queue<T> where T : PooledGameObject
 	{
 		public GameObject blankPrefab;
+		public GameObject container;
 		public int Preallocation = 5;
 		public int UponEmptySpawn = 1;
-		public float SpawnTime;
-		public float Timer;
+		private bool started = false;
+		private int total = 0;
+
+		public void Start ()
+		{
+			if(!started)
+			{
+				for(int i = 0; i < Preallocation; i++)
+				{
+					Enqueue(CreateNew());
+				}
+				started = true;
+				Debug.Log("Total " + total);
+			}
+		}
 
 		private T CreateNew()
 		{
-			T newT =((GameObject)Instantiate (blankPrefab)).GetComponent<T>();
-			newT.gameObj.SetActive (false);
+			GameObject go = (GameObject)Instantiate (blankPrefab);
+			T newT = go.GetComponent<T>();
+			newT.gameObj = go;
+			go.SetActive (false);
+			go.transform.parent = container.transform;
+			total++;
 			return newT;
 		}
 
@@ -40,6 +65,7 @@ public class GameObjectManager : MonoBehaviour
 				{
 					Enqueue(CreateNew());
 				}
+				Debug.Log("Total " + total);
 			}
 			return Dequeue();
 		}
@@ -63,26 +89,42 @@ public class GameObjectManager : MonoBehaviour
 	public class BulletPool : GameObjectPool<Bullet> { }
 	[Serializable]
 	public class PickupPool : GameObjectPool<Pickup> { }
+	[Serializable]
+	public class PlayerShotPool : GameObjectPool<PlayerShot> { }
 
 	public BulletPool bullets;
 	public PickupPool pickups;
-
+	public PlayerShotPool mainPlayerShots;
+	public PlayerShotPool optionPlayerShots;
+	
 	public static BulletPool Bullets
 	{
 		get { return manager.bullets; }
 	}
-
+	
 	public static PickupPool Pickups
 	{
 		get { return manager.pickups; }
 	}
 
+	public static PlayerShotPool MainPlayerShots
+	{
+		get { return manager.mainPlayerShots; }
+	}
+	
+	public static PlayerShotPool OptionPlayerShots
+	{
+		get { return manager.optionPlayerShots; }
+	}
+
 	public static GameObjectManager manager;
 
-	void Start()
+	void Awake()
 	{
-		bullets = new BulletPool ();
-		pickups = new PickupPool ();
+		bullets.Start ();
+		pickups.Start ();
+		mainPlayerShots.Start ();
+		optionPlayerShots.Start ();
 		manager = this;
 	}
 }

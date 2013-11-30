@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,11 +14,18 @@ public class BulletPatternEditor : Editor
 	
 	public override void OnInspectorGUI() 
 	{
-		bp.name = EditorGUILayout.TextField ("Name", bp.name);
-		bp.maxHealth = EditorGUILayout.IntField ("Health", bp.maxHealth);
-		bp.timeOut = EditorGUILayout.IntField ("Time", bp.timeOut);
-		bp.bonus = EditorGUILayout.IntField ("Bonus", bp.bonus);
-		bp.timeOutBulletPattern = EditorGUILayout.Toggle ("Timeout Success?", bp.timeOutBulletPattern);
+		bp.bossPattern = EditorGUILayout.Toggle ("Boss Pattern", bp.bossPattern);
+		if(bp.bossPattern)
+		{
+			EditorGUI.indentLevel++;
+			bp.bpName = EditorGUILayout.TextField ("Name", bp.bpName);
+			bp.survival = EditorGUILayout.Toggle ("Survival", bp.survival);
+			bp.maxHealth = EditorGUILayout.IntField ("Health", bp.maxHealth);
+			bp.timeOut = EditorGUILayout.IntField ("Time", bp.timeOut);
+			bp.bonus = EditorGUILayout.IntField ("Bonus", bp.bonus);
+			bp.bonusPerSecond = EditorGUILayout.IntField("Bonus Points Per Second", bp.bonusPerSecond);
+			EditorGUI.indentLevel--;
+		}
 		FireTagsGUI ();
 		BulletTagsGUI ();
 		

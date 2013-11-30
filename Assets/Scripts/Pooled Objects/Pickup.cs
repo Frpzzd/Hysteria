@@ -14,13 +14,6 @@ public class Pickup : PooledGameObject
 	public float acceleration;
 	public float autoCollectSpeed;
 
-	void Start()
-	{
-		gameObject.tag = "Pickup";
-		trans = transform;
-		rigBody = rigidbody2D;
-	}
-
 	public override void Activate()
 	{
 		state = PickupState.Normal;
