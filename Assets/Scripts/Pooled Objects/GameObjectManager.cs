@@ -8,14 +8,11 @@ public abstract class PooledGameObject : MonoBehaviour
 	public Transform trans;
 	[HideInInspector]
 	public GameObject gameObj;
-	[HideInInspector]
-	public Rigidbody2D rigBody;
 
 	public virtual void Awake()
 	{
 		trans = transform;
 		gameObj = gameObject;
-		rigBody = rigidbody2D;
 	}
 
 	public abstract void Activate();

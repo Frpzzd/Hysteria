@@ -27,13 +27,12 @@ public class Bullet : PooledGameObject
 	// Update is called once per frame
 	void FixedUpdate () 
 	{
-		Vector2 targetVelocity = trans.forward * speed;
+		Vector3 velocity = trans.forward * speed;
 		if(useVertical)
 		{
-			targetVelocity += (Vector2.up * verticalSpeed);
+			velocity += (Vector3.up * verticalSpeed);
 		}
-		Vector2 velocityChange = (targetVelocity - rigBody.velocity);
-		rigBody.AddForce(velocityChange);
+		trans.position += velocity;
 	}
 
 	public override void Activate()

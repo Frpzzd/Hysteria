@@ -5,7 +5,6 @@ public class PointOfCollection : MonoBehaviour
 {
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		Debug.Log ("Success");
 		Player p = other.gameObject.GetComponent<Player> ();
 		if(p != null)
 		{
@@ -15,11 +14,14 @@ public class PointOfCollection : MonoBehaviour
 				pickup.state = Pickup.PickupState.AutoCollect;
 			}
 		}
+		else
+		{
+			Debug.LogError("Something other than a player collided with the PoC: " + other.gameObject.name);
+		}
 	}
 
 	void OnTriggerExit2D(Collider2D other)
 	{
-		Debug.Log ("Success");
 		Player p = other.gameObject.GetComponent<Player> ();
 		if(p != null)
 		{
