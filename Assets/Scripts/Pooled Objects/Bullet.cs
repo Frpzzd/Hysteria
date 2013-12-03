@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Bullet : PooledGameObject
+public class Bullet : PooledGameObject<BulletSpawmParams>
 {
 	[HideInInspector]
 	public BulletPattern master;
@@ -35,10 +35,9 @@ public class Bullet : PooledGameObject
 		trans.position += velocity;
 	}
 
-	public override void Activate()
+	public override void Activate (BulletSpawmParams param)
 	{
 		grazed = false;
-		gameObj.SetActive(true);
 		RunActions();
 	}
 
@@ -337,6 +336,15 @@ public class Bullet : PooledGameObject
 			grazed = true;
 		}
 	}
+
+	public static BulletSpawmParams SpawnParams()
+	{
+		return null;
+	}
+}
+
+public class BulletSpawmParams
+{
 }
 
 public class BulletAction : BPAction

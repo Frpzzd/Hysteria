@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerShot : PooledGameObject 
+public class PlayerShot : PooledGameObject<bool>
 {
 	public bool mainShot;
 	public float speed;
 
-	public override void Activate()
+	public override void Activate (bool param)
 	{
-
+		mainShot = param;
 	}
 	
 	// Update is called once per frame

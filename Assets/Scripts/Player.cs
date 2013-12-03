@@ -87,7 +87,6 @@ public class Player : MonoBehaviour
 	private AudioSource audioSource;
 	[HideInInspector]
 	public Option[] options;
-	private float oldPower;
 	[HideInInspector]
 	public bool[] atMovementLimit;
 	
@@ -98,7 +97,6 @@ public class Player : MonoBehaviour
 		playerTransform = transform;
 		audioSource = audio;
 		hitboxRenderer = playerTransform.FindChild("Death Hitbox").renderer;
-		oldPower = power;
 		atMovementLimit = new bool[4];
 		options = playerTransform.GetComponentsInChildren<Option>();
 		foreach(Option o in options)
@@ -112,18 +110,15 @@ public class Player : MonoBehaviour
 		return (x == 0) ? 0 : (x > 0) ? 1 : -1;
 	}
 
-	void Update () 
+	void FixedUpdate () 
 	{
-		bool focused, focusUp, focusDown, shootUp, shootDown;
+		bool focused;
 		float deltat, speed;
 		Vector3 movementVector;
 
-		deltat = Time.deltaTime;
-		focused = Input.GetButton("Focus");
-		focusUp = Input.GetButtonUp ("Focus");
-		focusDown = Input.GetButtonDown ("Focus");
-		shootUp = Input.GetButtonUp ("Shoot");
-		shootDown = Input.GetButtonDown ("Shoot");
+		deltat = Time.fixedDeltaTime;
+		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
+		shooting = Input.GetButton("Shoot");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;
 		
 		//Movement
@@ -142,46 +137,26 @@ public class Player : MonoBehaviour
 		}
 		playerTransform.position += movementVector * deltat;
 
-		if(focusDown)
-		{
-			hitboxRenderer.enabled = true;
-		}
-		else if(focusUp)
-		{
-			hitboxRenderer.enabled = false;
-		}
-
 		//Bombing
 		if(!bombDeployed)
 		{
 			if(Input.GetButtonDown("Bomb"))
 			{
 				//Instantiate Bomb at character location
-				StartCoroutine(Invincibility(false, bombInvincibilityTime, Time.deltaTime));
+				StartCoroutine(Invincibility(false, bombInvincibilityTime, deltat));
 				bombDeployed = true;
 			}
 		}
 
 		//Shooting
-		if(shootDown)
-		{
-			shooting = true;
-		}
-		else if(shootUp)
-		{
-			shooting = false;
-		}
-
 		if(shooting)
 		{
-			MainShotTimer -= Time.deltaTime;
+			MainShotTimer -= deltat;
 			if(MainShotTimer <= 0)
 			{
 				Vector3 offset = new Vector3(1,0,0);
-				PlayerShot ps1 = GameObjectManager.MainPlayerShots.Get();
-				PlayerShot ps2 = GameObjectManager.MainPlayerShots.Get();
-				ps1.trans.position = playerTransform.position + offset;
-				ps2.trans.position = playerTransform.position - offset;
+				GameObjectManager.PlayerShots.Spawn(playerTransform.position + offset, true);
+				GameObjectManager.PlayerShots.Spawn(playerTransform.position - offset, true);
 				MainShotTimer = MainShotDelay;
 			}
 		}
@@ -190,22 +165,18 @@ public class Player : MonoBehaviour
 			MainShotTimer = 0;
 		}
 
-		if(focusDown || focusUp || Mathf.FloorToInt(oldPower) != Mathf.FloorToInt(power))
+		bool optActive;
+		for(int i = 0; i < options.Length; i++)
 		{
-			bool optActive;
-			for(int i = 0; i < options.Length; i++)
+			optActive = (float)i <= power - 1;
+			options[i].gamObj.SetActive(optActive);
+			if(optActive)
 			{
-				optActive = i < power;
-				options[i].gamObj.SetActive(optActive);
-				if(optActive)
-				{
-					float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
-					float angle = -(Mathf.PI / (Mathf.FloorToInt(power) + 1)) * (i + 1);
-					Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
-					options[i].trans.localPosition = position;
-				}
+				float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
+				float angle = -(Mathf.PI / (Mathf.FloorToInt(power) + 1)) * (i + 1);
+				Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
+				options[i].trans.localPosition = position;
 			}
-			oldPower = power;
 		}
 	}
 
@@ -221,7 +192,7 @@ public class Player : MonoBehaviour
 			while(elapsedTime < time)
 			{
 				mat.color = colors[index % 2];
-				elapsedTime += Time.deltaTime;
+				elapsedTime += intervalTime;
 				index++;
 				yield return new WaitForSeconds(intervalTime);
 			}
@@ -231,7 +202,7 @@ public class Player : MonoBehaviour
 		{
 			while(elapsedTime < time)
 			{
-				elapsedTime += Time.deltaTime;
+				elapsedTime += intervalTime;
 				yield return new WaitForSeconds(intervalTime);
 			}
 		}

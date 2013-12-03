@@ -9,14 +9,7 @@ public class PlayerShotBoundary : MonoBehaviour {
 		PlayerShot ps = go.GetComponent<PlayerShot> ();
 		if(ps != null)
 		{
-			if(ps.mainShot)
-			{
-				GameObjectManager.MainPlayerShots.Return(ps);
-			}
-			else
-			{
-				GameObjectManager.OptionPlayerShots.Return(ps);
-			}
+			GameObjectManager.PlayerShots.Return(ps);
 		}
 	}
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
-public abstract class PooledGameObject : MonoBehaviour
+public abstract class PooledGameObject<P> : MonoBehaviour
 {
 	[HideInInspector]
 	public Transform trans;
@@ -15,13 +15,13 @@ public abstract class PooledGameObject : MonoBehaviour
 		gameObj = gameObject;
 	}
 
-	public abstract void Activate();
+	public abstract void Activate(P param);
 }
 
 public class GameObjectManager : MonoBehaviour 
 {
 	[Serializable]
-	public class GameObjectPool<T> : Queue<T> where T : PooledGameObject
+	public class GameObjectPool<T, P> : Queue<T> where T : PooledGameObject<P> , new()
 	{
 		public GameObject blankPrefab;
 		public GameObject container;
@@ -66,12 +66,28 @@ public class GameObjectManager : MonoBehaviour
 			return Dequeue();
 		}
 
-		public T Get()
+		/// <summary>
+		/// Get the an available T from the queue specified by param.
+		/// Note does not spawn nor activate. For that use Spawn instead
+		/// </summary>
+		/// <param name="param">Parameter.</param>
+		public T Get(P param)
 		{
 			T newT = CustomDequeue();
-			newT.Activate ();
-			newT.gameObj.SetActive (true);
+			newT.Activate(param);
 			return newT;
+		}
+
+		/// <summary>
+		/// Spawn a T at the specified pos and param.
+		/// </summary>
+		/// <param name="pos">Position.</param>
+		/// <param name="param">Parameter.</param>
+		public void Spawn(Vector3 pos, P param)
+		{
+			T newT = Get(param);
+			newT.trans.position = pos;
+			newT.gameObj.SetActive (true);
 		}
 
 		public void Return(T t)
@@ -82,16 +98,15 @@ public class GameObjectManager : MonoBehaviour
 	}
 
 	[Serializable]
-	public class BulletPool : GameObjectPool<Bullet> { }
+	public class BulletPool : GameObjectPool<Bullet, BulletSpawmParams> { }
 	[Serializable]
-	public class PickupPool : GameObjectPool<Pickup> { }
+	public class PickupPool : GameObjectPool<Pickup, PickupType> { }
 	[Serializable]
-	public class PlayerShotPool : GameObjectPool<PlayerShot> { }
+	public class PlayerShotPool : GameObjectPool<PlayerShot, bool> { }
 
 	public BulletPool bullets;
 	public PickupPool pickups;
-	public PlayerShotPool mainPlayerShots;
-	public PlayerShotPool optionPlayerShots;
+	public PlayerShotPool playerShots;
 	
 	public static BulletPool Bullets
 	{
@@ -103,14 +118,9 @@ public class GameObjectManager : MonoBehaviour
 		get { return manager.pickups; }
 	}
 
-	public static PlayerShotPool MainPlayerShots
+	public static PlayerShotPool PlayerShots
 	{
-		get { return manager.mainPlayerShots; }
-	}
-	
-	public static PlayerShotPool OptionPlayerShots
-	{
-		get { return manager.optionPlayerShots; }
+		get { return manager.playerShots; }
 	}
 
 	public static GameObjectManager manager;
@@ -119,8 +129,7 @@ public class GameObjectManager : MonoBehaviour
 	{
 		bullets.Start ();
 		pickups.Start ();
-		mainPlayerShots.Start ();
-		optionPlayerShots.Start ();
+		playerShots.Start ();
 		manager = this;
 	}
 }

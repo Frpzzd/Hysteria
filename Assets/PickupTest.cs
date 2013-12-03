@@ -23,16 +23,16 @@ public class PickupTest : MonoBehaviour
 		{
 			for(int i = 0; i < number; i++)
 			{
-				Pickup p = GameObjectManager.Pickups.Get();
-				p.trans.position = new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height);
+				PickupType pt;
 				if(Random.value > 0.5)
 				{
-					p.type = PickupType.Power;
+					pt = PickupType.Power;
 				}
 				else
 				{
-					p.type = PickupType.Point;
+					pt = PickupType.Point;
 				}
+				GameObjectManager.Pickups.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt);
 			}
 			timer = delay;
 		}

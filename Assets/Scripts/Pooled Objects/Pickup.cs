@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public enum PickupType { Power, Point, PointValue, Life, Bomb }
 
-public class Pickup : PooledGameObject
+public class Pickup : PooledGameObject<PickupType>
 {
 	public enum PickupState { Normal, AutoCollect, ProximityCollect }
 	public PickupState state;
@@ -23,49 +23,50 @@ public class Pickup : PooledGameObject
 		mat = renderer.material;
 	}
 
-	public override void Activate()
+	public override void Activate (PickupType param)
 	{
 		state = Global.defaultPickupState;
 		currentVelocity = initialVelocity;
+		type = param;
+		switch(type)
+		{
+		case PickupType.Point:
+			mat.color = Color.blue;
+			break;
+		case PickupType.Power:
+			mat.color = Color.red;
+			break;
+		case PickupType.Bomb:
+			mat.color = Color.green;
+			break;
+		case PickupType.Life:
+			mat.color = Color.magenta;
+			break;
+		}
 	}
 
 	void Update()
 	{
+		float deltat = Time.deltaTime;
+		trans.position += Vector3.up * currentVelocity * deltat;
+		if(currentVelocity > maximumDownwardVelocity)
+		{
+			currentVelocity += acceleration * deltat;
+			if(currentVelocity < maximumDownwardVelocity)
+			{
+				currentVelocity = maximumDownwardVelocity;
+			}
+		}
 		switch(state)
 		{
-			case PickupState.Normal:
-				trans.Translate(0, currentVelocity * Time.deltaTime, 0);
-				if(currentVelocity > maximumDownwardVelocity)
-				{
-					currentVelocity += acceleration * Time.deltaTime;
-					if(currentVelocity < maximumDownwardVelocity)
-					{
-						currentVelocity = maximumDownwardVelocity;
-					}
-				}
-				break;
 			case PickupState.AutoCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * Time.deltaTime);
+					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
 					break;
 			case PickupState.ProximityCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * Time.deltaTime);
+					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
 					break;
-		}
-		switch(type)
-		{
-			case PickupType.Point:
-				mat.color = Color.blue;
-				break;
-			case PickupType.Power:
-				mat.color = Color.red;
-				break;
-			case PickupType.Bomb:
-				mat.color = Color.green;
-				break;
-			case PickupType.Life:
-				mat.color = Color.magenta;
+			default:
 				break;
 		}
 	}
-
 }
