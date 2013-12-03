@@ -252,6 +252,7 @@ public class Player : MonoBehaviour
 		switch(type)
 		{
 			case PickupType.Point:
+				Global.Score += 10000000;
 				audioSource.PlayOneShot (PickupClip);
 				break;
 			case PickupType.PointValue:

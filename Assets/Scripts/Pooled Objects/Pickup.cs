@@ -8,6 +8,7 @@ public class Pickup : PooledGameObject
 	public enum PickupState { Normal, AutoCollect, ProximityCollect }
 	public PickupState state;
 	public PickupType type;
+	private Material mat;
 	public float initialVelocity;
 	[HideInInspector]
 	public float currentVelocity;
@@ -15,6 +16,12 @@ public class Pickup : PooledGameObject
 	public float acceleration;
 	public float autoCollectSpeed;
 	public float proximityCollectSpeed;
+
+	public override void Awake()
+	{
+		base.Awake();
+		mat = renderer.material;
+	}
 
 	public override void Activate()
 	{
@@ -37,11 +44,26 @@ public class Pickup : PooledGameObject
 					}
 				}
 				break;
-		case PickupState.AutoCollect:
-				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * Time.deltaTime);
+			case PickupState.AutoCollect:
+					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * Time.deltaTime);
+					break;
+			case PickupState.ProximityCollect:
+					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * Time.deltaTime);
+					break;
+		}
+		switch(type)
+		{
+			case PickupType.Point:
+				mat.color = Color.blue;
 				break;
-		case PickupState.ProximityCollect:
-				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * Time.deltaTime);
+			case PickupType.Power:
+				mat.color = Color.red;
+				break;
+			case PickupType.Bomb:
+				mat.color = Color.green;
+				break;
+			case PickupType.Life:
+				mat.color = Color.magenta;
 				break;
 		}
 	}

@@ -25,6 +25,14 @@ public class PickupTest : MonoBehaviour
 			{
 				Pickup p = GameObjectManager.Pickups.Get();
 				p.trans.position = new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height);
+				if(Random.value > 0.5)
+				{
+					p.type = PickupType.Power;
+				}
+				else
+				{
+					p.type = PickupType.Point;
+				}
 			}
 			timer = delay;
 		}
