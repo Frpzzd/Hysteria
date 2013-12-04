@@ -48,25 +48,25 @@ public class Pickup : PooledGameObject<PickupType>
 	void Update()
 	{
 		float deltat = Time.deltaTime;
-		trans.position += Vector3.up * currentVelocity * deltat;
-		if(currentVelocity > maximumDownwardVelocity)
+		if(state == PickupState.AutoCollect)
 		{
-			currentVelocity += acceleration * deltat;
-			if(currentVelocity < maximumDownwardVelocity)
-			{
-				currentVelocity = maximumDownwardVelocity;
-			}
+			trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
 		}
-		switch(state)
+		else
 		{
-			case PickupState.AutoCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
-					break;
-			case PickupState.ProximityCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
-					break;
-			default:
-				break;
+			trans.position += Vector3.up * currentVelocity * deltat;
+			if(currentVelocity > maximumDownwardVelocity)
+			{
+				currentVelocity += acceleration * deltat;
+				if(currentVelocity < maximumDownwardVelocity)
+				{
+					currentVelocity = maximumDownwardVelocity;
+				}
+			}
+			if(state == PickupState.ProximityCollect)
+			{
+				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
+			}
 		}
 	}
 }

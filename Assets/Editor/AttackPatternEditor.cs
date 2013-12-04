@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(BulletPattern))]
-public class BulletPatternEditor : Editor 
+[CustomEditor(typeof(AttackPattern))]
+public class AttackPatternEditor : Editor 
 {
-	BulletPattern bp;
+	AttackPattern bp;
 	
 	void OnEnable()
 	{
-		bp = target as BulletPattern;
+		bp = target as AttackPattern;
 	}
 	
 	public override void OnInspectorGUI() 
@@ -26,6 +26,8 @@ public class BulletPatternEditor : Editor
 			bp.bonusPerSecond = EditorGUILayout.IntField("Bonus Points Per Second", bp.bonusPerSecond);
 			EditorGUI.indentLevel--;
 		}
+
+		MovementActionsGUI ();
 		FireTagsGUI ();
 		BulletTagsGUI ();
 		
@@ -35,13 +37,166 @@ public class BulletPatternEditor : Editor
 		Global.Rank = (int)EditorGUILayout.Slider("Rank", Global.Rank,0,1);
 		
 	}
+
+	private void MovementActionsGUI()
+	{
+		List<MovementAction> movementActions;
+		if(bp.movementActions == null)
+		{
+			bp.movementActions = new MovementAction[0];
+		}
+
+		movementActions = new List<MovementAction> (bp.movementActions);
+
+		EditorGUILayout.BeginHorizontal ();
+		bp.maFoldout = EditorGUILayout.Foldout (bp.maFoldout, "Movement Actions");
+		if (GUILayout.Button("Collapse All", GUILayout.Width(150)))
+		{
+			bp.maFoldout = !bp.maFoldout;
+			
+			for(int i = 0; i < bp.maFoldouts.Count;i++)
+			{
+				bp.maFoldouts[i] = bp.maFoldout;
+			}
+		}
+		EditorGUILayout.EndHorizontal ();
+
+		if(bp.maFoldout)
+		{
+			EditorGUI.indentLevel++;
+			int removeIndex = -1;
+			int moveIndex = -1;
+			
+			for (int l = 0; l < movementActions.Count; l++) 
+			{
+				GUILayout.BeginHorizontal();
+				string str = "Movement Action " + (l+1);
+				bp.maFoldouts[l] = EditorGUILayout.Foldout(bp.maFoldouts[l], str);
+				
+				if (GUILayout.Button("Down", GUILayout.Width(50)))
+					moveIndex = l;
+				
+				if (GUILayout.Button("Remove", GUILayout.Width(80)))
+					removeIndex = l;
+				GUILayout.EndHorizontal();
+				
+				EditorGUILayout.Space();
+				
+				if (bp.maFoldouts[l]) 
+				{
+					GUI.changed = false;
+					
+					EditorGUI.indentLevel++;
+					
+					if (GUI.changed) 
+						SceneView.RepaintAll();
+
+					MovementAction ma = movementActions[l];
+					ma.type = (MovementType)EditorGUILayout.EnumPopup("Action", ma.type);
+					switch(ma.type)
+					{
+						case MovementType.Wait:
+							ma.time = EditorGUILayout.FloatField ("Time", ma.time);
+							break;
+						case MovementType.StartRepeat:
+							ma.repeatCount = EditorGUILayout.IntField("Repeat Count", ma.repeatCount);
+							break;
+						case MovementType.Absolute:
+							ma.interpolation = (MovementInterpolation)EditorGUILayout.EnumPopup("Interpolation", ma.interpolation);
+							if(ma.interpolation != MovementInterpolation.Teleport)
+							{
+								ma.time = EditorGUILayout.FloatField ("Time", ma.time);
+							}
+							ma.endPoint = EditorGUILayout.Vector2Field("End Point", ma.endPoint);
+							if(ma.interpolation == MovementInterpolation.Spline)
+							{
+								ma.splineMidPoint = EditorGUILayout.Vector2Field("Mid Point", ma.splineMidPoint);
+							}
+							break;
+						case MovementType.Relative:
+							ma.interpolation = (MovementInterpolation)EditorGUILayout.EnumPopup("Interpolation", ma.interpolation);
+							if(ma.interpolation != MovementInterpolation.Teleport)
+							{
+								ma.time = EditorGUILayout.FloatField ("Time", ma.time);
+							}
+							ma.angleBased = EditorGUILayout.Toggle("Angle Based", ma.angleBased);
+							if(ma.angleBased)
+							{
+								ma.angle = EditorGUILayout.FloatField("Angle", ma.angle);
+								ma.distance = EditorGUILayout.FloatField("Distance", ma.distance);
+								if(ma.interpolation == MovementInterpolation.Spline)
+								{
+									ma.midAngle = EditorGUILayout.FloatField("Midpoiont Angle", ma.midAngle);
+									ma.midDistance = EditorGUILayout.FloatField("Midpoint Distance", ma.midDistance);
+								}
+							}
+							else
+							{
+								ma.endPoint = EditorGUILayout.Vector2Field("End Point", ma.endPoint);
+								if(ma.interpolation == MovementInterpolation.Spline)
+								{
+									ma.splineMidPoint = EditorGUILayout.Vector2Field("Mid Point", ma.splineMidPoint);
+								}
+							}
+							break;
+						case MovementType.TargetPlayer:
+							ma.time = EditorGUILayout.FloatField ("Time", ma.time);
+							ma.angle = EditorGUILayout.FloatField("Angle", ma.angle);
+							ma.distance = EditorGUILayout.FloatField("Distance", ma.distance);
+							break;
+						default:
+							break;
+					}
+					EditorGUI.indentLevel--;
+					EditorGUILayout.Space();
+				}
+			}
+			
+			// if the "down" button was pressed then we move that array index down one time, MAGIC
+			if(moveIndex >= 0 && moveIndex != movementActions.Count-1)
+			{
+				MovementAction temp = movementActions[moveIndex];	
+				movementActions[moveIndex] = movementActions[moveIndex+1];
+				movementActions[moveIndex+1] = temp;
+				
+				bool temp2 = bp.maFoldouts[moveIndex];
+				bp.maFoldouts[moveIndex] = bp.maFoldouts[moveIndex+1];
+				bp.maFoldouts[moveIndex+1] = temp2;
+			}
+			// hmm what could remove do
+			if (removeIndex >= 0) 
+			{
+				movementActions.RemoveAt(removeIndex);
+				bp.maFoldouts.RemoveAt(removeIndex);
+			}
+			
+			//add a space to the GUI, adding a number in those paranthesis(brackets to you brits) will increase the space size
+			EditorGUILayout.Space();
+			
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("");
+			if (GUILayout.Button("Add Movement", GUILayout.Width(100))) 
+			{
+				MovementAction ma = new MovementAction();
+				
+				movementActions.Add(ma);
+				bp.maFoldouts.Add(true);
+			}
+			GUILayout.EndHorizontal();
+			
+			bp.movementActions = movementActions.ToArray();
+			EditorGUI.indentLevel--;
+		}
+	}
 	
 	private void FireTagsGUI () 
 	{
 		List<FireTag> fireTags;
 
 		if (bp.fireTags == null)
+		{
 			bp.fireTags = new FireTag[0];
+		}
 		
 		fireTags = new List<FireTag>(bp.fireTags);
 		
@@ -53,9 +208,9 @@ public class BulletPatternEditor : Editor
 			bp.ftaFoldouts = new List<ActionFoldouts>(new ActionFoldouts[fireTags.Count]);
 			if(bp.ftaFoldouts.Count > 0)
 			{
-				for(int zz = 0; zz < bp.ftaFoldouts.Count;zz++)
+				for(int i = 0; i < bp.ftaFoldouts.Count;i++)
 				{
-					bp.ftaFoldouts[zz] = new ActionFoldouts();
+					bp.ftaFoldouts[i] = new ActionFoldouts();
 				}
 			}
 		}
@@ -66,8 +221,8 @@ public class BulletPatternEditor : Editor
 		{
 			bp.ftFoldout = !bp.ftFoldout;
 			
-			for(int zz = 0; zz < bp.ftFoldouts.Count;zz++)
-				bp.ftFoldouts[zz] = bp.ftFoldout;
+			for(int i = 0; i < bp.ftFoldouts.Count;i++)
+				bp.ftFoldouts[i] = bp.ftFoldout;
 		}
 		GUILayout.EndHorizontal();
 		
@@ -154,8 +309,6 @@ public class BulletPatternEditor : Editor
 			EditorGUI.indentLevel--;
 			
 		}
-		
-		EditorGUILayout.Space();
 	}
 	
 	//start the FireActions stuff. Its actually even longer and uglier then the previous function
@@ -175,8 +328,10 @@ public class BulletPatternEditor : Editor
 		{
 			bp.ftaFoldouts[i].main = !bp.ftaFoldouts[i].main;
 			
-			for(int zz = 0; zz < bp.ftaFoldouts[i].sub.Count;zz++)
-				bp.ftaFoldouts[i].sub[zz] = bp.ftaFoldouts[i].main;		
+			for(int j = 0; j < bp.ftaFoldouts[j].sub.Count;j++)
+			{
+				bp.ftaFoldouts[j].sub[j] = bp.ftaFoldouts[j].main;		
+			}
 		}
 		GUILayout.EndHorizontal();
 		
@@ -296,6 +451,9 @@ public class BulletPatternEditor : Editor
 							ac.repeatCount.y = EditorGUILayout.FloatField("RankRepeat", ac.repeatCount.y);
 						GUILayout.EndHorizontal();
 						break;
+					case FireActionType.SummonFamiliar:
+						ac.familiar = (GameObject)EditorGUILayout.ObjectField("Familiar", ac.familiar, typeof(GameObject), true);
+						break;
 					}
 					EditorGUI.indentLevel--;
 					if (GUI.changed) 
@@ -353,9 +511,9 @@ public class BulletPatternEditor : Editor
 			bp.btaFoldouts = new List<ActionFoldouts>(new ActionFoldouts[bulletTags.Count]);
 			if(bp.btaFoldouts.Count > 0)
 			{
-				for(int zz = 0; zz < bp.btaFoldouts.Count;zz++)
+				for(int i = 0; i < bp.btaFoldouts.Count;i++)
 				{
-					bp.btaFoldouts[zz] = new ActionFoldouts();
+					bp.btaFoldouts[i] = new ActionFoldouts();
 				}
 			}
 		}
@@ -366,8 +524,8 @@ public class BulletPatternEditor : Editor
 		{
 			bp.btFoldout = !bp.btFoldout;
 			
-			for(int zz = 0; zz < bp.btFoldouts.Count;zz++)
-				bp.btFoldouts[zz] = bp.btFoldout;	
+			for(int i = 0; i < bp.btFoldouts.Count;i++)
+				bp.btFoldouts[i] = bp.btFoldout;	
 		}
 		GUILayout.EndHorizontal();
 		
@@ -412,7 +570,9 @@ public class BulletPatternEditor : Editor
 					if(bt.rankSpeed)
 						bt.speed.z = EditorGUILayout.FloatField("RankSpeed", bt.speed.z);
 					GUILayout.EndHorizontal();
-					EditorGUILayout.ObjectField("Bullet Prefab ", bt.prefab, typeof(GameObject), false);
+					bt.sprite = (Sprite)EditorGUILayout.ObjectField("Sprite", bt.sprite, typeof(Sprite), false);
+					bt.colorMask = EditorGUILayout.ColorField("Color Mask", bt.colorMask);
+					bt.colliderRadius = EditorGUILayout.FloatField("Collider Radius", bt.colliderRadius);
 					
 					if (GUI.changed) 
 						SceneView.RepaintAll();
@@ -463,8 +623,6 @@ public class BulletPatternEditor : Editor
 			bp.bulletTags = bulletTags.ToArray();
 			
 		}
-		
-		EditorGUILayout.Space();
 	}
 	
 	//obligatory comment that makes this function stand out so you can find it better
@@ -484,8 +642,10 @@ public class BulletPatternEditor : Editor
 		{
 			bp.btaFoldouts[i].main = !bp.btaFoldouts[i].main;
 			
-			for(int zz = 0; zz < bp.btaFoldouts[i].sub.Count;zz++)
-				bp.btaFoldouts[i].sub[zz] = bp.btaFoldouts[i].main;		
+			for(int j = 0; j < bp.btaFoldouts[j].sub.Count;j++)
+			{
+				bp.btaFoldouts[j].sub[j] = bp.btaFoldouts[j].main;
+			}
 		}
 		GUILayout.EndHorizontal();
 		
@@ -534,7 +694,7 @@ public class BulletPatternEditor : Editor
 						GUILayout.EndHorizontal();
 						break;
 						
-					case(BulletActionType.Change_Direction):
+					case(BulletActionType.ChangeDirection):
 						ac.direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", ac.direction);
 						GUILayout.BeginHorizontal();
 						if(!ac.randomAngle)
@@ -565,8 +725,8 @@ public class BulletPatternEditor : Editor
 						ac.waitForChange = EditorGUILayout.Toggle("WaitToFinish", ac.waitForChange);
 						break;
 						
-					case(BulletActionType.Change_Speed):
-					case(BulletActionType.Vertical_Change_Speed):
+					case(BulletActionType.ChangeSpeed):
+					case(BulletActionType.VerticalChangeSpeed):
 						GUILayout.BeginHorizontal();
 						if(!ac.randomSpeed)
 							ac.speed.x = EditorGUILayout.FloatField("New Speed", ac.speed.x);
@@ -596,7 +756,7 @@ public class BulletPatternEditor : Editor
 						ac.waitForChange = EditorGUILayout.Toggle("WaitToFinish", ac.waitForChange);
 						break;
 						
-					case(BulletActionType.Start_Repeat):
+					case(BulletActionType.StartRepeat):
 						ac.repeatCount.x = (int)EditorGUILayout.IntField("Repeat Count", (int)ac.repeatCount.x);
 						GUILayout.BeginHorizontal();
 						ac.rankRepeat = EditorGUILayout.Toggle("AddRank", ac.rankRepeat);

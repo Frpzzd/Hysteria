@@ -3,13 +3,12 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-public class BulletPattern : MonoBehaviour 
+public class AttackPattern : MonoBehaviour 
 {
-	
 	[HideInInspector] 
-	public GameObject BPgameObject;
+	public GameObject APGameObject;
 	[HideInInspector]
-	public Transform BPtransform;
+	public Transform APtransform;
 
 	public bool bossPattern;
 	public string bpName;
@@ -22,6 +21,7 @@ public class BulletPattern : MonoBehaviour
 	public bool survival;
 	public int bonusPerSecond;
 
+	public MovementAction[] movementActions;
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
 	
@@ -30,6 +30,8 @@ public class BulletPattern : MonoBehaviour
 	bool started = false;
 	public float waitBeforeRepeating = 5.0f;
 
+	public bool maFoldout = false;
+	public List<bool> maFoldouts = new List<bool>();
 	public bool ftFoldout = false;
 	public List<bool> ftFoldouts = new List<bool>();
 	public bool btFoldout = false;
@@ -39,8 +41,8 @@ public class BulletPattern : MonoBehaviour
 
 	void Awake()
 	{
-		BPgameObject = gameObject;
-		BPtransform = transform;
+		APGameObject = gameObject;
+		APtransform = transform;
 	}
 
 	// Use this for initialization
@@ -77,7 +79,7 @@ public class BulletPattern : MonoBehaviour
 		
 		if(fireTag.actions.Length == 0)
 		{
-			Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+			Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 		}
 		else
 		{
@@ -103,7 +105,7 @@ public class BulletPattern : MonoBehaviour
 						break;
 						
 					case(FireActionType.Fire):
-						Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+						Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 						break;
 						
 					case(FireActionType.CallFireTag	):
@@ -159,7 +161,7 @@ public class BulletPattern : MonoBehaviour
 					break;
 					
 				case(FireActionType.Fire):
-					Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+					Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 					break;
 					
 				case(FireActionType.CallFireTag	):
@@ -191,11 +193,11 @@ public class BulletPattern : MonoBehaviour
 
 	}
 
-	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper previousRotation)
+	public void Fire(Transform trans, APAction action, float param, PreviousRotationWrapper previousRotation)
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex - 1];
-		Bullet temp = GameObjectManager.Bullets.Get(Bullet.SpawnParams());
+		Bullet temp = GameObjectManager.Bullets.Get(Bullet.SpawnParams(bt.sprite, bt.colorMask, bt.colliderRadius));
 		if(previousRotation.prevRotationNull)
 		{
 			previousRotation.prevRotationNull = false;
@@ -225,7 +227,7 @@ public class BulletPattern : MonoBehaviour
 
 		switch(action.direction)
 		{
-			case (DirectionType.Homing):
+			case (DirectionType.TargetPlayer):
 				Quaternion originalRot = trans.rotation;
 				float dotHeading = Vector3.Dot( temp.trans.up, Player.playerTransform.position - temp.trans.position );
 				
@@ -311,13 +313,36 @@ public class BulletPattern : MonoBehaviour
 	}
 }
 
-public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
+public enum DirectionType { TargetPlayer, Absolute, Relative , Sequence}
 
-public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
+public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat, SummonFamiliar }
 
 public class IndexWrapper
 {
 	public int index;
+}
+
+public enum MovementType { Wait, TargetPlayer, Absolute, Relative, StartRepeat, EndRepeat }
+
+public enum MovementInterpolation { Line, Spline, Teleport }
+
+public class MovementAction
+{
+	public MovementType type;
+	public MovementInterpolation interpolation;
+	public float time;
+
+	public bool angleBased = false;
+
+	public int repeatCount;
+
+	public Vector2 endPoint;
+	public Vector2 splineMidPoint;
+
+	public float angle;
+	public float distance;
+	public float midAngle;
+	public float midDistance;
 }
 
 public class FireTag
@@ -332,7 +357,9 @@ public class BulletTag
 	public Vector3 speed;
 	public bool randomSpeed = false;
 	public bool rankSpeed = false;
-	public GameObject prefab = null;
+	public Sprite sprite = null;
+	public float colliderRadius;
+	public Color colorMask = Color.white;
 	public BulletAction[] actions;
 }
 
@@ -342,7 +369,7 @@ public class PreviousRotationWrapper
 	public bool prevRotationNull = true;
 }
 
-public class BPAction
+public class APAction
 {
 	public Vector3 waitTime;
 	public bool randomWait = false;
@@ -371,9 +398,11 @@ public class BPAction
 	public Vector2 paramRange;
 }
 
-public class FireAction : BPAction
+public class FireAction : APAction
 {
 	public AudioClip audioClip = null;
+	public GameObject familiar;
+	public bool familiarLinkHealth;
 	public FireActionType type = FireActionType.Wait; 
 }
 
