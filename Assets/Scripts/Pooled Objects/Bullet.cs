@@ -67,7 +67,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 					}
 					if(actions[actionIndex].rankWait)
 					{
-						waitT += Global.Rank * actions[actionIndex].waitTime.z;
+						waitT += (int)Global.Rank * actions[actionIndex].waitTime.z;
 					}
 					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
@@ -128,7 +128,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		float repeatC = actions[startIndex].repeatCount.x;
 		if(actions[startIndex].rankRepeat)
 		{
-			repeatC += actions[startIndex].repeatCount.y * Global.Rank;
+			repeatC += actions[startIndex].repeatCount.y * (int)Global.Rank;
 		}
 		repeatC = Mathf.Floor(repeatC);
 
@@ -149,7 +149,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 						}
 						if(actions[actionIndex].rankWait)
 						{
-							waitT += Global.Rank * actions[actionIndex].waitTime.z;
+							waitT += (int)Global.Rank * actions[actionIndex].waitTime.z;
 						}
 						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
@@ -216,7 +216,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		else
 			d = actions[i].waitTime.x;
 		if(actions[i].rankWait)
-			d += Global.Rank * actions[i].waitTime.z;
+			d += (int)Global.Rank * actions[i].waitTime.z;
 		
 		d *= Time.deltaTime;
 		
@@ -228,7 +228,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		else
 			ang = actions[i].angle.x;
 		if(actions[i].rankAngle)
-			ang += Global.Rank * actions[i].angle.z;
+			ang += (int)Global.Rank * actions[i].angle.z;
 		
 		//and set rotation depending on angle
 		switch(actions[i].direction)
@@ -294,7 +294,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		else
 			d = actions[i].waitTime.x;
 		if(actions[i].rankWait)
-			d += Global.Rank * actions[i].waitTime.z;
+			d += (int)Global.Rank * actions[i].waitTime.z;
 		d *= Time.deltaTime;	
 		
 		float originalSpeed = speed;
@@ -304,7 +304,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		else
 			newSpeed = actions[i].speed.x;
 		if(actions[i].rankSpeed)
-			d += Global.Rank * actions[i].speed.z;
+			d += (int)Global.Rank * actions[i].speed.z;
 		
 		if(d > 0)
 		{

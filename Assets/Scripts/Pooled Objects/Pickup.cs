@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 public enum PickupType { Power, Point, PointValue, Life, Bomb }
@@ -16,6 +17,7 @@ public class Pickup : PooledGameObject<PickupType>
 	public float acceleration;
 	public float autoCollectSpeed;
 	public float proximityCollectSpeed;
+	public float rotationSpeed;
 
 	public override void Awake()
 	{
@@ -43,6 +45,7 @@ public class Pickup : PooledGameObject<PickupType>
 			mat.color = Color.magenta;
 			break;
 		}
+		RotateOnce();
 	}
 
 	void Update()
@@ -57,16 +60,30 @@ public class Pickup : PooledGameObject<PickupType>
 				currentVelocity = maximumDownwardVelocity;
 			}
 		}
-		switch(state)
+		if(currentVelocity < 0)
 		{
+			switch(state)
+			{
 			case PickupState.AutoCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
-					break;
+				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
+				break;
 			case PickupState.ProximityCollect:
-					trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
-					break;
+				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
+				break;
 			default:
 				break;
+			}
+		}
+	}
+
+	public IEnumerator RotateOnce()
+	{
+		float rotationAmount = 0f;
+		while(rotationAmount > 1)
+		{
+			rotationAmount += Time.fixedDeltaTime;
+			trans.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
+			yield return new WaitForFixedUpdate();
 		}
 	}
 }

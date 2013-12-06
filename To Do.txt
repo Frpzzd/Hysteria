@@ -1,0 +1,14 @@
+VITAL MUST DO
+	-To Do
+		-Enemy Controller
+			-Spline Movement Implementation
+			-Spline Movement Patter Editor
+		-Test Bullet Pattern
+		-Demo Stage
+		-Character Select
+		-Menus
+		-Player Option Shooting
+	-In Progress
+		-Stage Music Handling
+
+IDEAS

@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEditor;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
+[Serializable]
 public class BulletPattern : MonoBehaviour 
 {
-	
 	[HideInInspector] 
 	public GameObject BPgameObject;
 	[HideInInspector]
@@ -13,9 +14,9 @@ public class BulletPattern : MonoBehaviour
 
 	public bool bossPattern;
 	public string bpName;
-	public int maxHealth;
+	public int health;
 	public int currentHealth;
-	public int timeOut;
+	public int timeout;
 	public int secondsRemaining;
 	public int bonus;
 	public int remainingBonus;
@@ -29,13 +30,6 @@ public class BulletPattern : MonoBehaviour
 	
 	bool started = false;
 	public float waitBeforeRepeating = 5.0f;
-
-	public bool ftFoldout = false;
-	public List<bool> ftFoldouts = new List<bool>();
-	public bool btFoldout = false;
-	public List<bool> btFoldouts = new List<bool>();
-	public List<ActionFoldouts> ftaFoldouts = new List<ActionFoldouts>();
-	public List<ActionFoldouts> btaFoldouts = new List<ActionFoldouts>();
 
 	void Awake()
 	{
@@ -88,7 +82,7 @@ public class BulletPattern : MonoBehaviour
 					case(FireActionType.Wait):
 						if(fireTag.actions[iw.index].randomWait)
 						{
-							waitT = Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
+							waitT = UnityEngine.Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
 						}
 						else
 						{
@@ -96,7 +90,7 @@ public class BulletPattern : MonoBehaviour
 						}
 						if(fireTag.actions[iw.index].rankWait)
 						{
-							waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
+							waitT += (int)Global.Rank * fireTag.actions[iw.index].waitTime.z;
 						}
 						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
@@ -110,7 +104,7 @@ public class BulletPattern : MonoBehaviour
 						index = fireTag.actions[iw.index].fireTagIndex - 1;
 						
 						if(fireTag.actions[iw.index].passParam)
-							fireTags[index].param = Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
+							fireTags[index].param = UnityEngine.Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
 						else if(fireTag.actions[iw.index].passPassedParam)
 							fireTags[index].param = fireTag.param;
 						
@@ -136,7 +130,7 @@ public class BulletPattern : MonoBehaviour
 		
 		float repeatC = fireTag.actions[iw.index].repeatCount.x;
 		if(fireTag.actions[iw.index].rankRepeat)
-			repeatC += fireTag.actions[iw.index].repeatCount.y * Global.Rank;
+			repeatC += fireTag.actions[iw.index].repeatCount.y * (int)Global.Rank;
 		repeatC = Mathf.Floor(repeatC);
 		
 		iw.index++;
@@ -149,11 +143,11 @@ public class BulletPattern : MonoBehaviour
 				{
 				case(FireActionType.Wait):
 					if(fireTag.actions[iw.index].randomWait)
-						waitT = Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
+						waitT = UnityEngine.Random.Range(fireTag.actions[iw.index].waitTime.x, fireTag.actions[iw.index].waitTime.y);
 					else
 						waitT = fireTag.actions[iw.index].waitTime.x;
 					if(fireTag.actions[iw.index].rankWait)
-						waitT += Global.Rank * fireTag.actions[iw.index].waitTime.z;
+						waitT += (int)Global.Rank * fireTag.actions[iw.index].waitTime.z;
 					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
 					break;
@@ -166,7 +160,7 @@ public class BulletPattern : MonoBehaviour
 					index = fireTag.actions[iw.index].fireTagIndex - 1;
 					
 					if(fireTag.actions[iw.index].passParam)
-						fireTags[index].param = Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
+						fireTags[index].param = UnityEngine.Random.Range(fireTag.actions[iw.index].paramRange.x, fireTag.actions[iw.index].paramRange.y);
 					else if(fireTag.actions[iw.index].passPassedParam)
 						fireTags[index].param = fireTag.param;
 
@@ -211,7 +205,7 @@ public class BulletPattern : MonoBehaviour
 		{
 			if(action.randomAngle)
 			{
-				angle = Random.Range(action.angle.x, action.angle.y);
+				angle = UnityEngine.Random.Range(action.angle.x, action.angle.y);
 			}
 			else
 			{
@@ -219,7 +213,7 @@ public class BulletPattern : MonoBehaviour
 			}
 			if(action.rankAngle)
 			{
-				angle += Global.Rank * action.angle.z;
+				angle += (int)Global.Rank * action.angle.z;
 			}
 		}
 
@@ -258,7 +252,7 @@ public class BulletPattern : MonoBehaviour
 		{
 			if(action.randomSpeed)
 			{
-				speed = Random.Range(action.speed.x, action.speed.y);
+				speed = UnityEngine.Random.Range(action.speed.x, action.speed.y);
 			}
 			else
 			{
@@ -266,7 +260,7 @@ public class BulletPattern : MonoBehaviour
 			}
 			if(action.rankSpeed)
 			{
-				speed += Global.Rank * action.speed.z;
+				speed += (int)Global.Rank * action.speed.z;
 			}
 			
 			if(action.useSequenceSpeed)
@@ -284,7 +278,7 @@ public class BulletPattern : MonoBehaviour
 		{	
 			if(bt.randomSpeed)
 			{
-				temp.speed = Random.Range(bt.speed.x, bt.speed.y);
+				temp.speed = UnityEngine.Random.Range(bt.speed.x, bt.speed.y);
 			}
 			else
 			{
@@ -292,14 +286,14 @@ public class BulletPattern : MonoBehaviour
 			}
 			if(bt.rankSpeed)
 			{
-				temp.speed += Global.Rank * bt.speed.z;
+				temp.speed += (int)Global.Rank * bt.speed.z;
 			}
 		}
 		temp.actions = bt.actions;
 		
 		if(action.passParam)
 		{
-			temp.param = Random.Range(action.paramRange.x, action.paramRange.y);
+			temp.param = UnityEngine.Random.Range(action.paramRange.x, action.paramRange.y);
 		}
 
 		if(action.passPassedParam)
@@ -311,22 +305,27 @@ public class BulletPattern : MonoBehaviour
 	}
 }
 
+[Serializable]
 public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
+[Serializable]
 public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
 
+[Serializable]
 public class IndexWrapper
 {
 	public int index;
 }
 
-public class FireTag
+[Serializable]
+public class FireTag : PropertyAttribute
 {
 	public float param = 0.0f;
 	public PreviousRotationWrapper previousRotation;
 	public FireAction[] actions;
 }
 
+[Serializable]
 public class BulletTag
 {
 	public Vector3 speed;
@@ -336,13 +335,15 @@ public class BulletTag
 	public BulletAction[] actions;
 }
 
+[Serializable]
 public class PreviousRotationWrapper
 {
 	public Quaternion previousRotation;
 	public bool prevRotationNull = true;
 }
 
-public class BPAction
+[Serializable]
+public abstract class BPAction
 {
 	public Vector3 waitTime;
 	public bool randomWait = false;
@@ -371,12 +372,14 @@ public class BPAction
 	public Vector2 paramRange;
 }
 
+[Serializable]
 public class FireAction : BPAction
 {
 	public AudioClip audioClip = null;
 	public FireActionType type = FireActionType.Wait; 
 }
 
+[Serializable]
 public class ActionFoldouts
 {
 	public bool main = false;
