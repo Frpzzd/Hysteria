@@ -1,11 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Bullet : PooledGameObject<BulletSpawmParams>
 {
 	[HideInInspector]
-	public BulletPattern master;
+	public AttackPattern master;
 	[HideInInspector]
 	public BulletAction[] actions;
 	[HideInInspector]
@@ -23,6 +23,16 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 	public float param = 0.0f;
 	[HideInInspector]
 	public int actionIndex = 0;
+
+	private CircleCollider2D col;
+	private SpriteRenderer rend;
+
+	public override void Awake ()
+	{
+		base.Awake ();
+		col = (CircleCollider2D)collider2D;
+		rend = (SpriteRenderer)renderer;
+	}
 	
 	// Update is called once per frame
 	void FixedUpdate () 
@@ -38,6 +48,9 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 	public override void Activate (BulletSpawmParams param)
 	{
 		grazed = false;
+		rend.sprite = param.sp;
+		rend.color = param.colorMask;
+		col.radius = param.colliderRadius;
 		RunActions();
 	}
 
@@ -72,7 +85,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
 					break;
-				case(BulletActionType.Change_Direction):
+				case(BulletActionType.ChangeDirection):
 					if(actions[actionIndex].waitForChange)
 					{
 						yield return ChangeDirection(actionIndex);
@@ -82,7 +95,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 						ChangeDirection(actionIndex);
 					}
 					break;
-				case(BulletActionType.Change_Speed):
+				case(BulletActionType.ChangeSpeed):
 					if(actions[actionIndex].waitForChange)
 					{
 						yield return ChangeSpeed(actionIndex, false);
@@ -92,7 +105,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 						ChangeSpeed(actionIndex, false);
 					}
 					break;
-				case(BulletActionType.Start_Repeat):
+				case(BulletActionType.StartRepeat):
 					yield return RunNestedActions();
 					break;
 				case(BulletActionType.Fire):
@@ -101,7 +114,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 						master.Fire(trans, actions[actionIndex], param, prevRotation);
 					}
 					break;
-				case(BulletActionType.Vertical_Change_Speed):
+				case(BulletActionType.VerticalChangeSpeed):
 					if(actions[actionIndex].waitForChange)
 					{
 						yield return ChangeSpeed(actionIndex, true);
@@ -134,7 +147,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 
 		for(int y = 0; y < repeatC; y++)
 		{
-			while(actions[actionIndex].type != BulletActionType.End_Repeat)
+			while(actions[actionIndex].type != BulletActionType.EndRepeat)
 			{
 				switch(actions[actionIndex].type)
 				{
@@ -154,7 +167,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
 						break;
-					case(BulletActionType.Change_Direction):
+					case(BulletActionType.ChangeDirection):
 						if(actions[actionIndex].waitForChange)
 						{
 							yield return ChangeDirection(actionIndex);
@@ -164,7 +177,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 							ChangeDirection(actionIndex);
 						}
 						break;
-					case(BulletActionType.Change_Speed):
+					case(BulletActionType.ChangeSpeed):
 						if(actions[actionIndex].waitForChange)
 						{
 							yield return ChangeSpeed(actionIndex, false);
@@ -174,7 +187,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 							ChangeSpeed(actionIndex, false);
 						}
 						break;
-					case(BulletActionType.Start_Repeat):
+					case(BulletActionType.StartRepeat):
 						yield return RunNestedActions();
 						break;
 					case(BulletActionType.Fire):
@@ -183,7 +196,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 							master.Fire(trans, actions[actionIndex], param, prevRotation);
 						}
 						break;
-					case(BulletActionType.Vertical_Change_Speed):
+					case(BulletActionType.VerticalChangeSpeed):
 						if(actions[actionIndex].waitForChange)
 						{
 							yield return ChangeSpeed(actionIndex, true);
@@ -337,20 +350,27 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		}
 	}
 
-	public static BulletSpawmParams SpawnParams()
+	public static BulletSpawmParams SpawnParams(Sprite sp, Color colorMask, float colliderRadius)
 	{
-		return null;
+		BulletSpawmParams bps = new BulletSpawmParams ();
+		bps.colliderRadius = colliderRadius;
+		bps.sp = sp;
+		bps.colorMask = colorMask;
+		return bps;
 	}
 }
 
 public class BulletSpawmParams
 {
+	public Sprite sp;
+	public Color colorMask;
+	public float colliderRadius;
 }
 
-public class BulletAction : BPAction
+public class BulletAction : APAction
 {
 	public BulletActionType type = BulletActionType.Wait;
 	public bool waitForChange = false;
 }
 
-public enum BulletActionType { Wait, Change_Direction, Change_Speed, Start_Repeat, End_Repeat, Fire, Vertical_Change_Speed, Deactivate }
+public enum BulletActionType { Wait, ChangeDirection, ChangeSpeed, StartRepeat, EndRepeat, Fire, VerticalChangeSpeed, Deactivate }

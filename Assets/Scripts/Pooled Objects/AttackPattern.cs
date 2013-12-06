@@ -4,13 +4,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public class BulletPattern : MonoBehaviour 
+=======
+public class AttackPattern : MonoBehaviour 
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	[HideInInspector] 
-	public GameObject BPgameObject;
+	public GameObject APGameObject;
 	[HideInInspector]
-	public Transform BPtransform;
+	public Transform APtransform;
 
 	public bool bossPattern;
 	public string bpName;
@@ -23,6 +27,7 @@ public class BulletPattern : MonoBehaviour
 	public bool survival;
 	public int bonusPerSecond;
 
+	public MovementAction[] movementActions;
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
 	
@@ -31,10 +36,22 @@ public class BulletPattern : MonoBehaviour
 	bool started = false;
 	public float waitBeforeRepeating = 5.0f;
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
+=======
+	public bool maFoldout = false;
+	public List<bool> maFoldouts = new List<bool>();
+	public bool ftFoldout = false;
+	public List<bool> ftFoldouts = new List<bool>();
+	public bool btFoldout = false;
+	public List<bool> btFoldouts = new List<bool>();
+	public List<ActionFoldouts> ftaFoldouts = new List<ActionFoldouts>();
+	public List<ActionFoldouts> btaFoldouts = new List<ActionFoldouts>();
+
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 	void Awake()
 	{
-		BPgameObject = gameObject;
-		BPtransform = transform;
+		APGameObject = gameObject;
+		APtransform = transform;
 	}
 
 	// Use this for initialization
@@ -71,7 +88,7 @@ public class BulletPattern : MonoBehaviour
 		
 		if(fireTag.actions.Length == 0)
 		{
-			Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+			Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 		}
 		else
 		{
@@ -97,7 +114,7 @@ public class BulletPattern : MonoBehaviour
 						break;
 						
 					case(FireActionType.Fire):
-						Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+						Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 						break;
 						
 					case(FireActionType.CallFireTag	):
@@ -153,7 +170,7 @@ public class BulletPattern : MonoBehaviour
 					break;
 					
 				case(FireActionType.Fire):
-					Fire(BPtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
+					Fire(APtransform, fireTag.actions[iw.index], fireTag.param, fireTag.previousRotation);
 					break;
 					
 				case(FireActionType.CallFireTag	):
@@ -185,11 +202,11 @@ public class BulletPattern : MonoBehaviour
 
 	}
 
-	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper previousRotation)
+	public void Fire(Transform trans, APAction action, float param, PreviousRotationWrapper previousRotation)
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex - 1];
-		Bullet temp = GameObjectManager.Bullets.Get(Bullet.SpawnParams());
+		Bullet temp = GameObjectManager.Bullets.Get(Bullet.SpawnParams(bt.sprite, bt.colorMask, bt.colliderRadius));
 		if(previousRotation.prevRotationNull)
 		{
 			previousRotation.prevRotationNull = false;
@@ -219,7 +236,7 @@ public class BulletPattern : MonoBehaviour
 
 		switch(action.direction)
 		{
-			case (DirectionType.Homing):
+			case (DirectionType.TargetPlayer):
 				Quaternion originalRot = trans.rotation;
 				float dotHeading = Vector3.Dot( temp.trans.up, Player.playerTransform.position - temp.trans.position );
 				
@@ -305,11 +322,17 @@ public class BulletPattern : MonoBehaviour
 	}
 }
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
 [Serializable]
 public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
+=======
+public enum DirectionType { TargetPlayer, Absolute, Relative , Sequence}
+
+public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat, SummonFamiliar }
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 
 [Serializable]
 public class IndexWrapper
@@ -317,8 +340,35 @@ public class IndexWrapper
 	public int index;
 }
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public class FireTag : PropertyAttribute
+=======
+public enum MovementType { Wait, TargetPlayer, Absolute, Relative, StartRepeat, EndRepeat }
+
+public enum MovementInterpolation { Line, Spline, Teleport }
+
+public class MovementAction
+{
+	public MovementType type;
+	public MovementInterpolation interpolation;
+	public float time;
+
+	public bool angleBased = false;
+
+	public int repeatCount;
+
+	public Vector2 endPoint;
+	public Vector2 splineMidPoint;
+
+	public float angle;
+	public float distance;
+	public float midAngle;
+	public float midDistance;
+}
+
+public class FireTag
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	public float param = 0.0f;
 	public PreviousRotationWrapper previousRotation;
@@ -331,7 +381,9 @@ public class BulletTag
 	public Vector3 speed;
 	public bool randomSpeed = false;
 	public bool rankSpeed = false;
-	public GameObject prefab = null;
+	public Sprite sprite = null;
+	public float colliderRadius;
+	public Color colorMask = Color.white;
 	public BulletAction[] actions;
 }
 
@@ -342,8 +394,12 @@ public class PreviousRotationWrapper
 	public bool prevRotationNull = true;
 }
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public abstract class BPAction
+=======
+public class APAction
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	public Vector3 waitTime;
 	public bool randomWait = false;
@@ -372,10 +428,16 @@ public abstract class BPAction
 	public Vector2 paramRange;
 }
 
+<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public class FireAction : BPAction
+=======
+public class FireAction : APAction
+>>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	public AudioClip audioClip = null;
+	public GameObject familiar;
+	public bool familiarLinkHealth;
 	public FireActionType type = FireActionType.Wait; 
 }
 

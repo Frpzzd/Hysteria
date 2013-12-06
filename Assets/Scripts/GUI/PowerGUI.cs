@@ -19,7 +19,7 @@ public class PowerGUI : MonoBehaviour
 	{
 		if(Player.instance.power != currentPower)
 		{
-			gt.text = "Power: " + Player.instance.power.ToString("n2") + maxPower;
+			gt.text = Player.instance.power.ToString("n2") + maxPower;
 			currentPower = Player.instance.power;
 		}
 	}

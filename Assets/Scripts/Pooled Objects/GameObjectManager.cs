@@ -103,10 +103,13 @@ public class GameObjectManager : MonoBehaviour
 	public class PickupPool : GameObjectPool<Pickup, PickupType> { }
 	[Serializable]
 	public class PlayerShotPool : GameObjectPool<PlayerShot, bool> { }
+	[Serializable]
+	public class ScorePopupPool : GameObjectPool<ScorePopup, ScorePopup.Params> { } 
 
 	public BulletPool bullets;
 	public PickupPool pickups;
 	public PlayerShotPool playerShots;
+	public ScorePopupPool scorePopups;
 	
 	public static BulletPool Bullets
 	{
@@ -123,6 +126,11 @@ public class GameObjectManager : MonoBehaviour
 		get { return manager.playerShots; }
 	}
 
+	public static ScorePopupPool ScorePopups
+	{
+		get { return manager.scorePopups; }
+	}
+
 	public static GameObjectManager manager;
 
 	void Awake()
@@ -130,6 +138,7 @@ public class GameObjectManager : MonoBehaviour
 		bullets.Start ();
 		pickups.Start ();
 		playerShots.Start ();
+		scorePopups.Start ();
 		manager = this;
 	}
 }
