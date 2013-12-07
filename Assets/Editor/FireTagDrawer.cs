@@ -11,9 +11,7 @@ public class FireTagDrawer : PropertyDrawer
 		property.isExpanded = EditorGUI.Foldout(position, property.isExpanded, "Fire Tag");
 		if(property.isExpanded)
 		{
-			EditorGUI.indentLevel++;
 			EditorUtil.ArrayGUI(property, "actions");
-			EditorGUI.indentLevel--;
 		}
 		EditorGUI.EndProperty();
 	}

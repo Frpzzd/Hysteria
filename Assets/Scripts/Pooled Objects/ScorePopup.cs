@@ -6,10 +6,14 @@ public class ScorePopup : PooledGameObject<ScorePopup.Params>
 	private GUIText gt;
 	public float fadeSpeed;
 	public float alphaDespawnThreshold;
+	private Color startColor;
+	private Color endColor;
+	private float transition;
 	public float upVel;
 
-	void Awake()
+	public override void Awake()
 	{
+		base.Awake();
 		gt = guiText;
 	}
 	
@@ -18,7 +22,8 @@ public class ScorePopup : PooledGameObject<ScorePopup.Params>
 	{
 		float deltat = Time.deltaTime;
 		trans.position += Vector3.up * upVel * deltat;
-		gt.color.a = gt.color.a - fadeSpeed * deltat;
+		transition += fadeSpeed * deltat;
+		gt.color = Color.Lerp(startColor, endColor, transition);
 		if(gt.color.a <= alphaDespawnThreshold)
 		{
 			GameObjectManager.ScorePopups.Return(this);
@@ -28,7 +33,9 @@ public class ScorePopup : PooledGameObject<ScorePopup.Params>
 	public override void Activate (Params param)
 	{
 		gt.text = param.text;
-		gt.color = param.colorMask;
+		startColor = endColor = param.colorMask;
+		endColor.a = alphaDespawnThreshold;
+		transition = 0;
 	}
 
 	public static Params SpawnParams(Color colorMask, int value)

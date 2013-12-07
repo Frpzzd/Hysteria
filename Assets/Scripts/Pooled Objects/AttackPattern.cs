@@ -4,12 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
-[Serializable]
-public class BulletPattern : MonoBehaviour 
-=======
 public class AttackPattern : MonoBehaviour 
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	[HideInInspector] 
 	public GameObject APGameObject;
@@ -36,8 +31,6 @@ public class AttackPattern : MonoBehaviour
 	bool started = false;
 	public float waitBeforeRepeating = 5.0f;
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
-=======
 	public bool maFoldout = false;
 	public List<bool> maFoldouts = new List<bool>();
 	public bool ftFoldout = false;
@@ -46,8 +39,7 @@ public class AttackPattern : MonoBehaviour
 	public List<bool> btFoldouts = new List<bool>();
 	public List<ActionFoldouts> ftaFoldouts = new List<ActionFoldouts>();
 	public List<ActionFoldouts> btaFoldouts = new List<ActionFoldouts>();
-
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
+	
 	void Awake()
 	{
 		APGameObject = gameObject;
@@ -322,17 +314,11 @@ public class AttackPattern : MonoBehaviour
 	}
 }
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
 public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
 [Serializable]
 public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat }
-=======
-public enum DirectionType { TargetPlayer, Absolute, Relative , Sequence}
-
-public enum FireActionType { Wait, Fire, CallFireTag, StartRepeat, EndRepeat, SummonFamiliar }
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 
 [Serializable]
 public class IndexWrapper
@@ -340,10 +326,6 @@ public class IndexWrapper
 	public int index;
 }
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
-[Serializable]
-public class FireTag : PropertyAttribute
-=======
 public enum MovementType { Wait, TargetPlayer, Absolute, Relative, StartRepeat, EndRepeat }
 
 public enum MovementInterpolation { Line, Spline, Teleport }
@@ -367,8 +349,8 @@ public class MovementAction
 	public float midDistance;
 }
 
-public class FireTag
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
+[Serializable]
+public class FireTag : PropertyAttribute
 {
 	public float param = 0.0f;
 	public PreviousRotationWrapper previousRotation;
@@ -394,12 +376,8 @@ public class PreviousRotationWrapper
 	public bool prevRotationNull = true;
 }
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
-public abstract class BPAction
-=======
 public class APAction
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	public Vector3 waitTime;
 	public bool randomWait = false;
@@ -428,12 +406,8 @@ public class APAction
 	public Vector2 paramRange;
 }
 
-<<<<<<< HEAD:Assets/Scripts/Pooled Objects/BulletPattern.cs
 [Serializable]
-public class FireAction : BPAction
-=======
 public class FireAction : APAction
->>>>>>> 83d106982860f05fa407355d544e96e47ab3eb00:Assets/Scripts/Pooled Objects/AttackPattern.cs
 {
 	public AudioClip audioClip = null;
 	public GameObject familiar;

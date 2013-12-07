@@ -8,25 +8,50 @@ public class EditorUtil
 
 	public static void ArrayGUI(SerializedObject obj, string name)
 	{
-		ArrayGUIImpl(obj.FindProperty(name));
+		ArrayGUIImpl(obj.FindProperty(name), null);
 	}
-
+	
 	public static void ArrayGUI(SerializedProperty prop, string name)
 	{
-		ArrayGUIImpl(prop.FindPropertyRelative(name));
+		ArrayGUIImpl(prop.FindPropertyRelative(name), null);
 	}
 
-	private static void ArrayGUIImpl(SerializedProperty sp)
+	public static void ArrayGUI(SerializedObject obj, string name, string label)
+	{
+		ArrayGUIImpl(obj.FindProperty(name), label);
+	}
+
+	public static void ArrayGUI(SerializedProperty prop, string name, string label)
+	{
+		ArrayGUIImpl(prop.FindPropertyRelative(name), label);
+	}
+
+	private static void ArrayGUIImpl(SerializedProperty sp, string label)
 	{
 		if(sp.isArray)
 		{
 			int size = sp.arraySize;
 			int c = size;
 			EditorGUILayout.BeginHorizontal();
-			EditorGUILayout.PropertyField(sp);
+			if(label == null)
+			{
+				EditorGUILayout.PropertyField(sp);
+			}
+			else
+			{
+				EditorGUILayout.PropertyField(sp, new GUIContent(label));
+			}
+			if(GUILayout.Button("+"))
+			{
+				c++;
+			}
 			if(GUILayout.Button("Collapse All"))
 			{
 				
+			}
+			if(GUILayout.Button("Clear"))
+			{
+				sp.ClearArray();
 			}
 			EditorGUILayout.EndHorizontal();
 			if(sp.isExpanded)
@@ -35,11 +60,10 @@ public class EditorUtil
 				int moveIndex = -1;
 				int moveDir = 0;
 				EditorGUI.indentLevel++;
-
-				for (int i=0; i < size; i++) {
-					EditorGUILayout.PropertyField(sp.GetArrayElementAtIndex(i), true);
-					EditorGUILayout.BeginHorizontal();
+				for (int i = 0; i < size; i++) 
+				{
 					GUILayout.Space(EditorGUI.indentLevel * IndentSpacing);
+					EditorGUILayout.PropertyField(sp.GetArrayElementAtIndex(i), true);
 					GUI.enabled = (i > 0);
 					if(GUILayout.Button("Up"))
 					{
@@ -53,11 +77,10 @@ public class EditorUtil
 						moveDir = 1;
 					}
 					GUI.enabled = true;
-					if(GUILayout.Button("Remove"))
+					if(GUILayout.Button("X"))
 					{
 						removeIndex = i;
 					}
-					EditorGUILayout.EndHorizontal();
 				}
 				
 				if(moveIndex > 0)
@@ -75,24 +98,12 @@ public class EditorUtil
 					}
 					sp.DeleteArrayElementAtIndex(removeIndex);
 				}
-
-				EditorGUILayout.BeginHorizontal();
-				GUILayout.Space(EditorGUI.indentLevel * IndentSpacing);
-				if(GUILayout.Button("Add"))
-				{
-					c++;
-				}
-				if(GUILayout.Button("Clear All"))
-				{
-					sp.ClearArray();
-				}
-				EditorGUILayout.EndHorizontal();
 				EditorGUI.indentLevel--;
 			}
 			if (c != size)
 			{
 				sp.arraySize = c;
-			}
+			}	
 		}
 	}
 }
