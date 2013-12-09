@@ -51,11 +51,15 @@ public class Pickup : PooledGameObject<PickupType>
 	void Update()
 	{
 		float deltat = Time.deltaTime;
-		if(state == PickupState.AutoCollect)
+		trans.position += Vector3.up * currentVelocity * deltat;
+		if(currentVelocity > maximumDownwardVelocity)
 		{
-			trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
+			currentVelocity += acceleration * deltat;
+			if(currentVelocity < maximumDownwardVelocity)
+			{
+				currentVelocity = maximumDownwardVelocity;
+			}
 		}
-
 		if(currentVelocity < 0)
 		{
 			switch(state)

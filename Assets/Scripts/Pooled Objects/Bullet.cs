@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -21,9 +21,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 	public bool grazed;
 	[HideInInspector]
 	public float param = 0.0f;
-	[HideInInspector]
-	public int actionIndex = 0;
-
+		
 	private CircleCollider2D col;
 	private SpriteRenderer rend;
 
@@ -65,63 +63,63 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 	public IEnumerator RunActions()
 	{	
 		float waitT;
-		for(actionIndex = 0; actionIndex < actions.Length; actionIndex++)
+		for(int i = 0; i < actions.Length; i++)
 		{
-			switch(actions[actionIndex].type)
+			switch(actions[i].type)
 			{
 				case(BulletActionType.Wait):			
-					if(actions[actionIndex].randomWait)
+					if(actions[i].randomWait)
 					{
-						waitT = Random.Range(actions[actionIndex].waitTime.x, actions[actionIndex].waitTime.y);
+						waitT = Random.Range(actions[i].waitTime.x, actions[i].waitTime.y);
 					}
 					else
 					{
-						waitT = actions[actionIndex].waitTime.x;
+						waitT = actions[i].waitTime.x;
 					}
-					if(actions[actionIndex].rankWait)
+					if(actions[i].rankWait)
 					{
-						waitT += (int)Global.Rank * actions[actionIndex].waitTime.z;
+						waitT += (int)Global.Rank * actions[i].waitTime.z;
 					}
 					waitT *= Time.deltaTime;
 					yield return new WaitForSeconds(waitT);
 					break;
 				case(BulletActionType.ChangeDirection):
-					if(actions[actionIndex].waitForChange)
+					if(actions[i].waitForChange)
 					{
-						yield return ChangeDirection(actionIndex);
+						yield return ChangeDirection(actions[i]);
 					}
 					else
 					{
-						ChangeDirection(actionIndex);
+						ChangeDirection(actions[i]);
 					}
 					break;
 				case(BulletActionType.ChangeSpeed):
-					if(actions[actionIndex].waitForChange)
+					if(actions[i].waitForChange)
 					{
-						yield return ChangeSpeed(actionIndex, false);
+						yield return ChangeSpeed(actions[i], false);
 					}
 					else
 					{
-						ChangeSpeed(actionIndex, false);
+						ChangeSpeed(actions[i], false);
 					}
 					break;
-				case(BulletActionType.StartRepeat):
-					yield return RunNestedActions();
+				case(BulletActionType.Repeat):
+					yield return RunNestedActions(actions[i]);
 					break;
 				case(BulletActionType.Fire):
 					if(master != null)
 					{
-						master.Fire(trans, actions[actionIndex], param, prevRotation);
+						master.Fire(trans, actions[i], param, prevRotation);
 					}
 					break;
 				case(BulletActionType.VerticalChangeSpeed):
-					if(actions[actionIndex].waitForChange)
+					if(actions[i].waitForChange)
 					{
-						yield return ChangeSpeed(actionIndex, true);
+						yield return ChangeSpeed(actions[i], true);
 					}
 					else
 					{
-						ChangeSpeed(actionIndex, true);
+						ChangeSpeed(actions[i], true);
 					}
 					break;
 				case(BulletActionType.Deactivate):
@@ -131,120 +129,114 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		}
 	}
 
-	public IEnumerator RunNestedActions()
+	public IEnumerator RunNestedActions(BulletAction ba)
 	{
-		int startIndex = actionIndex;
-		int endIndex = 0;
-		actionIndex++;
 		float waitT;
 		
-		float repeatC = actions[startIndex].repeatCount.x;
-		if(actions[startIndex].rankRepeat)
+		float repeatC = ba.repeatCount.x;
+		if(ba.rankRepeat)
 		{
-			repeatC += actions[startIndex].repeatCount.y * (int)Global.Rank;
+			repeatC += ba.repeatCount.y * (int)Global.Rank;
 		}
 		repeatC = Mathf.Floor(repeatC);
 
-		for(int y = 0; y < repeatC; y++)
+		for(int i = 0; i < repeatC; i++)
 		{
-			while(actions[actionIndex].type != BulletActionType.EndRepeat)
+			for(int j = 0; j < ba.nestedActions.Length; j++)
 			{
-				switch(actions[actionIndex].type)
+				BulletAction currentAction = ba.nestedActions[j];
+				switch(currentAction.type)
 				{
 					case(BulletActionType.Wait):
-						if(actions[actionIndex].randomWait)
+						if(currentAction.randomWait)
 						{
-							waitT = Random.Range(actions[actionIndex].waitTime.x, actions[actionIndex].waitTime.y);
+							waitT = Random.Range(currentAction.waitTime.x, currentAction.waitTime.y);
 						}
 						else
 						{
-							waitT = actions[actionIndex].waitTime.x;
+							waitT = currentAction.waitTime.x;
 						}
-						if(actions[actionIndex].rankWait)
+						if(currentAction.rankWait)
 						{
-							waitT += (int)Global.Rank * actions[actionIndex].waitTime.z;
+							waitT += (int)Global.Rank * currentAction.waitTime.z;
 						}
 						waitT *= Time.deltaTime;
 						yield return new WaitForSeconds(waitT);
 						break;
 					case(BulletActionType.ChangeDirection):
-						if(actions[actionIndex].waitForChange)
+						if(currentAction.waitForChange)
 						{
-							yield return ChangeDirection(actionIndex);
+							yield return ChangeDirection(actions[i]);
 						}
 						else
 						{
-							ChangeDirection(actionIndex);
+							ChangeDirection(actions[i]);
 						}
 						break;
 					case(BulletActionType.ChangeSpeed):
-						if(actions[actionIndex].waitForChange)
+						if(currentAction.waitForChange)
 						{
-							yield return ChangeSpeed(actionIndex, false);
+							yield return ChangeSpeed(actions[i], false);
 						}
 						else
 						{
-							ChangeSpeed(actionIndex, false);
+							ChangeSpeed(actions[i], false);
 						}
 						break;
-					case(BulletActionType.StartRepeat):
-						yield return RunNestedActions();
+					case(BulletActionType.Repeat):
+						yield return RunNestedActions(actions[i]);
 						break;
 					case(BulletActionType.Fire):
 						if(master != null)
 						{
-							master.Fire(trans, actions[actionIndex], param, prevRotation);
+							master.Fire(trans, currentAction, param, prevRotation);
 						}
 						break;
 					case(BulletActionType.VerticalChangeSpeed):
-						if(actions[actionIndex].waitForChange)
+						if(currentAction.waitForChange)
 						{
-							yield return ChangeSpeed(actionIndex, true);
+							yield return ChangeSpeed(currentAction, true);
 						}
 						else
 						{
-							ChangeSpeed(actionIndex, true);
+							ChangeSpeed(currentAction, true);
 						}
 						break;
 					case(BulletActionType.Deactivate):
 						Deactivate();
 						break;
 				}
-				actionIndex++;
 			}
-			endIndex = actionIndex;
-			actionIndex = startIndex+1;
 		}
-		actionIndex = endIndex;
 	}
 
-	public IEnumerator ChangeDirection(int i)
+	public IEnumerator ChangeDirection(BulletAction ba)
 	{
 		float t = 0.0f, d, ang;
 		int dir;
 		Quaternion newRot = Quaternion.identity;
 
-		if(actions[i].randomWait)
-			d = Random.Range(actions[i].waitTime.x, actions[i].waitTime.y);
+		if(ba.randomWait)
+			d = Random.Range(ba.waitTime.x, ba.waitTime.y);
 		else
-			d = actions[i].waitTime.x;
-		if(actions[i].rankWait)
-			d += (int)Global.Rank * actions[i].waitTime.z;
+			d = ba.waitTime.x;
+		if(ba.rankWait)
+			d += (int)Global.Rank * ba.waitTime.z;
 		
 		d *= Time.deltaTime;
 		
 		Quaternion originalRot = trans.localRotation;
 		
 		// determine offset
-		if(actions[i].randomAngle)
-			ang = Random.Range(actions[i].angle.x, actions[i].angle.y);
+		if(ba.randomAngle)
+			ang = Random.Range(ba.angle.x, ba.angle.y);
 		else
-			ang = actions[i].angle.x;
-		if(actions[i].rankAngle)
-			ang += (int)Global.Rank * actions[i].angle.z;
+			ang = ba.angle.x;
+		if(ba.rankAngle)
+			ang += (int)Global.Rank * ba.angle.z;
 		
 		//and set rotation depending on angle
-		switch(actions[i].direction)
+		switch(ba.direction)
 		{
 		case (DirectionType.TargetPlayer):
 			float dotHeading = Vector3.Dot( trans.up, Player.playerTransform.position - trans.position );		
@@ -267,7 +259,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		}
 		
 		//Sequence has its own thing going on, continually turning a set amount until time is up
-		if(actions[i].direction == DirectionType.Sequence)
+		if(ba.direction == DirectionType.Sequence)
 		{
 			newRot = Quaternion.AngleAxis (-ang, Vector3.right); 
 			
@@ -293,7 +285,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 	}
 
 	//its basically the same as the above except without rotations
-	public IEnumerator ChangeSpeed(int i, bool isVertical)
+	public IEnumerator ChangeSpeed(BulletAction ba, bool isVertical)
 	{
 		float t = 0.0f;
 		float s = 0.0f;
@@ -302,22 +294,22 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		if(isVertical)
 			useVertical = true;
 		
-		if(actions[i].randomWait)
-			d = Random.Range(actions[i].waitTime.x, actions[i].waitTime.y);
+		if(ba.randomWait)
+			d = Random.Range(ba.waitTime.x, ba.waitTime.y);
 		else
-			d = actions[i].waitTime.x;
-		if(actions[i].rankWait)
-			d += (int)Global.Rank * actions[i].waitTime.z;
+			d = ba.waitTime.x;
+		if(ba.rankWait)
+			d += (int)Global.Rank * ba.waitTime.z;
 		d *= Time.deltaTime;	
 		
 		float originalSpeed = speed;
 		
-		if(actions[i].randomSpeed)
-			newSpeed = Random.Range(actions[i].speed.x, actions[i].speed.y);
+		if(ba.randomSpeed)
+			newSpeed = Random.Range(ba.speed.x, ba.speed.y);
 		else
-			newSpeed = actions[i].speed.x;
-		if(actions[i].rankSpeed)
-			d += (int)Global.Rank * actions[i].speed.z;
+			newSpeed = ba.speed.x;
+		if(ba.rankSpeed)
+			d += (int)Global.Rank * ba.speed.z;
 		
 		if(d > 0)
 		{
@@ -367,10 +359,11 @@ public class BulletSpawmParams
 	public float colliderRadius;
 }
 
-public class BulletAction : APAction
+public class BulletAction : BPAction
 {
 	public BulletActionType type = BulletActionType.Wait;
 	public bool waitForChange = false;
+	public BulletAction[] nestedActions;
 }
 
-public enum BulletActionType { Wait, ChangeDirection, ChangeSpeed, StartRepeat, EndRepeat, Fire, VerticalChangeSpeed, Deactivate }
+public enum BulletActionType { Wait, ChangeDirection, ChangeSpeed, Repeat, Fire, VerticalChangeSpeed, Deactivate }

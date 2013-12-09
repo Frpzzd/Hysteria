@@ -104,7 +104,7 @@ public class GameObjectManager : MonoBehaviour
 	[Serializable]
 	public class PlayerShotPool : GameObjectPool<PlayerShot, bool> { }
 	[Serializable]
-	public class ScorePopupPool : GameObjectPool<ScorePopup, ScorePopup.Params> { } 
+	public class ScorePopupPool : GameObjectPool<ScorePopup, ScorePopup.Params> { }
 
 	public BulletPool bullets;
 	public PickupPool pickups;
