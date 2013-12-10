@@ -98,7 +98,7 @@ public class GameObjectManager : MonoBehaviour
 	}
 
 	[Serializable]
-	public class BulletPool : GameObjectPool<Bullet, BulletSpawmParams> { }
+	public class BulletPool : GameObjectPool<Bullet, BulletTag> { }
 	[Serializable]
 	public class PickupPool : GameObjectPool<Pickup, PickupType> { }
 	[Serializable]

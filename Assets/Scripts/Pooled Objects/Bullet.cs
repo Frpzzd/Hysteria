@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Bullet : PooledGameObject<BulletSpawmParams>
+public class Bullet : PooledGameObject<BulletTag>
 {
 	[HideInInspector]
 	public AttackPattern master;
@@ -43,10 +43,10 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		trans.position += velocity;
 	}
 
-	public override void Activate (BulletSpawmParams param)
+	public override void Activate (BulletTag param)
 	{
 		grazed = false;
-		rend.sprite = param.sp;
+		rend.sprite = param.sprite;
 		rend.color = param.colorMask;
 		col.radius = param.colliderRadius;
 		RunActions();
@@ -62,26 +62,13 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 
 	public IEnumerator RunActions()
 	{	
-		float waitT;
+		float deltat = Time.deltaTime;
 		for(int i = 0; i < actions.Length; i++)
 		{
 			switch(actions[i].type)
 			{
-				case(BulletActionType.Wait):			
-					if(actions[i].randomWait)
-					{
-						waitT = Random.Range(actions[i].waitTime.x, actions[i].waitTime.y);
-					}
-					else
-					{
-						waitT = actions[i].waitTime.x;
-					}
-					if(actions[i].rankWait)
-					{
-						waitT += (int)Global.Rank * actions[i].waitTime.z;
-					}
-					waitT *= Time.deltaTime;
-					yield return new WaitForSeconds(waitT);
+			case(BulletActionType.Wait):
+					yield return new WaitForSeconds(actions[i].wait.Value * deltat);
 					break;
 				case(BulletActionType.ChangeDirection):
 					if(actions[i].waitForChange)
@@ -131,14 +118,9 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 
 	public IEnumerator RunNestedActions(BulletAction ba)
 	{
-		float waitT;
+		float deltat = Time.deltaTime;
 		
-		float repeatC = ba.repeatCount.x;
-		if(ba.rankRepeat)
-		{
-			repeatC += ba.repeatCount.y * (int)Global.Rank;
-		}
-		repeatC = Mathf.Floor(repeatC);
+		float repeatC = Mathf.Floor (ba.repeat.Value);
 
 		for(int i = 0; i < repeatC; i++)
 		{
@@ -148,20 +130,7 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 				switch(currentAction.type)
 				{
 					case(BulletActionType.Wait):
-						if(currentAction.randomWait)
-						{
-							waitT = Random.Range(currentAction.waitTime.x, currentAction.waitTime.y);
-						}
-						else
-						{
-							waitT = currentAction.waitTime.x;
-						}
-						if(currentAction.rankWait)
-						{
-							waitT += (int)Global.Rank * currentAction.waitTime.z;
-						}
-						waitT *= Time.deltaTime;
-						yield return new WaitForSeconds(waitT);
+						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 					case(BulletActionType.ChangeDirection):
 						if(currentAction.waitForChange)
@@ -216,45 +185,33 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		int dir;
 		Quaternion newRot = Quaternion.identity;
 
-		if(ba.randomWait)
-			d = Random.Range(ba.waitTime.x, ba.waitTime.y);
-		else
-			d = ba.waitTime.x;
-		if(ba.rankWait)
-			d += (int)Global.Rank * ba.waitTime.z;
-		
-		d *= Time.deltaTime;
+		d = ba.wait.Value * Time.deltaTime;
 		
 		Quaternion originalRot = trans.localRotation;
 		
 		// determine offset
-		if(ba.randomAngle)
-			ang = Random.Range(ba.angle.x, ba.angle.y);
-		else
-			ang = ba.angle.x;
-		if(ba.rankAngle)
-			ang += (int)Global.Rank * ba.angle.z;
+		ang = ba.angle.Value;
 		
 		//and set rotation depending on angle
 		switch(ba.direction)
 		{
-		case (DirectionType.TargetPlayer):
-			float dotHeading = Vector3.Dot( trans.up, Player.playerTransform.position - trans.position );		
-			if(dotHeading > 0)
-				dir = -1;
-			else
-				dir = 1;
-			float angleDif = Vector3.Angle(trans.forward, Player.playerTransform.position - trans.position);
-			newRot = originalRot * Quaternion.AngleAxis((dir * angleDif) - ang, Vector3.right); 
-			break;
-			
-		case (DirectionType.Absolute):
-			newRot = Quaternion.Euler(-(ang - 270), 270, 0);
-			break;
-			
-		case (DirectionType.Relative):
-			newRot = originalRot * Quaternion.AngleAxis(-ang, Vector3.right);
-			break;
+			case (DirectionType.TargetPlayer):
+				float dotHeading = Vector3.Dot( trans.up, Player.playerTransform.position - trans.position );		
+				if(dotHeading > 0)
+					dir = -1;
+				else
+					dir = 1;
+				float angleDif = Vector3.Angle(trans.forward, Player.playerTransform.position - trans.position);
+				newRot = originalRot * Quaternion.AngleAxis((dir * angleDif) - ang, Vector3.right); 
+				break;
+				
+			case (DirectionType.Absolute):
+				newRot = Quaternion.Euler(-(ang - 270), 270, 0);
+				break;
+				
+			case (DirectionType.Relative):
+				newRot = originalRot * Quaternion.AngleAxis(-ang, Vector3.right);
+				break;
 			
 		}
 		
@@ -293,23 +250,14 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		
 		if(isVertical)
 			useVertical = true;
-		
-		if(ba.randomWait)
-			d = Random.Range(ba.waitTime.x, ba.waitTime.y);
-		else
-			d = ba.waitTime.x;
-		if(ba.rankWait)
-			d += (int)Global.Rank * ba.waitTime.z;
-		d *= Time.deltaTime;	
+
+		d = ba.wait.Value * Time.deltaTime;	
 		
 		float originalSpeed = speed;
-		
-		if(ba.randomSpeed)
-			newSpeed = Random.Range(ba.speed.x, ba.speed.y);
-		else
-			newSpeed = ba.speed.x;
-		if(ba.rankSpeed)
-			d += (int)Global.Rank * ba.speed.z;
+
+		newSpeed = ba.speed.UnrankedValue;
+		if(ba.speed.rank)
+			d += ba.speed.RankValue;
 		
 		if(d > 0)
 		{
@@ -342,21 +290,21 @@ public class Bullet : PooledGameObject<BulletSpawmParams>
 		}
 	}
 
-	public static BulletSpawmParams SpawnParams(Sprite sp, Color colorMask, float colliderRadius)
+	public static Params SpawnParams(Sprite sp, Color colorMask, float colliderRadius)
 	{
-		BulletSpawmParams bps = new BulletSpawmParams ();
+		Params bps = new Params ();
 		bps.colliderRadius = colliderRadius;
 		bps.sp = sp;
 		bps.colorMask = colorMask;
 		return bps;
 	}
-}
 
-public class BulletSpawmParams
-{
-	public Sprite sp;
-	public Color colorMask;
-	public float colliderRadius;
+	public class Params
+	{
+		public Sprite sp;
+		public Color colorMask;
+		public float colliderRadius;
+	}
 }
 
 public class BulletAction : BPAction

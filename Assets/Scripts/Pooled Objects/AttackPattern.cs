@@ -1,11 +1,9 @@
 using UnityEngine;
 using UnityEditor;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
-[Serializable]
-public class AttackPattern : MonoBehaviour
+public class AttackPattern : MonoBehaviour, NamedObject
 {
 	[HideInInspector] 
 	public GameObject BPgameObject;
@@ -22,6 +20,12 @@ public class AttackPattern : MonoBehaviour
 	public int remainingBonus;
 	public bool survival;
 	public int bonusPerSecond;
+
+	public string Name
+	{
+		get { return bpName; }
+		set { bpName = value; }
+	}
 
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
@@ -65,7 +69,7 @@ public class AttackPattern : MonoBehaviour
 	private IEnumerator RunFire(FireTag fireTag)
 	{
 		int index = 0;
-		float waitT;
+		float deltat = Time.deltaTime;
 		
 		if(fireTag.actions.Length == 0)
 		{
@@ -79,20 +83,7 @@ public class AttackPattern : MonoBehaviour
 				switch(currentAction.type)
 				{
 					case(FireActionType.Wait):
-						if(currentAction.randomWait)
-						{
-							waitT = UnityEngine.Random.Range(currentAction.waitTime.x, currentAction.waitTime.y);
-						}
-						else
-						{
-							waitT = currentAction.waitTime.x;
-						}
-						if(currentAction.rankWait)
-						{
-							waitT += (int)Global.Rank * currentAction.waitTime.z;
-						}
-						waitT *= Time.deltaTime;
-						yield return new WaitForSeconds(waitT);
+						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 						
 					case(FireActionType.Fire):
@@ -121,14 +112,8 @@ public class AttackPattern : MonoBehaviour
 
 	public IEnumerator RunNestedFire(FireTag ft, FireAction fa)
 	{
-		float waitT;
-		
-		float repeatC = fa.repeatCount.x;
-		if(fa.rankRepeat)
-		{
-			repeatC += fa.repeatCount.y * (int)Global.Rank;
-		}
-		repeatC = Mathf.Floor(repeatC);
+		float deltat = Time.deltaTime;
+		float repeatC = Mathf.Floor(fa.repeat.Value);
 
 		for(int i = 0; i < repeatC; i++)
 		{
@@ -138,14 +123,7 @@ public class AttackPattern : MonoBehaviour
 				switch(currentAction.type)
 				{
 					case(FireActionType.Wait):
-						if(currentAction.randomWait)
-							waitT = UnityEngine.Random.Range(currentAction.waitTime.x, currentAction.waitTime.y);
-						else
-							waitT = currentAction.waitTime.x;
-						if(currentAction.rankWait)
-							waitT += (int)Global.Rank * currentAction.waitTime.z;
-						waitT *= Time.deltaTime;
-						yield return new WaitForSeconds(waitT);
+						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 						
 					case(FireActionType.Fire):
@@ -176,7 +154,7 @@ public class AttackPattern : MonoBehaviour
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = action.bulletTag;
-		Bullet temp = GameObjectManager.Bullets.Get(Bullet.SpawnParams());
+		Bullet temp = GameObjectManager.Bullets.Get(bt);
 		if(previousRotation.prevRotationNull)
 		{
 			previousRotation.prevRotationNull = false;
@@ -190,18 +168,7 @@ public class AttackPattern : MonoBehaviour
 		}
 		else
 		{
-			if(action.randomAngle)
-			{
-				angle = UnityEngine.Random.Range(action.angle.x, action.angle.y);
-			}
-			else
-			{
-				angle = action.angle.x;
-			}
-			if(action.rankAngle)
-			{
-				angle += (int)Global.Rank * action.angle.z;
-			}
+			angle = action.angle.Value;
 		}
 
 		switch(action.direction)
@@ -237,18 +204,7 @@ public class AttackPattern : MonoBehaviour
 		previousRotation.previousRotation = temp.trans.localRotation;
 		if(action.overwriteBulletSpeed)
 		{
-			if(action.randomSpeed)
-			{
-				speed = UnityEngine.Random.Range(action.speed.x, action.speed.y);
-			}
-			else
-			{
-				speed = action.speed.x;	
-			}
-			if(action.rankSpeed)
-			{
-				speed += (int)Global.Rank * action.speed.z;
-			}
+			speed = action.speed.Value;
 			
 			if(action.useSequenceSpeed)
 			{
@@ -263,18 +219,7 @@ public class AttackPattern : MonoBehaviour
 		}
 		else
 		{	
-			if(bt.randomSpeed)
-			{
-				temp.speed = UnityEngine.Random.Range(bt.speed.x, bt.speed.y);
-			}
-			else
-			{
-				temp.speed = bt.speed.x;
-			}
-			if(bt.rankSpeed)
-			{
-				temp.speed += (int)Global.Rank * bt.speed.z;
-			}
+			temp.speed = bt.speed.Value;
 		}
 		temp.actions = bt.actions;
 		
@@ -292,26 +237,23 @@ public class AttackPattern : MonoBehaviour
 	}
 }
 
-[Serializable]
 public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
 
-[Serializable]
 public enum FireActionType { Wait, Fire, CallFireTag, Repeat }
 
-public abstract class Tag : UnityEngine.Object
+public interface NamedObject
 {
-	public abstract string tagName { get; set; }
+	string Name { get; set; }
 }
 
-[Serializable]
-public class FireTag : Tag
+public class FireTag : Object, NamedObject
 {
 	private string ftName = "Fire Tag";
 	public float param = 0.0f;
 	public PreviousRotationWrapper previousRotation;
 	public FireAction[] actions;
 
-	public override string tagName
+	public string Name
 	{
 		get
 		{
@@ -325,17 +267,17 @@ public class FireTag : Tag
 	}
 }
 
-[Serializable]
-public class BulletTag : Tag
+public class BulletTag : Object, NamedObject
 {
 	private string btName = "Bullet Tag";
-	public Vector3 speed;
-	public bool randomSpeed = false;
-	public bool rankSpeed = false;
-	public GameObject prefab = null;
+	public AttackPatternProperty speed;
+	public Sprite sprite;
+	public float colliderRadius;
+	public Color colorMask;
+
 	public BulletAction[] actions;
 
-	public override string tagName
+	public string Name
 	{
 		get
 		{
@@ -349,44 +291,77 @@ public class BulletTag : Tag
 	}
 }
 
-[Serializable]
 public class PreviousRotationWrapper
 {
 	public Quaternion previousRotation;
 	public bool prevRotationNull = true;
 }
 
-[Serializable]
 public abstract class BPAction
 {
-	public Vector3 waitTime;
-	public bool randomWait = false;
-	public bool rankWait = false;
+	public AttackPatternProperty wait;
+	public AttackPatternProperty angle;
+	public AttackPatternProperty speed;
+	public AttackPatternProperty repeat;
 	
 	public DirectionType direction;
-	public Vector3 angle;
-	public bool randomAngle = false;
-	public bool rankAngle = false;
-	
-	public bool overwriteBulletSpeed = false;
-	public Vector3 speed;
-	public bool randomSpeed = false;
-	public bool rankSpeed = false;
-	public bool useSequenceSpeed = false;
 
 	public BulletTag bulletTag;
 	public bool useParam = false;
+	public bool overwriteBulletSpeed = false;
+	public bool useSequenceSpeed = false;
 
 	public FireTag fireTag;
-	public Vector2 repeatCount;
-	public bool rankRepeat = false;
-	
 	public bool passParam = false;
 	public bool passPassedParam = false;
 	public Vector2 paramRange;
 }
 
-[Serializable]
+public struct AttackPatternProperty
+{
+	private Vector3 values;
+	public bool rank;
+	public bool random;
+
+	public float Value
+	{
+		get { return UnrankedValue + RankValue; }
+	}
+
+	public float UnrankedValue
+	{
+		get { return (random) ? RandomValue : FixedValue; }
+	}
+
+	public float FixedValue
+	{
+		get { return values.x; }
+		set { values.x = value; }
+	}
+
+	public float RandomValue
+	{
+		get { return Random.Range (values.x, values.y); }
+	}
+
+	public float RankValue
+	{
+		get { return (rank) ? (int)Global.Rank * values.z : 0; }
+	}
+
+	public float RankParam
+	{
+		get { return values.z; }
+		set { values.z = value; }
+	}
+
+	public Vector2 RandomRange
+	{
+		get { return new Vector2(values.x, values.y); }
+		set { values.x = value.x; values.y = value.y; }
+	}
+}
+
 public class FireAction : BPAction
 {
 	public AudioClip audioClip = null;

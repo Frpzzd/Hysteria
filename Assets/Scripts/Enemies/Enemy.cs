@@ -16,6 +16,8 @@ public class Enemy : MonoBehaviour
 {
 	public float health;
 	public float currentHealth;
+	public bool boss;
+	public AttackPattern[] attackPatterns;
 
 	// Use this for initialization
 	void Start () {

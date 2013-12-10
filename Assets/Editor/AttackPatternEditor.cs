@@ -5,13 +5,6 @@ using UnityEngine;
 [CustomEditor(typeof(AttackPattern))]
 public class AttackPatternEditor : Editor 
 {
-//	BulletPattern bp;
-//
-//	void OnEnable()
-//	{
-//		bp = target as BulletPattern;
-//	}
-
 	public override void OnInspectorGUI() 
 	{
 		SerializedProperty bossPattern = serializedObject.FindProperty("bossPattern");
