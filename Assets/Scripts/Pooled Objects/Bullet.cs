@@ -289,22 +289,6 @@ public class Bullet : PooledGameObject<BulletTag>
 			grazed = true;
 		}
 	}
-
-	public static Params SpawnParams(Sprite sp, Color colorMask, float colliderRadius)
-	{
-		Params bps = new Params ();
-		bps.colliderRadius = colliderRadius;
-		bps.sp = sp;
-		bps.colorMask = colorMask;
-		return bps;
-	}
-
-	public class Params
-	{
-		public Sprite sp;
-		public Color colorMask;
-		public float colliderRadius;
-	}
 }
 
 public class BulletAction : BPAction

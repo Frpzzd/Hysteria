@@ -19,7 +19,40 @@ public class EditorUtils
         }
         EditorGUILayout.EndHorizontal();
     }
-    
+
+    public static int NamedObjectPopup(string label, NamedObject[] objects, int selectedIndex, string nullName)
+    {
+        Dictionary<string, int> repeats = new Dictionary<string, int>();
+        List<string> names = new List<string>(objects.Length);
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (names.Contains(objects [i].Name))
+            {
+                if (objects [i].Name == null)
+                {
+                    objects [i].Name = nullName;
+                }
+                if (repeats.ContainsKey(objects [i].Name))
+                {
+                    repeats [objects [i].Name]++;
+                } else
+                {
+                    repeats [objects [i].Name] = 1;
+                }
+                names.Add(objects [i].Name + " " + (repeats [objects [i].Name] + 1));
+            } else
+            {
+                names.Add(objects [i].Name);
+            }
+        }
+        selectedIndex = EditorGUILayout.Popup(label, selectedIndex, names.ToArray());
+        if (selectedIndex < 0 || selectedIndex >= objects.Length)
+        {
+            selectedIndex = -1;
+        }
+        return selectedIndex;
+    }
+
     public static void MoveRemoveAdd<T>(Vector3 moveRemove, List<T> list, FoldoutTreeNode foldouts) where T : new()
     {
         if (moveRemove.y >= 0)

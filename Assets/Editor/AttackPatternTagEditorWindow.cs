@@ -6,15 +6,58 @@ public class AttackPatternTagEditorWindow : EditorWindow
 {
     private Vector2 scroll;
     private AttackPatternActionEditorWindow apaew;
-    private AttackPattern[] ap;
-    private int apSelect;
-    private int tagSelect;
+    public AttackPattern[] ap;
+    public bool fireOrBullet;
+    public int apSelect;
+    public int tagSelect;
+
+    public AttackPattern currentAp
+    {
+        get
+        {
+            if(ap != null && ap.Length > 0 && apSelect >= 0 && apSelect < ap.Length)
+            {
+                return ap[apSelect];
+            }
+            else
+            {
+                return null;
+            }
+        }
+    }
+
+    public NamedObject currentTag
+    {
+        get
+        {
+            NamedObject tag = null;
+            if(ap != null && ap.Length > 0 && apSelect >= 0 && apSelect < ap.Length && tagSelect >= 0)
+            {
+                if(fireOrBullet)
+                {
+                    if(ap[apSelect].bulletTags.Length > tagSelect)
+                    {
+                        tag = ap[apSelect].bulletTags[tagSelect];
+                    }
+                }
+                else
+                {
+                    if(ap[apSelect].fireTags.Length > tagSelect)
+                    {
+                        tag = ap[apSelect].fireTags[tagSelect];
+                    }
+                }
+            }
+            return tag;
+        }
+    }
 
     [MenuItem("Window/Attack Pattern Editor")]
     public static void ShowWindow()
     {
         AttackPatternTagEditorWindow aptew = EditorWindow.GetWindow<AttackPatternTagEditorWindow>("Tags");
         aptew.apaew = EditorWindow.GetWindow<AttackPatternActionEditorWindow>("Actions");
+        aptew.apaew.aptew = aptew;
     }
 
     void OnGUI()
@@ -26,7 +69,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
 
     void Update()
     {
-        if (Selection.activeGameObject != null)
+        if (Selection.activeGameObject != null && ap != null)
         {
             bool changed = false;
             AttackPattern[] patterns = Selection.activeGameObject.GetComponents<AttackPattern>();
@@ -64,7 +107,6 @@ public class AttackPatternTagEditorWindow : EditorWindow
         }
         apSelect = -1;
         tagSelect = -1;
-        apaew.Tag = null;
         Repaint();
     }
 
@@ -76,34 +118,11 @@ public class AttackPatternTagEditorWindow : EditorWindow
         }
         if (ap.Length > 1)
         {
-            List<string> names = new List<string>(ap.Length);
-            Dictionary<string, int> repeats = new Dictionary<string, int>();
-            for(int i = 0; i < ap.Length; i++)
-            {
-                //Handle Name Repeats
-                if(names.Contains(ap[i].Name))
-                {
-                    if(repeats.ContainsKey(ap[i].Name))
-                    {
-                        repeats[ap[i].Name]++;
-                    }
-                    else
-                    {
-                        repeats[ap[i].Name] = 1;
-                    }
-                    names.Add(ap[i].Name + " " + (repeats[ap[i].Name] + 1));
-                }
-                else
-                {
-                    names.Add(ap[i].Name);
-                }
-            }
             int oldSelect = apSelect;
-            apSelect = EditorGUILayout.Popup(apSelect, names.ToArray());
+            apSelect = EditorUtils.NamedObjectPopup(null, ap, apSelect, "Attack Pattern");
             if(apSelect != oldSelect)
             {
                 tagSelect = -1;
-                apaew.Tag = null;
             }
         } 
         else
@@ -117,8 +136,8 @@ public class AttackPatternTagEditorWindow : EditorWindow
         scroll = EditorGUILayout.BeginScrollView(scroll);
         if (ap.Length > 0 && apSelect >= 0)
         {
-            ap [apSelect].fireTags = TagGUI<FireTag>("Fire Tags", ap[apSelect].fireTags);
-            ap [apSelect].bulletTags = TagGUI<BulletTag>("Bullet Tag", ap[apSelect].bulletTags);
+            ap [apSelect].fireTags = TagGUI<FireTag>("Fire Tags", false, ap[apSelect].fireTags);
+            ap [apSelect].bulletTags = TagGUI<BulletTag>("Bullet Tags", true, ap[apSelect].bulletTags);
         }
         EditorGUILayout.EndScrollView();
     }
@@ -131,7 +150,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
-    private T[] TagGUI<T>(string label, T[] tags) where T : NamedObject, new()
+    private T[] TagGUI<T>(string label, bool buttonEnable, T[] tags) where T : NamedObject, new()
     {
         EditorGUILayout.LabelField(label);
         if (tags == null || tags.Length < 1)
@@ -141,23 +160,17 @@ public class AttackPatternTagEditorWindow : EditorWindow
         }
         
         List<T> tagList = new List<T>(tags);
-
-        bool buttonCheck = (apaew.Tag is T);
         
+        Debug.Log(tags[0].Name);
+        bool buttonCheck = (fireOrBullet == buttonEnable);
+
         Vector3 moveRemove = new Vector3(-1f, -1f, 0f);
         for (int i = 0; i < tagList.Count; i++)
         {
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button((buttonCheck && (i == tagSelect)) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
             {
-                if(typeof(T) == typeof(BulletTag))
-                {
-                    apaew.Tag = ap[apSelect].bulletTags[i];
-                }
-                else if(typeof(T) == typeof(FireTag))
-                {
-                    apaew.Tag = ap[apSelect].fireTags[i];
-                }
+                fireOrBullet = buttonEnable;
                 tagSelect = i;
                 apaew.Repaint();
             }
@@ -169,7 +182,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
         return tagList.ToArray();
     }
 
-    public Vector3 UpDownRemoveButtons(Vector3 moveRemove, int count, int i, bool buttonCheck)
+    public Vector3 UpDownRemoveButtons(Vector3 moveRemove,int count, int i, bool buttonCheck)
     {
         GUI.enabled = (i > 0);
         if (GUILayout.Button('\u25B2'.ToString(), GUILayout.Width(22)))
@@ -188,7 +201,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
             moveRemove.z = 1f;      //Move Direction
             if (buttonCheck && tagSelect == i)
             {
-                tagSelect--;
+                tagSelect++;
             }
         }
         GUI.enabled = (count > 1);

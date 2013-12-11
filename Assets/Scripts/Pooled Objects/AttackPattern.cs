@@ -91,7 +91,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 						break;
 						
 					case(FireActionType.CallFireTag	):
-						FireTag calledFireTag = currentAction.fireTag;
+						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
 						
 						if(currentAction.passParam)
 							calledFireTag.param = UnityEngine.Random.Range(currentAction.paramRange.x, currentAction.paramRange.y);
@@ -131,7 +131,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 						break;
 						
 					case(FireActionType.CallFireTag	):
-						FireTag calledFireTag = currentAction.fireTag;
+						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
 						
 						if(currentAction.passParam)
 							calledFireTag.param = UnityEngine.Random.Range(currentAction.paramRange.x, currentAction.paramRange.y);
@@ -153,7 +153,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper previousRotation)
 	{
 		float angle, direction, angleDifference, speed;
-		BulletTag bt = action.bulletTag;
+		BulletTag bt = bulletTags[action.bulletTagIndex];
 		Bullet temp = GameObjectManager.Bullets.Get(bt);
 		if(previousRotation.prevRotationNull)
 		{
@@ -306,12 +306,12 @@ public abstract class BPAction
 	
 	public DirectionType direction;
 
-	public BulletTag bulletTag;
+	public int bulletTagIndex;
 	public bool useParam = false;
 	public bool overwriteBulletSpeed = false;
 	public bool useSequenceSpeed = false;
 
-	public FireTag fireTag;
+	public int fireTagIndex;
 	public bool passParam = false;
 	public bool passPassedParam = false;
 	public Vector2 paramRange;
