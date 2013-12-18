@@ -10,5 +10,6 @@ VITAL MUST DO
 		-Player Option Shooting
 	-In Progress
 		-Stage Music Handling
+		-Editors for stage development
 
 IDEAS

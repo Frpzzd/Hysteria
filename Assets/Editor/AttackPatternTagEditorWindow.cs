@@ -160,8 +160,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
         }
         
         List<T> tagList = new List<T>(tags);
-        
-        Debug.Log(tags[0].Name);
+
         bool buttonCheck = (fireOrBullet == buttonEnable);
 
         Vector3 moveRemove = new Vector3(-1f, -1f, 0f);
@@ -172,13 +171,17 @@ public class AttackPatternTagEditorWindow : EditorWindow
             {
                 fireOrBullet = buttonEnable;
                 tagSelect = i;
+                if(apaew == null)
+                {
+                    apaew = EditorWindow.GetWindow<AttackPatternActionEditorWindow>();
+                }
                 apaew.Repaint();
             }
             tagList [i].Name = EditorGUILayout.TextField(tagList [i].Name);
             moveRemove = UpDownRemoveButtons(moveRemove, tagList.Count, i, buttonCheck);
             EditorGUILayout.EndHorizontal();
         }
-        EditorUtils.MoveRemoveAdd<T>(moveRemove, tagList, null);
+        EditorUtils.MoveRemoveAdd<T>(moveRemove, tagList);
         return tagList.ToArray();
     }
 

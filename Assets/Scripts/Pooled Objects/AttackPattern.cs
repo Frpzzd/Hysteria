@@ -29,6 +29,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
+	public HashSet<Bullet> children;
 	
 	float sequenceSpeed = 0.0f;
 	
@@ -39,6 +40,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 	{
 		BPgameObject = gameObject;
 		BPtransform = transform;
+		children = new HashSet<Bullet> ();
 	}
 
 	// Use this for initialization
@@ -73,7 +75,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		
 		if(fireTag.actions.Length == 0)
 		{
-			Fire(BPtransform, fireTag.actions[index], fireTag.param, fireTag.previousRotation);
+			Fire(BPtransform.position, BPtransform.rotation, fireTag.actions[index], fireTag.param, fireTag.previousRotation);
 		}
 		else
 		{
@@ -82,15 +84,15 @@ public class AttackPattern : MonoBehaviour, NamedObject
 				FireAction currentAction = fireTag.actions[index];
 				switch(currentAction.type)
 				{
-					case(FireActionType.Wait):
+					case(FireAction.Type.Wait):
 						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 						
-					case(FireActionType.Fire):
-						Fire(BPtransform, currentAction, fireTag.param, fireTag.previousRotation);
+					case(FireAction.Type.Fire):
+						Fire(currentAction.GetSourcePosition(BPtransform.position), BPtransform.rotation, currentAction, fireTag.param, fireTag.previousRotation);
 						break;
 						
-					case(FireActionType.CallFireTag	):
+					case(FireAction.Type.CallFireTag	):
 						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
 						
 						if(currentAction.passParam)
@@ -102,7 +104,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 							yield return RunFire(calledFireTag);
 						break;
 						
-					case(FireActionType.Repeat):
+					case(FireAction.Type.Repeat):
 						yield return RunNestedFire(fireTag, currentAction);
 						break;
 				}
@@ -122,15 +124,15 @@ public class AttackPattern : MonoBehaviour, NamedObject
 				FireAction currentAction = fa.nestedActions[j];
 				switch(currentAction.type)
 				{
-					case(FireActionType.Wait):
+					case(FireAction.Type.Wait):
 						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 						
-					case(FireActionType.Fire):
-						Fire(BPtransform, currentAction, ft.param, ft.previousRotation);
+					case(FireAction.Type.Fire):
+						Fire(currentAction.GetSourcePosition(BPtransform.position), BPtransform.rotation, currentAction, ft.param, ft.previousRotation);
 						break;
 						
-					case(FireActionType.CallFireTag	):
+					case(FireAction.Type.CallFireTag	):
 						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
 						
 						if(currentAction.passParam)
@@ -142,7 +144,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 							yield return RunFire(calledFireTag);
 						break;
 						
-					case(FireActionType.Repeat):
+					case(FireAction.Type.Repeat):
 						yield return RunNestedFire(ft, currentAction);
 						break;
 				}
@@ -150,7 +152,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		}
 	}
 
-	public void Fire(Transform trans, BPAction action, float param, PreviousRotationWrapper previousRotation)
+	public void Fire(Vector3 position, Quaternion rotation, Action action, float param, PreviousRotationWrapper previousRotation)
 	{
 		float angle, direction, angleDifference, speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex];
@@ -160,8 +162,10 @@ public class AttackPattern : MonoBehaviour, NamedObject
 			previousRotation.prevRotationNull = false;
 			previousRotation.previousRotation = temp.trans.localRotation;
 		}
-		temp.trans.position = trans.position;
-		temp.trans.rotation = trans.rotation;
+		
+		temp.trans.position = position;
+		temp.trans.rotation = rotation;
+
 		if(action.useParam)
 		{
 			angle = param;
@@ -173,8 +177,8 @@ public class AttackPattern : MonoBehaviour, NamedObject
 
 		switch(action.direction)
 		{
-			case (DirectionType.Homing):
-				Quaternion originalRot = trans.rotation;
+			case (DirectionType.TargetPlayer):
+				Quaternion originalRot = rotation;
 				float dotHeading = Vector3.Dot( temp.trans.up, Player.playerTransform.position - temp.trans.position );
 				
 				if(dotHeading > 0)
@@ -194,7 +198,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 				break;
 				
 			case (DirectionType.Relative):
-				temp.trans.localRotation = trans.localRotation * Quaternion.AngleAxis (-angle, Vector3.right);
+				temp.trans.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
 				break;
 				
 			case (DirectionType.Sequence):
@@ -234,12 +238,16 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		}
 		temp.master = this;
 		temp.gameObj.SetActive(true);
+		if(action.audioClip != null)
+		{
+			AudioSource.PlayClipAtPoint(action.audioClip, position);
+		}
 	}
 }
 
-public enum DirectionType { TargetPlayer, Homing, Absolute, Relative, Sequence }
+public enum DirectionType { TargetPlayer, Absolute, Relative, Sequence }
 
-public enum FireActionType { Wait, Fire, CallFireTag, Repeat }
+public enum SourceType { Attacker, Absolute, Relative, AnotherObject, ScreenEdge }
 
 public interface NamedObject
 {
@@ -297,7 +305,7 @@ public class PreviousRotationWrapper
 	public bool prevRotationNull = true;
 }
 
-public abstract class BPAction
+public abstract class Action
 {
 	public AttackPatternProperty wait;
 	public AttackPatternProperty angle;
@@ -305,6 +313,12 @@ public abstract class BPAction
 	public AttackPatternProperty repeat;
 	
 	public DirectionType direction;
+	public SourceType source;
+
+	public bool randomSource = false;
+	public Vector2 randomArea = Vector2.zero;
+	public Vector3 location = Vector3.zero;
+	public Transform alternateSource;
 
 	public int bulletTagIndex;
 	public bool useParam = false;
@@ -315,6 +329,67 @@ public abstract class BPAction
 	public bool passParam = false;
 	public bool passPassedParam = false;
 	public Vector2 paramRange;
+
+	public AudioClip audioClip = null;
+
+	public Vector3 GetSourcePosition(Vector3 currentPos)
+	{
+		Vector3 value = Vector3.zero;
+		switch(source)
+		{
+			case SourceType.Attacker:
+				value = currentPos;
+				break;
+			case SourceType.AnotherObject:
+				value = alternateSource.position;
+				break;
+			case SourceType.Absolute:
+				value = location;
+				break;
+			case SourceType.Relative:
+				value = new Vector3(currentPos.x + location.x, currentPos.y + location.y);
+				break;
+		}
+		if(randomSource)
+		{
+			value.x += randomArea.x - (2 * randomArea.x * Random.value);
+			value.y += randomArea.y - (2 * randomArea.y * Random.value);
+		}
+		return value;
+	}
+}
+
+public abstract class NestedAction<T, P> : Action where T : NestedAction<T, P>
+{
+	public T[] nestedActions;
+	public P type;
+
+	#if UNITY_EDITOR
+	public bool foldout = true;
+	
+	public void Expand(bool recursive)
+	{
+		SetAll (true, recursive);
+	}
+	
+	public void Collapse(bool recursive)
+	{
+		SetAll (false, recursive);
+	}
+	
+	private void SetAll(bool value, bool recursive)
+	{
+		foldout = value;
+		if(recursive && nestedActions != null && nestedActions.Length > 0)
+		{
+			for(int i = 0; i < nestedActions.Length; i++)
+			{
+				nestedActions[i].SetAll(value, recursive);
+			}
+		}
+	}
+	#endif
+
 }
 
 public struct AttackPatternProperty
@@ -362,9 +437,13 @@ public struct AttackPatternProperty
 	}
 }
 
-public class FireAction : BPAction
+public class FireAction : NestedAction<FireAction, FireAction.Type>
 {
-	public AudioClip audioClip = null;
-	public FireActionType type = FireActionType.Wait; 
-	public FireAction[] nestedActions;
+	public enum Type { Wait, Fire, CallFireTag, Repeat }
+}
+
+public class BulletAction : NestedAction<BulletAction, BulletAction.Type>
+{
+	public enum Type { Wait, ChangeDirection, ChangeSpeed, Repeat, Fire, VerticalChangeSpeed, Deactivate }
+	public bool waitForChange = false;
 }

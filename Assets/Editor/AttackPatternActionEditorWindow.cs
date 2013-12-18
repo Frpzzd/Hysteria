@@ -7,8 +7,6 @@ public class AttackPatternActionEditorWindow : EditorWindow
 {
     private Vector2 actionScroll;
     public AttackPatternTagEditorWindow aptew;
-    public Dictionary<BulletTag, FoldoutTreeNode> bulletRoots;
-    public Dictionary<FireTag, FoldoutTreeNode> fireRoots;
     private NamedObject currentTag;
 
     private NamedObject tag
@@ -23,29 +21,11 @@ public class AttackPatternActionEditorWindow : EditorWindow
         {
             if (tag is BulletTag)
             {
-                BulletTag bulletTag = tag as BulletTag;
-                if(bulletRoots == null)
-                {
-                    bulletRoots = new Dictionary<BulletTag, FoldoutTreeNode>();
-                }
-                if(!bulletRoots.ContainsKey(bulletTag))
-                {
-                    bulletRoots[bulletTag] = new FoldoutTreeNode();
-                }
-                BulletActionsGUI(bulletTag, bulletRoots[bulletTag]);
+                BulletActionsGUI(tag as BulletTag);
             } 
             else if(tag is FireTag)
             {
-                FireTag fireTag = tag as FireTag;
-                if(fireRoots == null)
-                {
-                    fireRoots = new Dictionary<FireTag, FoldoutTreeNode>();
-                }
-                if(!fireRoots.ContainsKey(fireTag))
-                {
-                    fireRoots[fireTag] = new FoldoutTreeNode();
-                }
-                FireActionsGUI(fireTag, fireRoots[fireTag]);
+                FireActionsGUI(tag as FireTag);
             }
         }
         EditorGUILayout.EndScrollView();
@@ -82,7 +62,7 @@ public class AttackPatternActionEditorWindow : EditorWindow
 
     private void Trim(FireAction action)
     {
-        if (action.type != FireActionType.Repeat && action.nestedActions != null)
+        if (action.type != FireAction.Type.Repeat && action.nestedActions != null)
         {
             action.nestedActions = null;
         } 
@@ -97,7 +77,7 @@ public class AttackPatternActionEditorWindow : EditorWindow
     
     private void Trim(BulletAction action)
     {
-        if (action.type != BulletActionType.Repeat && action.nestedActions != null)
+        if (action.type != BulletAction.Type.Repeat && action.nestedActions != null)
         {
             action.nestedActions = null;
         } 
@@ -110,61 +90,57 @@ public class AttackPatternActionEditorWindow : EditorWindow
         }
     }
 
-    private void BulletActionsGUI(BulletTag bulletTag, FoldoutTreeNode foldouts)
+    private void BulletActionsGUI(BulletTag bulletTag)
     {
         if (bulletTag.actions == null || bulletTag.actions.Length == 0)
         {
             bulletTag.actions = new BulletAction[0];
-            ResetFoldouts(foldouts, true);
         }
         
         EditorGUILayout.LabelField("Bullet Tag: " + bulletTag.Name);
         bulletTag.speed = AttackPatternPropertyField("Speed", bulletTag.speed, false);
         
-        EditorUtils.ExpandCollapseButtons("Actions", foldouts);
-        
-        bulletTag.actions = BulletActionGUI(bulletTag.actions, foldouts);   
+        ExpandCollapseButtons<BulletAction, BulletAction.Type>("Actions", bulletTag.actions);
+
+        bulletTag.actions = BulletActionGUI(bulletTag.actions);   
     }
     
-    private void NestedBulletActionsGUI(BulletAction ba, FoldoutTreeNode foldouts)
+    private void NestedBulletActionsGUI(BulletAction ba)
     {
         if (ba.nestedActions == null || ba.nestedActions.Length == 0)
         {
             ba.nestedActions = new BulletAction[1];
             ba.nestedActions [0] = new BulletAction();
-            ResetFoldouts(foldouts);
         }
         
-        ba.nestedActions = BulletActionGUI(ba.nestedActions, foldouts);
+        ba.nestedActions = BulletActionGUI(ba.nestedActions);
     }
     
-    private void FireActionsGUI(FireTag fireTag, FoldoutTreeNode foldouts)
+    private void FireActionsGUI(FireTag fireTag)
     {
         if (fireTag.actions == null || fireTag.actions.Length == 0)
         {
             fireTag.actions = new FireAction[1];
             fireTag.actions [0] = new FireAction();
-            ResetFoldouts(foldouts);
         }
 
-        EditorUtils.ExpandCollapseButtons("Fire Tag: " + fireTag.Name, foldouts);
+        ExpandCollapseButtons<FireAction, FireAction.Type>("Fire Tag: " + fireTag.name, fireTag.actions);
         
-        fireTag.actions = FireActionGUI(fireTag.actions, foldouts); 
+        fireTag.actions = FireActionGUI(fireTag.actions); 
     }
     
-    private void NestedFireActionsGUI(FireAction fa, FoldoutTreeNode foldouts)
+    private void NestedFireActionsGUI(FireAction fa)
     {
         if (fa.nestedActions == null || fa.nestedActions.Length == 0)
         {
             fa.nestedActions = new FireAction[1];
             fa.nestedActions [0] = new FireAction();
-            ResetFoldouts(foldouts);
         }
         
-        fa.nestedActions = FireActionGUI(fa.nestedActions, foldouts);
+        fa.nestedActions = FireActionGUI(fa.nestedActions);
     }
     
-    private BulletAction[] BulletActionGUI(BulletAction[] bulletActions, FoldoutTreeNode foldouts)
+    private BulletAction[] BulletActionGUI(BulletAction[] bulletActions)
     {
         List<BulletAction> actions = new List<BulletAction>(bulletActions);
         
@@ -174,45 +150,41 @@ public class AttackPatternActionEditorWindow : EditorWindow
             Rect boundingRect = EditorGUILayout.BeginVertical();
             GUI.Box(boundingRect, "");
             EditorGUILayout.BeginHorizontal();
-            foldouts.foldouts [i] = EditorGUILayout.Foldout(foldouts.foldouts [i], "Action " + (i + 1));
+            actions[i].foldout = EditorGUILayout.Foldout(actions[i].foldout, "Action " + (i + 1));
             moveRemove = UpDownRemoveButtons(moveRemove, actions.Count, i, true);
             EditorGUILayout.EndHorizontal();
-            if (foldouts.foldouts [i])
+            if (actions[i].foldout)
             {
                 EditorGUI.indentLevel++;
                 BulletAction ac = actions [i];
-                ac.type = (BulletActionType)EditorGUILayout.EnumPopup("Action Type", ac.type);
+                ac.type = (BulletAction.Type)EditorGUILayout.EnumPopup("Action Type", ac.type);
                 
                 switch (ac.type)
                 {
-                    case(BulletActionType.Wait):
+                    case(BulletAction.Type.Wait):
                         ac.wait = AttackPatternPropertyField("Wait", ac.wait, false);
                         break;
-                        
-                    case(BulletActionType.ChangeDirection):
+
+                    case(BulletAction.Type.ChangeDirection):
                         ac.direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", ac.direction);
                         ac.angle = AttackPatternPropertyField("Angle", ac.angle, false);
                         ac.wait = AttackPatternPropertyField("Time", ac.wait, false);
                         ac.waitForChange = EditorGUILayout.Toggle("Wait To Finish", ac.waitForChange);
                         break;
                         
-                    case(BulletActionType.ChangeSpeed):
-                    case(BulletActionType.VerticalChangeSpeed):
+                    case(BulletAction.Type.ChangeSpeed):
+                    case(BulletAction.Type.VerticalChangeSpeed):
                         ac.speed = AttackPatternPropertyField("Speed", ac.speed, false);
                         ac.wait = AttackPatternPropertyField("Time", ac.wait, false);
                         ac.waitForChange = EditorGUILayout.Toggle("Wait To Finish", ac.waitForChange);
                         break;
-                        
-                    case(BulletActionType.Repeat):
+
+                    case(BulletAction.Type.Repeat):
                         ac.repeat = AttackPatternPropertyField("Repeat", ac.repeat, true);
-                        if (foldouts.children [i] == null)
-                        {
-                            foldouts.children [i] = new FoldoutTreeNode();
-                        }
-                        NestedBulletActionsGUI(ac, foldouts.children [i]);
+                        NestedBulletActionsGUI(ac);
                         break;
-                        
-                    case(BulletActionType.Fire):    
+
+                    case(BulletAction.Type.Fire):    
                         ac.direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", ac.direction);
                         
                         if (!ac.useParam)
@@ -234,11 +206,11 @@ public class AttackPatternActionEditorWindow : EditorWindow
             }
             EditorGUILayout.EndVertical();
         }
-        EditorUtils.MoveRemoveAdd(moveRemove, actions, foldouts);
+        EditorUtils.MoveRemoveAdd(moveRemove, actions);
         return actions.ToArray();   
     }
     
-    private FireAction[] FireActionGUI(FireAction[] fireActions, FoldoutTreeNode foldouts)
+    private FireAction[] FireActionGUI(FireAction[] fireActions)
     {
         List<FireAction> actions = new List<FireAction>(fireActions);
         
@@ -248,23 +220,23 @@ public class AttackPatternActionEditorWindow : EditorWindow
             Rect boundingRect = EditorGUILayout.BeginVertical();
             GUI.Box(boundingRect, "");
             EditorGUILayout.BeginHorizontal();
-            foldouts.foldouts [i] = EditorGUILayout.Foldout(foldouts.foldouts [i], "Action " + (i + 1));
+            actions[i].foldout = EditorGUILayout.Foldout(actions[i].foldout, "Action " + (i + 1));
             moveRemove = UpDownRemoveButtons(moveRemove, actions.Count, i);
             EditorGUILayout.EndHorizontal();
-            if (foldouts.foldouts [i])
+            if (actions[i].foldout)
             {
                 EditorGUI.indentLevel++;    
                 FireAction ac = actions [i];
-                
-                ac.type = (FireActionType)EditorGUILayout.EnumPopup("Action Type", ac.type);
+
+                ac.type = (FireAction.Type)EditorGUILayout.EnumPopup("Action Type", ac.type);
                 
                 switch (ac.type)
                 {
-                    case(FireActionType.Wait):
+                    case(FireAction.Type.Wait):
                         ac.wait = AttackPatternPropertyField("Wait", ac.wait, false);
                         break;
-                        
-                    case(FireActionType.Fire):
+
+                    case(FireAction.Type.Fire):
                         ac.direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", ac.direction);
                         if (!ac.useParam)
                         {
@@ -299,8 +271,8 @@ public class AttackPatternActionEditorWindow : EditorWindow
                         }
                         ac.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", aptew.currentAp.bulletTags, ac.bulletTagIndex, "Bullet Tag");
                         break;
-                        
-                    case(FireActionType.CallFireTag):
+
+                    case(FireAction.Type.CallFireTag):
                         ac.fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", aptew.currentAp.fireTags, ac.fireTagIndex, "Fire Tag");
                         EditorGUILayout.BeginHorizontal();
                         ac.passParam = EditorGUILayout.Toggle("PassParam", ac.passParam);
@@ -314,21 +286,17 @@ public class AttackPatternActionEditorWindow : EditorWindow
                             ac.paramRange = EditorGUILayout.Vector2Field("Param Range", ac.paramRange);
                         }
                         break;
-                        
-                    case(FireActionType.Repeat):
+
+                    case(FireAction.Type.Repeat):
                         ac.repeat = AttackPatternPropertyField("Repeat", ac.repeat, true);
-                        if (foldouts.children [i] == null)
-                        {
-                            foldouts.children [i] = new FoldoutTreeNode();
-                        }
-                        NestedFireActionsGUI(ac, foldouts.children [i]);
+                        NestedFireActionsGUI(ac);
                         break;
                 }
                 EditorGUI.indentLevel--;
             }
             EditorGUILayout.EndVertical();
         }
-        EditorUtils.MoveRemoveAdd<FireAction>(moveRemove, actions, foldouts);
+        EditorUtils.MoveRemoveAdd<FireAction>(moveRemove, actions);
         
         return actions.ToArray();
     }
@@ -369,21 +337,26 @@ public class AttackPatternActionEditorWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
         return app;
     }
-    
-    private static void ResetFoldouts(FoldoutTreeNode foldouts)
+
+    public static void ExpandCollapseButtons<T, P>(string label, NestedAction<T, P>[] actions) where T : NestedAction<T, P>
     {
-        ResetFoldouts(foldouts, false);
-    }
-    
-    private static void ResetFoldouts(FoldoutTreeNode foldouts, bool zeroed)
-    {
-        foldouts.children.Clear();
-        foldouts.foldouts.Clear();
-        if(!zeroed)
+        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.LabelField(label);
+        if (GUILayout.Button("Expand All", GUILayout.Width(80)))
         {
-            foldouts.children.Add(null);
-            foldouts.foldouts.Add(true);
+            for(int i = 0; i < actions.Length; i++)
+            {
+                actions[i].Expand(true);
+            }
         }
+        if (GUILayout.Button("Collapse All", GUILayout.Width(80)))
+        {
+            for(int i = 0; i < actions.Length; i++)
+            {
+                actions[i].Expand(true);
+            }
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     public Vector3 UpDownRemoveButtons(Vector3 moveRemove, int count, int i)

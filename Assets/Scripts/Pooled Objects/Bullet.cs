@@ -67,10 +67,10 @@ public class Bullet : PooledGameObject<BulletTag>
 		{
 			switch(actions[i].type)
 			{
-			case(BulletActionType.Wait):
+			case(BulletAction.Type.Wait):
 					yield return new WaitForSeconds(actions[i].wait.Value * deltat);
 					break;
-				case(BulletActionType.ChangeDirection):
+				case(BulletAction.Type.ChangeDirection):
 					if(actions[i].waitForChange)
 					{
 						yield return ChangeDirection(actions[i]);
@@ -80,7 +80,7 @@ public class Bullet : PooledGameObject<BulletTag>
 						ChangeDirection(actions[i]);
 					}
 					break;
-				case(BulletActionType.ChangeSpeed):
+				case(BulletAction.Type.ChangeSpeed):
 					if(actions[i].waitForChange)
 					{
 						yield return ChangeSpeed(actions[i], false);
@@ -90,16 +90,16 @@ public class Bullet : PooledGameObject<BulletTag>
 						ChangeSpeed(actions[i], false);
 					}
 					break;
-				case(BulletActionType.Repeat):
+				case(BulletAction.Type.Repeat):
 					yield return RunNestedActions(actions[i]);
 					break;
-				case(BulletActionType.Fire):
+				case(BulletAction.Type.Fire):
 					if(master != null)
 					{
-						master.Fire(trans, actions[i], param, prevRotation);
+						master.Fire(actions[i].GetSourcePosition(trans.position), trans.rotation, actions[i], param, prevRotation);
 					}
 					break;
-				case(BulletActionType.VerticalChangeSpeed):
+				case(BulletAction.Type.VerticalChangeSpeed):
 					if(actions[i].waitForChange)
 					{
 						yield return ChangeSpeed(actions[i], true);
@@ -109,7 +109,7 @@ public class Bullet : PooledGameObject<BulletTag>
 						ChangeSpeed(actions[i], true);
 					}
 					break;
-				case(BulletActionType.Deactivate):
+				case(BulletAction.Type.Deactivate):
 					Deactivate();
 					break;
 			}
@@ -129,10 +129,10 @@ public class Bullet : PooledGameObject<BulletTag>
 				BulletAction currentAction = ba.nestedActions[j];
 				switch(currentAction.type)
 				{
-					case(BulletActionType.Wait):
+					case(BulletAction.Type.Wait):
 						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
-					case(BulletActionType.ChangeDirection):
+					case(BulletAction.Type.ChangeDirection):
 						if(currentAction.waitForChange)
 						{
 							yield return ChangeDirection(actions[i]);
@@ -142,7 +142,7 @@ public class Bullet : PooledGameObject<BulletTag>
 							ChangeDirection(actions[i]);
 						}
 						break;
-					case(BulletActionType.ChangeSpeed):
+					case(BulletAction.Type.ChangeSpeed):
 						if(currentAction.waitForChange)
 						{
 							yield return ChangeSpeed(actions[i], false);
@@ -152,16 +152,16 @@ public class Bullet : PooledGameObject<BulletTag>
 							ChangeSpeed(actions[i], false);
 						}
 						break;
-					case(BulletActionType.Repeat):
+					case(BulletAction.Type.Repeat):
 						yield return RunNestedActions(actions[i]);
 						break;
-					case(BulletActionType.Fire):
+					case(BulletAction.Type.Fire):
 						if(master != null)
 						{
-							master.Fire(trans, currentAction, param, prevRotation);
+							master.Fire(actions[i].GetSourcePosition(trans.position), trans.rotation, currentAction, param, prevRotation);
 						}
 						break;
-					case(BulletActionType.VerticalChangeSpeed):
+					case(BulletAction.Type.VerticalChangeSpeed):
 						if(currentAction.waitForChange)
 						{
 							yield return ChangeSpeed(currentAction, true);
@@ -171,7 +171,7 @@ public class Bullet : PooledGameObject<BulletTag>
 							ChangeSpeed(currentAction, true);
 						}
 						break;
-					case(BulletActionType.Deactivate):
+					case(BulletAction.Type.Deactivate):
 						Deactivate();
 						break;
 				}
@@ -290,12 +290,3 @@ public class Bullet : PooledGameObject<BulletTag>
 		}
 	}
 }
-
-public class BulletAction : BPAction
-{
-	public BulletActionType type = BulletActionType.Wait;
-	public bool waitForChange = false;
-	public BulletAction[] nestedActions;
-}
-
-public enum BulletActionType { Wait, ChangeDirection, ChangeSpeed, Repeat, Fire, VerticalChangeSpeed, Deactivate }
