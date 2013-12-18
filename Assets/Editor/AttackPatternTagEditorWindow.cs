@@ -161,7 +161,6 @@ public class AttackPatternTagEditorWindow : EditorWindow
         
         List<T> tagList = new List<T>(tags);
         
-        Debug.Log(tags[0].Name);
         bool buttonCheck = (fireOrBullet == buttonEnable);
 
         Vector3 moveRemove = new Vector3(-1f, -1f, 0f);

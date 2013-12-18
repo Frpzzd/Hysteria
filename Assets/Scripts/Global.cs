@@ -21,4 +21,5 @@ public static class Global
 }
 
 public enum GameState {Start, In_Game, Game_Over}
+public enum GameType {Normal, StagePractice, AttackPractice}
 public enum Rank : int { Easy = 0, Normal = 1, Hard = 2, Insane = 3 }

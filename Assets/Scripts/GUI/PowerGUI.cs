@@ -5,12 +5,10 @@ public class PowerGUI : MonoBehaviour
 {
 	private GUIText gt;
 	private static float currentPower;
-	private string maxPower;
 
 	void Start()
 	{
 		currentPower = 0;
-		maxPower = " / 4.00";
 		gt = guiText;
 	}
 
@@ -19,7 +17,7 @@ public class PowerGUI : MonoBehaviour
 	{
 		if(Player.instance.power != currentPower)
 		{
-			gt.text = "Power: " + Player.instance.power.ToString("n2") + maxPower;
+			gt.text = ((float)Player.instance.power / (float)Player.instance.options.Length).ToString("0.00%");
 			currentPower = Player.instance.power;
 		}
 	}
