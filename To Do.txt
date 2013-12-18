@@ -8,6 +8,7 @@ VITAL MUST DO
 		-Character Select
 		-Menus
 		-Player Option Shooting
+			-Switch to Myer Briggs Selection Style
 	-In Progress
 		-Stage Music Handling
 		-Editors for stage development
