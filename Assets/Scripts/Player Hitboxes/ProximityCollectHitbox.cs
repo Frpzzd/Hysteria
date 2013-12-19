@@ -22,7 +22,6 @@ public class ProximityCollectHitbox : MonoBehaviour
 
 	void OnTriggerExit2D(Collider2D other)
 	{
-		Debug.Log ("Exit");
 		Pickup pickup = other.gameObject.GetComponent<Pickup> ();
 		if(pickup == null)
 		{

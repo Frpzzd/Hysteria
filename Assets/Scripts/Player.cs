@@ -4,92 +4,131 @@ using System.Collections;
 
 public class Player : MonoBehaviour 
 {
-	[HideInInspector]
 	public static Transform playerTransform;
-	[HideInInspector]
 	public static Player instance;
 
 	public float optionDistance;
 
-	public int maxLives;
-	public int maxBombs;
+	public int maxLives = 10;
+	public int maxBombs = 10;
 	public int lives;
 	public int bombs;
-	public float power;
+	public float power = 0f;
 	public uint point;
 
 	public float unfocusedSpeed;
 	public float focusedSpeed;
 
-	// Based on Hans Eysenck's ideas of temprament
-	// Introversion vs Extraverison controls spread and power
-	// Psychotism vs Neurotism controls speed and power
+	public bool EI;
+	public bool SN;
+	public bool TF;
+	public bool JP;
 
-	// Extraversion
-	// -- Hot Red
-	// -- Homing
-	// -- Weaker Shots
-	// -- Wider Spread
-
-	// Introversion
-	// -- Cool Blue
-	// -- Focused
-	// -- Stronger shots
-	// -- Tighter Spread
-
-	// Psychotism 
-	// -- High Power Shots
-	// -- Slow Shot Speed
-
-	// Neurotism
-	// -- Low Power Shots
-	// -- Fast Shot Speed
-
-	// > 0 := Extraversion/Neurotism
-	// < 0 := Intraversion/Psychotism
-	// = 0 := balanced
-	public float IntroExtraVersion;
-	public float NeuroPsychOtism;
-
-	[Serializable]
-	public class Trait
+	public string ShotType
 	{
-		public float baseValue;
-		public float scaling;
-		[HideInInspector]
-		public float value;
+		get { return ((EI) ? "E" : "I") + ((SN) ? "S" : "N") + ((TF) ? "T" : "F") + ((JP) ? "J" : "P"); }
+	}
+
+	//TO-DO: Implement Bomb Functionality
+	//Shot Type: 8x Shot Damage
+	//Bomb Type: Shield, Absorbs incoming bullets, high bullet to point ratio, does not damage enemies
+	public bool Extravert
+	{
+		get { return EI; }
+		set { EI = value; }
 	}
 	
-	//Note Spread is in terms of PI
-	public Trait FireRate;
-	public Trait Homing;
-	public Trait Spread;
-	public Trait ShotDamage;
+	//TO-DO: Implement Bomb Functionality
+	//Shot Type: 8x shot speed
+	//Bomb Type: Linear laser, Cancels bullets that collide with it, low bullet to point ratio, instantly kills non-boss enemies
+	public bool Introvert
+	{
+		get { return !EI; }
+		set { EI = !value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type: Wide Spread, halved damage
+	//Bomb Type: 2x Area of Effect, 1/2x effectiveness
+	public bool Sensing
+	{
+		get { return SN; }
+		set { SN = value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type: Forward Focus, doubled damage
+	//Bomb Type: 1/2x Area of effect, 2x as effective
+	public bool Intuitive
+	{
+		get { return !SN; }
+		set { SN = !value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type: 
+	//Bomb Type: Shorter bomb duration, longer death bomb window
+	public bool Thinking
+	{
+		get { return TF; }
+		set { TF = !value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type:
+	//Bomb Type: Longer Bomb Duration, shorter death bomb window
+	public bool Feeling
+	{
+		get { return !TF; }
+		set { TF = value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type: Makes Player shots homing
+	//Bomb Type: Six starting lives, two bombs each
+	public bool Judging
+	{
+		get { return JP; }
+		set { JP = value; }
+	}
+	
+	//TO-DO: Implement Functionality
+	//Shot Type: Makes Player Shots piercing
+	//Bomb Type: Two starting lives, six bombs each
+	public bool Percieving
+	{
+		get { return !JP; }
+		set { JP = !value; }
+	}
 
 	public bool invincible = false;
 
 	public float deathInvincibilityTime;
-	public float bombInvincibilityTime;
 	public float invincibilityFlashInterval;
+
 	public AudioClip DeathClip;
 	public AudioClip GrazeClip;
 	public AudioClip PickupClip;
 	public AudioClip ExtendClip;
 	public AudioClip BombUpClip;
 
-	public float MainShotDelay;
-	public float MainShotTimer;
+	public Timer MainShotTimer;
+	public int MainShotDamage;
+
+	public float baseOptionFireDelay;
+	public float baseOptionShotDamage;
 
 	//Private Variables
-	private bool bombDeployed = false;
-	private bool shooting = false;
 	private Renderer hitboxRenderer;
 	private AudioSource audioSource;
 	[HideInInspector]
 	public Option[] options;
 	[HideInInspector]
 	public bool[] atMovementLimit;
-	
+	[HideInInspector]
+	public Bomb bomb;
+	private Timer OptionShotTimer;
+
 	void Start () 
 	{
 		//Cache commonly accessed components of player
@@ -99,10 +138,16 @@ public class Player : MonoBehaviour
 		hitboxRenderer = playerTransform.FindChild("Death Hitbox").renderer;
 		atMovementLimit = new bool[4];
 		options = playerTransform.GetComponentsInChildren<Option>();
+		bomb = playerTransform.GetComponentInChildren<Bomb> ();
 		foreach(Option o in options)
 		{
 			o.gamObj.SetActive(false);
 		}
+		bomb.Active = false;
+		OptionShotTimer = new Timer ();
+		OptionShotTimer.totalTime = ((Introvert) ? 0.125f : 1f) * baseOptionFireDelay;
+		OptionShotTimer.Start ();
+		MainShotTimer.Start ();
 	}
 
 	private int Sign(float x)
@@ -118,9 +163,9 @@ public class Player : MonoBehaviour
 
 		deltat = Time.fixedDeltaTime;
 		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
-		shooting = Input.GetButton("Shoot");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;
 		
+		OptionShotTimer.totalTime = ((Introvert) ? 1f/8f : 8f) * baseOptionFireDelay;
 		//Movement
 		movementVector = Vector3.zero;
 		movementVector.x = Sign(Input.GetAxisRaw("Horizontal")) * speed;
@@ -138,31 +183,43 @@ public class Player : MonoBehaviour
 		playerTransform.position += movementVector * deltat;
 
 		//Bombing
-		if(!bombDeployed)
+		if(!bomb.Active)
 		{
 			if(Input.GetButtonDown("Bomb"))
 			{
 				//Instantiate Bomb at character location
-				StartCoroutine(Invincibility(false, bombInvincibilityTime, deltat));
-				bombDeployed = true;
+				StartCoroutine(Invincibility(false, bomb.Duration, deltat));
+				bomb.Active = true;
 			}
 		}
 
 		//Shooting
-		if(shooting)
+		if(Input.GetButton("Shoot"))
 		{
-			MainShotTimer -= deltat;
-			if(MainShotTimer <= 0)
+			OptionShotTimer.Start();
+			if(MainShotTimer.Done)
 			{
-				Vector3 offset = new Vector3(1,0,0);
+				Vector3 offset = new Vector3(1.5f,0,0);
 				GameObjectManager.PlayerShots.Spawn(playerTransform.position + offset, true);
 				GameObjectManager.PlayerShots.Spawn(playerTransform.position - offset, true);
-				MainShotTimer = MainShotDelay;
+				MainShotTimer.Reset();
+			}
+			if(OptionShotTimer.Done)
+			{
+				for(int i = 0; i < options.Length; i++)
+				{
+					if(options[i].gamObj.activeSelf)
+					{
+						options[i].Fire();
+					}
+				}
+				OptionShotTimer.Reset();
 			}
 		}
 		else
 		{
-			MainShotTimer = 0;
+			MainShotTimer.remainingTime = 0;
+			OptionShotTimer.Pause();
 		}
 
 		bool optActive;
@@ -253,7 +310,7 @@ public class Player : MonoBehaviour
 		{
 			if(lives <= 0)
 			{
-				Global.gameState = GameState.Game_Over;
+				Global.gameState = GameState.GameOver;
 			}
 			lives--;
 			audioSource.PlayOneShot(DeathClip);

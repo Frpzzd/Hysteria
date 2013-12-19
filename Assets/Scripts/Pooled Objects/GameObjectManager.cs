@@ -66,11 +66,6 @@ public class GameObjectManager : MonoBehaviour
 			return Dequeue();
 		}
 
-		/// <summary>
-		/// Get the an available T from the queue specified by param.
-		/// Note does not spawn nor activate. For that use Spawn instead
-		/// </summary>
-		/// <param name="param">Parameter.</param>
 		public T Get(P param)
 		{
 			T newT = CustomDequeue();
@@ -78,16 +73,18 @@ public class GameObjectManager : MonoBehaviour
 			return newT;
 		}
 
-		/// <summary>
-		/// Spawn a T at the specified pos and param.
-		/// </summary>
-		/// <param name="pos">Position.</param>
-		/// <param name="param">Parameter.</param>
-		public void Spawn(Vector3 pos, P param)
+		public T Spawn(Vector3 pos, P param)
+		{
+			return Spawn (pos, Quaternion.identity, param);
+		}
+
+		public T Spawn(Vector3 pos, Quaternion rotation, P param)
 		{
 			T newT = Get(param);
 			newT.trans.position = pos;
+			newT.trans.rotation = rotation;
 			newT.gameObj.SetActive (true);
+			return newT;
 		}
 
 		public void Return(T t)

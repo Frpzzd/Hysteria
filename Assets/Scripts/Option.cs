@@ -15,9 +15,8 @@ public class Option : MonoBehaviour
 		gamObj = gameObject;
 	}
 	
-	// Update is called once per frame
-	void Update () 
+	public void Fire()
 	{
-		
+		//GameObjectManager.PlayerShots.Spawn (trans.position, trans.rotation, false);
 	}
 }

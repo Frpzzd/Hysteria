@@ -4,7 +4,7 @@ public abstract class PlayerHitbox : MonoBehaviour
 {
 	protected Player master;
 	
-	public virtual void Start()
+	void Awake()
 	{
 		master = transform.parent.gameObject.GetComponent<Player> ();
 	}

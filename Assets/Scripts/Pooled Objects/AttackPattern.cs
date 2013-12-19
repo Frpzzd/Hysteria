@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -20,6 +19,8 @@ public class AttackPattern : MonoBehaviour, NamedObject
 	public int remainingBonus;
 	public bool survival;
 	public int bonusPerSecond;
+
+	public EnemyDrops drops;
 
 	public string Name
 	{
