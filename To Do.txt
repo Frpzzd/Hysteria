@@ -7,10 +7,10 @@ VITAL MUST DO
 		-Demo Stage
 		-Character Select
 		-Menus
-		-Player Option Shooting
-			-Switch to Myer Briggs Selection Style
+		-Tutorial
+		-Score Popups
+		-Lasers
 	-In Progress
 		-Stage Music Handling
 		-Editors for stage development
-
 IDEAS

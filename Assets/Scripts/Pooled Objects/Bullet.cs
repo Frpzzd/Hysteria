@@ -6,8 +6,9 @@ public class Bullet : PooledGameObject<BulletTag>
 {
 	[HideInInspector]
 	public AttackPattern master;
+	private BulletTag bulletTag;
 	[HideInInspector]
-	public BulletAction[] actions;
+	public GameObject prefab;
 	[HideInInspector]
 	public PreviousRotationWrapper prevRotation= new PreviousRotationWrapper();
 	
@@ -21,119 +22,69 @@ public class Bullet : PooledGameObject<BulletTag>
 	public bool grazed;
 	[HideInInspector]
 	public float param = 0.0f;
-		
-	private CircleCollider2D col;
+	[HideInInspector]
+	public Collider2D col;
 	private SpriteRenderer rend;
 
 	public override void Awake ()
 	{
 		base.Awake ();
-		col = (CircleCollider2D)collider2D;
+		col = collider2D;
 		rend = (SpriteRenderer)renderer;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () 
 	{
-		Vector3 velocity = trans.forward * speed;
+		Vector3 velocity = Transform.forward * speed;
 		if(useVertical)
 		{
 			velocity += (Vector3.up * verticalSpeed);
 		}
-		trans.position += velocity;
+		Transform.position += velocity;
 	}
 
 	public override void Activate (BulletTag param)
 	{
 		grazed = false;
-		rend.sprite = param.sprite;
-		rend.color = param.colorMask;
-		col.radius = param.colliderRadius;
-		RunActions();
+		if(prefab != param.prefab)
+		{
+			prefab = param.prefab;
+			SpriteRenderer sp = prefab.renderer as SpriteRenderer;
+			rend.color = sp.color;
+			rend.sprite = sp.sprite;
+		}
+		bulletTag = param;
+	}
+
+	public override void LateActivate ()
+	{
+		RunActions (bulletTag.actions, 1);
 	}
 
 	public void Deactivate()
 	{
-		if(gameObj.activeSelf)
+		if(GameObject.activeSelf)
 		{
 			GameObjectManager.Bullets.Return(this);
 		}
 	}
 
-	public IEnumerator RunActions()
+	public IEnumerator RunActions(BulletAction[] actions, int repeatC)
 	{	
 		float deltat = Time.deltaTime;
-		for(int i = 0; i < actions.Length; i++)
-		{
-			switch(actions[i].type)
-			{
-			case(BulletAction.Type.Wait):
-					yield return new WaitForSeconds(actions[i].wait.Value * deltat);
-					break;
-				case(BulletAction.Type.ChangeDirection):
-					if(actions[i].waitForChange)
-					{
-						yield return ChangeDirection(actions[i]);
-					}
-					else
-					{
-						ChangeDirection(actions[i]);
-					}
-					break;
-				case(BulletAction.Type.ChangeSpeed):
-					if(actions[i].waitForChange)
-					{
-						yield return ChangeSpeed(actions[i], false);
-					}
-					else
-					{
-						ChangeSpeed(actions[i], false);
-					}
-					break;
-				case(BulletAction.Type.Repeat):
-					yield return RunNestedActions(actions[i]);
-					break;
-				case(BulletAction.Type.Fire):
-					if(master != null)
-					{
-						master.Fire(actions[i].GetSourcePosition(trans.position), trans.rotation, actions[i], param, prevRotation);
-					}
-					break;
-				case(BulletAction.Type.VerticalChangeSpeed):
-					if(actions[i].waitForChange)
-					{
-						yield return ChangeSpeed(actions[i], true);
-					}
-					else
-					{
-						ChangeSpeed(actions[i], true);
-					}
-					break;
-				case(BulletAction.Type.Deactivate):
-					Deactivate();
-					break;
-			}
-		}
-	}
 
-	public IEnumerator RunNestedActions(BulletAction ba)
-	{
-		float deltat = Time.deltaTime;
-		
-		float repeatC = Mathf.Floor (ba.repeat.Value);
-
-		for(int i = 0; i < repeatC; i++)
+		for(int j = 0; j < repeatC; j++)
 		{
-			for(int j = 0; j < ba.nestedActions.Length; j++)
+			for(int i = 0; i < actions.Length; i++)
 			{
-				BulletAction currentAction = ba.nestedActions[j];
-				switch(currentAction.type)
+				switch(actions[i].type)
 				{
 					case(BulletAction.Type.Wait):
-						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
+						yield return new WaitForSeconds(actions[i].wait.Value * deltat);
 						break;
 					case(BulletAction.Type.ChangeDirection):
-						if(currentAction.waitForChange)
+						if(actions[i].waitForChange)
 						{
 							yield return ChangeDirection(actions[i]);
 						}
@@ -143,7 +94,7 @@ public class Bullet : PooledGameObject<BulletTag>
 						}
 						break;
 					case(BulletAction.Type.ChangeSpeed):
-						if(currentAction.waitForChange)
+						if(actions[i].waitForChange)
 						{
 							yield return ChangeSpeed(actions[i], false);
 						}
@@ -153,22 +104,19 @@ public class Bullet : PooledGameObject<BulletTag>
 						}
 						break;
 					case(BulletAction.Type.Repeat):
-						yield return RunNestedActions(actions[i]);
+						yield return RunActions(actions[i].nestedActions, Mathf.FloorToInt(actions[i].repeat.Value));
 						break;
 					case(BulletAction.Type.Fire):
-						if(master != null)
-						{
-							master.Fire(actions[i].GetSourcePosition(trans.position), trans.rotation, currentAction, param, prevRotation);
-						}
+						master.Fire(actions[i].GetSourcePosition(Transform.position), Transform.rotation, actions[i], param, prevRotation);
 						break;
 					case(BulletAction.Type.VerticalChangeSpeed):
-						if(currentAction.waitForChange)
+						if(actions[i].waitForChange)
 						{
-							yield return ChangeSpeed(currentAction, true);
+							yield return ChangeSpeed(actions[i], true);
 						}
 						else
 						{
-							ChangeSpeed(currentAction, true);
+							ChangeSpeed(actions[i], true);
 						}
 						break;
 					case(BulletAction.Type.Deactivate):
@@ -187,7 +135,7 @@ public class Bullet : PooledGameObject<BulletTag>
 
 		d = ba.wait.Value * Time.deltaTime;
 		
-		Quaternion originalRot = trans.localRotation;
+		Quaternion originalRot = Transform.localRotation;
 		
 		// determine offset
 		ang = ba.angle.Value;
@@ -196,12 +144,12 @@ public class Bullet : PooledGameObject<BulletTag>
 		switch(ba.direction)
 		{
 			case (DirectionType.TargetPlayer):
-				float dotHeading = Vector3.Dot( trans.up, Player.playerTransform.position - trans.position );		
+				float dotHeading = Vector3.Dot( Transform.up, Player.PlayerTransform.position - Transform.position );		
 				if(dotHeading > 0)
 					dir = -1;
 				else
 					dir = 1;
-				float angleDif = Vector3.Angle(trans.forward, Player.playerTransform.position - trans.position);
+				float angleDif = Vector3.Angle(Transform.forward, Player.PlayerTransform.position - Transform.position);
 				newRot = originalRot * Quaternion.AngleAxis((dir * angleDif) - ang, Vector3.right); 
 				break;
 				
@@ -222,7 +170,7 @@ public class Bullet : PooledGameObject<BulletTag>
 			
 			while(t < d)
 			{
-				trans.localRotation *= newRot;
+				Transform.localRotation *= newRot;
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
 			}
@@ -232,12 +180,12 @@ public class Bullet : PooledGameObject<BulletTag>
 		{
 			while(t < d)
 			{
-				trans.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
+				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
 			}
 			
-			trans.localRotation = newRot;
+			Transform.localRotation = newRot;
 		}
 	}
 
@@ -277,7 +225,7 @@ public class Bullet : PooledGameObject<BulletTag>
 
 	public void Cancel()
 	{
-		//Spawn Point Value at current location
+		GameObjectManager.Pickups.Spawn (Transform.position, PickupType.PointValue);
 		Deactivate();
 	}
 

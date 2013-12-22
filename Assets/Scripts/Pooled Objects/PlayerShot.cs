@@ -17,11 +17,11 @@ public class PlayerShot : PooledGameObject<bool>
 		{
 			if(mainShot)
 			{
-				return Player.instance.MainShotDamage;
+				return Player.MainShotDamage;
 			}
 			else
 			{
-				return (int)(((Player.instance.Extravert) ? 8f : 1f) * ((Player.instance.Sensing) ? 2f : 0.5f) * Player.instance.baseOptionShotDamage);
+				return Player.OptionShotDamage;
 			}
 		}
 	}
@@ -31,12 +31,12 @@ public class PlayerShot : PooledGameObject<bool>
 		mainShot = param;
 		if(!mainShot)
 		{
-			if(Player.instance.Judging)
+			if(Player.Judging)
 			{
 				float closestDistance = float.MaxValue;
 				for(int i = 0; i < Enemy.enemiesInPlay.Count; i++)
 				{
-					float currentDistance = (Enemy.enemiesInPlay[i].trans.position - Player.playerTransform.position).sqrMagnitude;
+					float currentDistance = (Enemy.enemiesInPlay[i].Transform.position - Player.PlayerTransform.position).sqrMagnitude;
 					if(currentDistance < closestDistance)
 					{
 						target = Enemy.enemiesInPlay[i];
@@ -57,9 +57,9 @@ public class PlayerShot : PooledGameObject<bool>
 	// Update is called once per frame
 	void Update () 
 	{
-		Vector3 pos = trans.position;
-		pos += trans.up * mainSpeed * Time.deltaTime;
-		trans.position = pos;
+		Vector3 pos = Transform.position;
+		pos += Transform.up * ((mainShot) ? mainSpeed : optionSpeed)* Time.deltaTime;
+		Transform.position = pos;
 		if(target != null && !target.Dead)
 		{
 

@@ -8,7 +8,7 @@ public class CollectionHitbox : PlayerHitbox
 		Pickup p = other.gameObject.GetComponent<Pickup> ();
 		if(p != null)
 		{
-			Player.instance.Pickup (p.type);
+			Player.Pickup (p.type);
 			GameObjectManager.Pickups.Return(p);
 		}
 	}

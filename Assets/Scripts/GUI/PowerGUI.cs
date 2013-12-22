@@ -15,10 +15,10 @@ public class PowerGUI : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if(Player.instance.power != currentPower)
+		if(Player.Power != currentPower)
 		{
-			gt.text = ((float)Player.instance.power / (float)Player.instance.options.Length).ToString("0.00%");
-			currentPower = Player.instance.power;
+			gt.text = ((float)Player.Power / (float)Player.MaxOptions).ToString("0.00%");
+			currentPower = Player.Power;
 		}
 	}
 }

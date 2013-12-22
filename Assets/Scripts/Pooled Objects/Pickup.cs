@@ -51,7 +51,7 @@ public class Pickup : PooledGameObject<PickupType>
 	void Update()
 	{
 		float deltat = Time.deltaTime;
-		trans.position += Vector3.up * currentVelocity * deltat;
+		Transform.position += Vector3.up * currentVelocity * deltat;
 		if(currentVelocity > maximumDownwardVelocity)
 		{
 			currentVelocity += acceleration * deltat;
@@ -65,10 +65,10 @@ public class Pickup : PooledGameObject<PickupType>
 			switch(state)
 			{
 			case PickupState.AutoCollect:
-				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, autoCollectSpeed * deltat);
+				Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, autoCollectSpeed * deltat);
 				break;
 			case PickupState.ProximityCollect:
-				trans.position = Vector3.MoveTowards(trans.position, Player.playerTransform.position, proximityCollectSpeed * deltat);
+				Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, proximityCollectSpeed * deltat);
 				break;
 			default:
 				break;
@@ -82,7 +82,7 @@ public class Pickup : PooledGameObject<PickupType>
 		while(rotationAmount > 1)
 		{
 			rotationAmount += Time.fixedDeltaTime;
-			trans.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
+			Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
 			yield return new WaitForFixedUpdate();
 		}
 	}

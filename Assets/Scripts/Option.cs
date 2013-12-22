@@ -1,22 +1,36 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Option : MonoBehaviour 
+public class Option : CachedObject
 {
-	[HideInInspector]
-	public Transform trans;
-	[HideInInspector]
-	public GameObject gamObj;
+	public float angle;
+	private Quaternion rotation;
+	private Quaternion focusedRotation;
 
 	// Use this for initialization
-	void Start () 
+	public override void Awake() 
 	{
-		trans = transform;
-		gamObj = gameObject;
+		base.Awake ();
+		rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
+		focusedRotation = Quaternion.Euler(new Vector3(0, 0, (angle - 90) / 2));
 	}
 	
 	public void Fire()
 	{
-		//GameObjectManager.PlayerShots.Spawn (trans.position, trans.rotation, false);
+		if(Player.Sensing)
+		{
+			if(Player.Focused)
+			{
+				GameObjectManager.PlayerShots.Spawn (Transform.position, focusedRotation, false);
+			}
+			else
+			{
+				GameObjectManager.PlayerShots.Spawn (Transform.position, rotation, false);
+			}
+		}
+		else
+		{
+			GameObjectManager.PlayerShots.Spawn (Transform.position, false);
+		}
 	}
 }

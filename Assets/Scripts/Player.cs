@@ -2,10 +2,10 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class Player : MonoBehaviour 
+public class Player : CachedObject
 {
-	public static Transform playerTransform;
-	public static Player instance;
+	private static Player instance;
+	private static Transform respawnLocation;
 
 	public float optionDistance;
 
@@ -24,81 +24,119 @@ public class Player : MonoBehaviour
 	public bool TF;
 	public bool JP;
 
-	public string ShotType
+	public float powerLostOnDeath;
+	public int powerItemsExpelledOnDeath;
+
+	public static float Power
 	{
-		get { return ((EI) ? "E" : "I") + ((SN) ? "S" : "N") + ((TF) ? "T" : "F") + ((JP) ? "J" : "P"); }
+		get { return instance.power; }
+	}
+
+	public static bool Focused
+	{
+		get { return instance.focused; }
+	}
+
+	public static int MainShotDamage
+	{
+		get { return mainShotDamage; }
+	}
+
+	public static int OptionShotDamage
+	{
+		get { return (int)(((Extravert) ? 8f : 1f) * ((Intuitive) ? 2f : 1f) * baseOptionShotDamage); }
+	}
+
+	public static bool MaxPower
+	{
+		get { return Power / instance.options.Length > 1; }
+	}
+
+	public static int MaxOptions
+	{
+		get { return instance.options.Length; }
+	}
+
+	public static string ShotType
+	{
+		get { return ((Extravert) ? "E" : "I") + ((Sensing) ? "S" : "N") + ((Thinking) ? "T" : "F") + ((Judging) ? "J" : "P"); }
+	}
+
+	public static Transform PlayerTransform
+	{
+		get { return instance.Transform; }
 	}
 
 	//TO-DO: Implement Bomb Functionality
 	//Shot Type: 8x Shot Damage
 	//Bomb Type: Shield, Absorbs incoming bullets, high bullet to point ratio, does not damage enemies
-	public bool Extravert
+	public static bool Extravert
 	{
-		get { return EI; }
-		set { EI = value; }
+		get { return instance.EI; }
+		set { instance.EI = value; }
 	}
 	
 	//TO-DO: Implement Bomb Functionality
 	//Shot Type: 8x shot speed
 	//Bomb Type: Linear laser, Cancels bullets that collide with it, low bullet to point ratio, instantly kills non-boss enemies
-	public bool Introvert
+	public static bool Introvert
 	{
-		get { return !EI; }
-		set { EI = !value; }
+		get { return !instance.EI; }
+		set { instance.EI = !value; }
 	}
 	
-	//TO-DO: Implement Functionality
-	//Shot Type: Wide Spread, halved damage
-	//Bomb Type: 2x Area of Effect, 1/2x effectiveness
-	public bool Sensing
+	//TO-DO: Implement Bomb Functionality
+	//Shot Type: Wide Spread, focusing narrows wide spread
+	//Bomb Type: 2x Area of Effect
+	public static bool Sensing
 	{
-		get { return SN; }
-		set { SN = value; }
+		get { return instance.SN; }
+		set { instance.SN = value; }
 	}
 	
-	//TO-DO: Implement Functionality
-	//Shot Type: Forward Focus, doubled damage
-	//Bomb Type: 1/2x Area of effect, 2x as effective
-	public bool Intuitive
+	//TO-DO: Implement Bomb Functionality
+	//Shot Type: Forward Focus, focusing increases fire rate
+	//Bomb Type: 2x as effective
+	public static bool Intuitive
 	{
-		get { return !SN; }
-		set { SN = !value; }
+		get { return !instance.SN; }
+		set { instance.SN = !value; }
 	}
 	
 	//TO-DO: Implement Functionality
 	//Shot Type: 
 	//Bomb Type: Shorter bomb duration, longer death bomb window
-	public bool Thinking
+	public static bool Thinking
 	{
-		get { return TF; }
-		set { TF = !value; }
+		get { return instance.TF; }
+		set { instance.TF = !value; }
 	}
 	
 	//TO-DO: Implement Functionality
 	//Shot Type:
 	//Bomb Type: Longer Bomb Duration, shorter death bomb window
-	public bool Feeling
+	public static bool Feeling
 	{
-		get { return !TF; }
-		set { TF = value; }
+		get { return !instance.TF; }
+		set { instance.TF = value; }
 	}
 	
 	//TO-DO: Implement Functionality
 	//Shot Type: Makes Player shots homing
 	//Bomb Type: Six starting lives, two bombs each
-	public bool Judging
+	public static bool Judging
 	{
-		get { return JP; }
-		set { JP = value; }
+		get { return instance.JP; }
+		set { instance.JP = value; }
 	}
 	
 	//TO-DO: Implement Functionality
 	//Shot Type: Makes Player Shots piercing
 	//Bomb Type: Two starting lives, six bombs each
-	public bool Percieving
+	public static bool Percieving
 	{
-		get { return !JP; }
-		set { JP = !value; }
+		get { return !instance.JP; }
+		set { instance.JP = !value; }
 	}
 
 	public bool invincible = false;
@@ -111,43 +149,51 @@ public class Player : MonoBehaviour
 	public AudioClip PickupClip;
 	public AudioClip ExtendClip;
 	public AudioClip BombUpClip;
+	public AudioClip fireClip;
 
-	public Timer MainShotTimer;
-	public int MainShotDamage;
+	public Timer mainShotDelay;
+	public const int mainShotDamage = 1;
 
 	public float baseOptionFireDelay;
-	public float baseOptionShotDamage;
+	public const int baseOptionShotDamage = 1;
 
 	//Private Variables
-	private Renderer hitboxRenderer;
-	private AudioSource audioSource;
-	[HideInInspector]
-	public Option[] options;
+	private SpriteRenderer hitboxRenderer;
+	private SpriteRenderer spriteRenderer;
+	private Option[] options;
 	[HideInInspector]
 	public bool[] atMovementLimit;
 	[HideInInspector]
 	public Bomb bomb;
+	[NonSerialized]
+	public bool focused;
 	private Timer OptionShotTimer;
 
-	void Start () 
+	public override void Awake()
 	{
+		base.Awake ();
+		if(instance != null)
+		{
+			Destroy (gameObject);
+			return;
+		}
 		//Cache commonly accessed components of player
 		instance = this;
-		playerTransform = transform;
-		audioSource = audio;
-		hitboxRenderer = playerTransform.FindChild("Death Hitbox").renderer;
+		respawnLocation = GameObject.Find ("Player Respawn Location").transform;
+		hitboxRenderer = Transform.FindChild("Death Hitbox").renderer as SpriteRenderer;
+		spriteRenderer = Transform.FindChild ("Sprite").renderer as SpriteRenderer;
 		atMovementLimit = new bool[4];
-		options = playerTransform.GetComponentsInChildren<Option>();
-		bomb = playerTransform.GetComponentInChildren<Bomb> ();
+		options = Transform.GetComponentsInChildren<Option>();
+		bomb = Transform.GetComponentInChildren<Bomb> ();
 		foreach(Option o in options)
 		{
-			o.gamObj.SetActive(false);
+			o.GameObject.SetActive(false);
 		}
 		bomb.Active = false;
 		OptionShotTimer = new Timer ();
-		OptionShotTimer.totalTime = ((Introvert) ? 0.125f : 1f) * baseOptionFireDelay;
+		OptionShotTimer.totalTime = ((Introvert) ? 1f : 8f) * baseOptionFireDelay;
 		OptionShotTimer.Start ();
-		MainShotTimer.Start ();
+		mainShotDelay.Start ();
 	}
 
 	private int Sign(float x)
@@ -157,15 +203,13 @@ public class Player : MonoBehaviour
 
 	void FixedUpdate () 
 	{
-		bool focused;
 		float deltat, speed;
 		Vector3 movementVector;
 
 		deltat = Time.fixedDeltaTime;
 		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;
-		
-		OptionShotTimer.totalTime = ((Introvert) ? 1f/8f : 8f) * baseOptionFireDelay;
+		OptionShotTimer.totalTime = ((Introvert) ? 1f : 8f) * ((Intuitive && focused) ? 0.5f : 1f) * baseOptionFireDelay;
 		//Movement
 		movementVector = Vector3.zero;
 		movementVector.x = Sign(Input.GetAxisRaw("Horizontal")) * speed;
@@ -180,7 +224,7 @@ public class Player : MonoBehaviour
 		{
 			movementVector.x = 0;
 		}
-		playerTransform.position += movementVector * deltat;
+		Transform.position += movementVector * deltat;
 
 		//Bombing
 		if(!bomb.Active)
@@ -197,18 +241,19 @@ public class Player : MonoBehaviour
 		if(Input.GetButton("Shoot"))
 		{
 			OptionShotTimer.Start();
-			if(MainShotTimer.Done)
+			if(mainShotDelay.Done)
 			{
 				Vector3 offset = new Vector3(1.5f,0,0);
-				GameObjectManager.PlayerShots.Spawn(playerTransform.position + offset, true);
-				GameObjectManager.PlayerShots.Spawn(playerTransform.position - offset, true);
-				MainShotTimer.Reset();
+				GameObjectManager.PlayerShots.Spawn(Transform.position + offset, true);
+				GameObjectManager.PlayerShots.Spawn(Transform.position - offset, true);
+				SoundManager.PlaySoundEffect(fireClip, Transform.position);
+				mainShotDelay.Reset();;
 			}
-			if(OptionShotTimer.Done)
+			if(OptionShotTimer.Done && power >= 1)
 			{
 				for(int i = 0; i < options.Length; i++)
 				{
-					if(options[i].gamObj.activeSelf)
+					if(options[i].GameObject.activeSelf)
 					{
 						options[i].Fire();
 					}
@@ -218,7 +263,7 @@ public class Player : MonoBehaviour
 		}
 		else
 		{
-			MainShotTimer.remainingTime = 0;
+			mainShotDelay.remainingTime = 0;
 			OptionShotTimer.Pause();
 		}
 
@@ -226,13 +271,13 @@ public class Player : MonoBehaviour
 		for(int i = 0; i < options.Length; i++)
 		{
 			optActive = (float)i <= power - 1;
-			options[i].gamObj.SetActive(optActive);
+			options[i].GameObject.SetActive(optActive);
 			if(optActive)
 			{
 				float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
 				float angle = -(Mathf.PI / (Mathf.FloorToInt(power) + 1)) * (i + 1);
 				Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
-				options[i].trans.localPosition = position;
+				options[i].Transform.localPosition = position;
 			}
 		}
 	}
@@ -243,17 +288,16 @@ public class Player : MonoBehaviour
 		float elapsedTime = 0f;
 		if(flash)
 		{
-			Material mat = GetComponent<MeshRenderer>().material;
-			Color[] colors = new Color[]{Color.clear, mat.color};
+			Color[] colors = new Color[]{Color.clear, spriteRenderer.color};
 			int index = 0;
 			while(elapsedTime < time)
 			{
-				mat.color = colors[index % 2];
+				spriteRenderer.color = colors[index % 2];
 				elapsedTime += intervalTime;
 				index++;
 				yield return new WaitForSeconds(intervalTime);
 			}
-			mat.color = colors[1];
+			spriteRenderer.color = colors[1];
 		}
 		else
 		{
@@ -275,28 +319,26 @@ public class Player : MonoBehaviour
 		}
 	}
 
-	public void Pickup(PickupType type)
+	public static void Pickup(PickupType type)
 	{
 		switch(type)
 		{
 			case PickupType.Point:
-				Global.Score += 10000000;
-				audioSource.PlayOneShot (PickupClip);
+				Global.Score += 10000;
 				break;
 			case PickupType.PointValue:
-				audioSource.PlayOneShot (PickupClip);
 				break;
 			case PickupType.Power:
-				ChangePower(0.01f);
-				audioSource.PlayOneShot (PickupClip);
+				instance.ChangePower(0.01f);
 				break;
 			case PickupType.Bomb:
-				audioSource.PlayOneShot (BombUpClip);
+				SoundManager.PlaySoundEffect(instance.BombUpClip, instance.Transform.position);
 				break;
-			case PickupType.Life:
-				audioSource.PlayOneShot(ExtendClip);
-				break;
+		case PickupType.Life:
+			SoundManager.PlaySoundEffect(instance.ExtendClip, instance.Transform.position);
+			break;
 		}
+		SoundManager.PlaySoundEffect(instance.PickupClip, instance.Transform.position);
 	}
 
 	private void ChangePower(float amount)
@@ -308,19 +350,24 @@ public class Player : MonoBehaviour
 	{
 		if(!invincible)
 		{
+			lives--;
+			//TO-DO: Play Player death effect at player's location
+			SoundManager.PlaySoundEffect(instance.PickupClip, instance.Transform.position);
+			Transform.position = respawnLocation.position;
 			if(lives <= 0)
 			{
 				Global.gameState = GameState.GameOver;
 			}
-			lives--;
-			audioSource.PlayOneShot(DeathClip);
-			ChangePower(-1.0f);
-			GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
-			foreach(GameObject go in pickups)
+			else
 			{
-				go.GetComponent<Pickup>().state = global::Pickup.PickupState.Normal;
+				ChangePower(-powerLostOnDeath);
+				GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
+				foreach(GameObject go in pickups)
+				{
+					go.GetComponent<Pickup>().state = global::Pickup.PickupState.Normal;
+				}
+				StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
 			}
-			StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
 		}
 	}
 }

@@ -2,20 +2,13 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
-public abstract class PooledGameObject<P> : MonoBehaviour
+public abstract class PooledGameObject<P> : CachedObject
 {
-	[HideInInspector]
-	public Transform trans;
-	[HideInInspector]
-	public GameObject gameObj;
-
-	public virtual void Awake()
-	{
-		trans = transform;
-		gameObj = gameObject;
-	}
-
 	public abstract void Activate(P param);
+
+	public virtual void LateActivate()
+	{
+	}
 }
 
 public class GameObjectManager : MonoBehaviour 
@@ -47,7 +40,6 @@ public class GameObjectManager : MonoBehaviour
 		{
 			GameObject go = (GameObject)Instantiate (blankPrefab);
 			T newT = go.GetComponent<T>();
-			newT.gameObj = go;
 			go.SetActive (false);
 			go.transform.parent = container.transform;
 			All.Add (newT);
@@ -81,21 +73,75 @@ public class GameObjectManager : MonoBehaviour
 		public T Spawn(Vector3 pos, Quaternion rotation, P param)
 		{
 			T newT = Get(param);
-			newT.trans.position = pos;
-			newT.trans.rotation = rotation;
-			newT.gameObj.SetActive (true);
+			newT.Transform.position = pos;
+			newT.Transform.rotation = rotation;
+			newT.GameObject.SetActive (true);
+			newT.LateActivate ();
 			return newT;
 		}
 
 		public void Return(T t)
 		{
-			t.gameObj.SetActive (false);
+			t.GameObject.SetActive (false);
 			Enqueue(t);
 		}
 	}
 
 	[Serializable]
-	public class BulletPool : GameObjectPool<Bullet, BulletTag> { }
+	public class BulletPoolSubset : GameObjectPool<Bullet, BulletTag> { }
+
+	[Serializable]
+	public class BulletPool
+	{
+		public BulletPoolSubset circleBullets;
+		public BulletPoolSubset boxBullets;
+
+		public void Start()
+		{
+			circleBullets.Start ();
+			boxBullets.Start ();
+		}
+
+		public void Return(Bullet bullet)
+		{
+			Type colliderType = bullet.col.GetType ();
+			if(colliderType == typeof(CircleCollider2D))
+			{
+				circleBullets.Return(bullet);
+			}
+			if(colliderType == typeof(BoxCollider2D))
+			{
+				boxBullets.Return(bullet);
+			}
+		}
+
+		public Bullet Get(BulletTag tag)
+		{
+			Bullet bullet = null;
+			Collider2D col = tag.prefab.collider2D;
+			Type colliderType = col.GetType ();
+			if(colliderType == typeof(CircleCollider2D))
+			{
+				bullet = circleBullets.Get (tag);
+				CircleCollider2D bulletCol = bullet.col as CircleCollider2D;
+				CircleCollider2D circleCol = col as CircleCollider2D;
+				bulletCol.center = circleCol.center;
+				bulletCol.radius = circleCol.radius;
+				return bullet;
+			}
+			if(colliderType == typeof(BoxCollider2D))
+			{
+				bullet = circleBullets.Get (tag);
+				BoxCollider2D bulletCol = bullet.col as BoxCollider2D;
+				BoxCollider2D circleCol = col as BoxCollider2D;
+				bulletCol.center = circleCol.center;
+				bulletCol.size = circleCol.size;
+				return bullet;
+			}
+			return null;
+		}
+
+	}
 	[Serializable]
 	public class PickupPool : GameObjectPool<Pickup, PickupType> { }
 	[Serializable]

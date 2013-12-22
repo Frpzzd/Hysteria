@@ -47,10 +47,10 @@ public class TimerManager : MonoBehaviour
 [Serializable]
 public class Timer
 {
-	[HideInInspector]
+	[NonSerialized]
 	public float remainingTime;
 	public float totalTime;
-	[HideInInspector]
+	[NonSerialized]
 	private bool active = false;
 
 	public Timer()

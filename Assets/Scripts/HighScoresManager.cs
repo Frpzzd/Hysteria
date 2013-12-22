@@ -103,6 +103,7 @@ public class HighScoresManager : MonoBehaviour
 			get { return "High Score" + place + " "; }
 		}
 
+#pragma warning disable 168
 		public HighScore(int place, int defaultScore)
 		{
 			this.place = place;
@@ -122,6 +123,7 @@ public class HighScoresManager : MonoBehaviour
 				timestamp = null;
 			}
 		}
+#pragma warning restore 168
 
 		public void Save()
 		{

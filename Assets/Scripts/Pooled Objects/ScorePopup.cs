@@ -21,7 +21,7 @@ public class ScorePopup : PooledGameObject<ScorePopup.Params>
 	void FixedUpdate () 
 	{
 		float deltat = Time.deltaTime;
-		trans.position += Vector3.up * upVel * deltat;
+		Transform.position += Vector3.up * upVel * deltat;
 		transition += fadeSpeed * deltat;
 		gt.color = Color.Lerp(startColor, endColor, transition);
 		if(gt.color.a <= alphaDespawnThreshold)

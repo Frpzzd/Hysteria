@@ -11,47 +11,6 @@ public class AttackPatternTagEditorWindow : EditorWindow
     public int apSelect;
     public int tagSelect;
 
-    public AttackPattern currentAp
-    {
-        get
-        {
-            if(ap != null && ap.Length > 0 && apSelect >= 0 && apSelect < ap.Length)
-            {
-                return ap[apSelect];
-            }
-            else
-            {
-                return null;
-            }
-        }
-    }
-
-    public NamedObject currentTag
-    {
-        get
-        {
-            NamedObject tag = null;
-            if(ap != null && ap.Length > 0 && apSelect >= 0 && apSelect < ap.Length && tagSelect >= 0)
-            {
-                if(fireOrBullet)
-                {
-                    if(ap[apSelect].bulletTags.Length > tagSelect)
-                    {
-                        tag = ap[apSelect].bulletTags[tagSelect];
-                    }
-                }
-                else
-                {
-                    if(ap[apSelect].fireTags.Length > tagSelect)
-                    {
-                        tag = ap[apSelect].fireTags[tagSelect];
-                    }
-                }
-            }
-            return tag;
-        }
-    }
-
     [MenuItem("Window/Attack Pattern Editor")]
     public static void ShowWindow()
     {
@@ -175,6 +134,16 @@ public class AttackPatternTagEditorWindow : EditorWindow
                 {
                     apaew = EditorWindow.GetWindow<AttackPatternActionEditorWindow>();
                 }
+                if(fireOrBullet)
+                {
+                    apaew.tag = ap[apSelect].bulletTags[tagSelect];
+                }
+                else
+                {
+                    apaew.tag = ap[apSelect].fireTags[tagSelect];
+                }
+                apaew.bulletTags = ap[apSelect].bulletTags;
+                apaew.fireTags = ap[apSelect].fireTags;
                 apaew.Repaint();
             }
             tagList [i].Name = EditorGUILayout.TextField(tagList [i].Name);

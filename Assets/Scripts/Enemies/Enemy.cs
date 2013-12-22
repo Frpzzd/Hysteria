@@ -3,7 +3,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public struct EnemyDrops
+[Serializable]
+public class EnemyDrops
 {
 	public float radius;
 	public int point;
@@ -12,11 +13,11 @@ public struct EnemyDrops
 	public int bomb;
 }
 
-public class Enemy : MonoBehaviour 
+public class Enemy : CachedObject
 {
 	public static List<Enemy> enemiesInPlay;
 	public int health;
-	public int currentHealth;
+	private int currentHealth;
 	public bool boss;
 	private AttackPattern[] attackPatterns;
 
@@ -24,8 +25,8 @@ public class Enemy : MonoBehaviour
 	{
 		enemiesInPlay = new List<Enemy> ();
 	}
-
-	[HideInInspector]
+	
+	[NonSerialized]
 	public Transform trans;
 
 	public bool Dead
@@ -36,7 +37,7 @@ public class Enemy : MonoBehaviour
 	public EnemyDrops drops;
 	private int currentAttackPattern;
 
-	void Awake()
+	public override void Awake()
 	{
 		attackPatterns = GetComponents<AttackPattern> ();
 		for(int i = 0; i < attackPatterns.Length; i++)
@@ -44,12 +45,14 @@ public class Enemy : MonoBehaviour
 			attackPatterns[i].enabled = false;
 		}
 		currentAttackPattern = 0;
-		trans = transform;
+		currentHealth = health;
 	}
 
 	public void Spawn()
 	{
 		enemiesInPlay.Add (this);
+		collider2D.enabled = true;
+		renderer.enabled = true;
 	}
 	
 	// Update is called once per frame
@@ -98,6 +101,8 @@ public class Enemy : MonoBehaviour
 			Drop (drops);
 		}
 		enemiesInPlay.Remove (this);
+		collider2D.enabled = false;
+		renderer.enabled = false;
 		//TO-DO: Play enemy death visual effect here
 		//TO-DO: Play enemy death sound effect here
 	}
@@ -124,7 +129,7 @@ public class Enemy : MonoBehaviour
 			distance = drop.radius * UnityEngine.Random.value;
 			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Life);
 		}
-		for(int i = 0; i < drop.point; i++)
+		for(int i = 0; i < drop.bomb; i++)
 		{
 			angle = 2 * Mathf.PI * UnityEngine.Random.value;
 			distance = drop.radius * UnityEngine.Random.value;
@@ -134,11 +139,11 @@ public class Enemy : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D col)
 	{
-		if(col.tag == "Player Shot")
+		if(col.gameObject.layer == 9) // Player Shots
 		{
 			PlayerShot shot = col.GetComponent<PlayerShot>();
 			Damage (shot.DamageValue);
-			if(!Player.instance.Percieving)
+			if(!Player.Percieving || shot.mainShot)
 			{
 				GameObjectManager.PlayerShots.Return(shot);
 			}

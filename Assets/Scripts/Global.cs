@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class Global : MonoBehaviour
+public class Global
 {
 	public static Rank Rank;
 

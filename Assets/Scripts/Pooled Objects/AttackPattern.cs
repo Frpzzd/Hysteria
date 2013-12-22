@@ -1,14 +1,10 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class AttackPattern : MonoBehaviour, NamedObject
+public class AttackPattern : CachedObject, NamedObject
 {
-	[HideInInspector] 
-	public GameObject BPgameObject;
-	[HideInInspector]
-	public Transform BPtransform;
-
 	public bool bossPattern;
 	public string bpName = "Attack Pattern";
 	public int health;
@@ -30,19 +26,10 @@ public class AttackPattern : MonoBehaviour, NamedObject
 
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
-	public HashSet<Bullet> children;
 	
 	float sequenceSpeed = 0.0f;
 	
 	bool started = false;
-	public float waitBeforeRepeating = 5.0f;
-
-	void Awake()
-	{
-		BPgameObject = gameObject;
-		BPtransform = transform;
-		children = new HashSet<Bullet> ();
-	}
 
 	// Use this for initialization
 	void Start () 
@@ -65,32 +52,33 @@ public class AttackPattern : MonoBehaviour, NamedObject
 
 		while(true)
 		{
-			yield return RunFire(fireTags[0]);
+			yield return RunFire(fireTags[0], fireTags[0].actions, 1);
 		}
 	}
 
-	private IEnumerator RunFire(FireTag fireTag)
+	private IEnumerator RunFire(FireTag fireTag, FireAction[] actions, int repeatC)
 	{
-		int index = 0;
 		float deltat = Time.deltaTime;
 		
-		if(fireTag.actions.Length == 0)
+		if(actions.Length == 0)
 		{
-			Fire(BPtransform.position, BPtransform.rotation, fireTag.actions[index], fireTag.param, fireTag.previousRotation);
+			return false;
 		}
 		else
 		{
-			for(index = 0; index < fireTag.actions.Length; index++)
+			for(int j = 0; j < repeatC; j++)
 			{
-				FireAction currentAction = fireTag.actions[index];
-				switch(currentAction.type)
+				for(int i = 0; i < actions.Length; i++)
 				{
+					FireAction currentAction = actions[i];
+					switch(currentAction.type)
+					{
 					case(FireAction.Type.Wait):
 						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
 						break;
 						
 					case(FireAction.Type.Fire):
-						Fire(currentAction.GetSourcePosition(BPtransform.position), BPtransform.rotation, currentAction, fireTag.param, fireTag.previousRotation);
+						Fire(currentAction.GetSourcePosition(Transform.position), Transform.rotation, currentAction, fireTag.param, fireTag.previousRotation);
 						break;
 						
 					case(FireAction.Type.CallFireTag	):
@@ -102,52 +90,13 @@ public class AttackPattern : MonoBehaviour, NamedObject
 							calledFireTag.param = fireTag.param;
 						
 						if(calledFireTag.actions.Length > 0)
-							yield return RunFire(calledFireTag);
+							yield return RunFire(calledFireTag, calledFireTag.actions, 1);
 						break;
 						
 					case(FireAction.Type.Repeat):
-						yield return RunNestedFire(fireTag, currentAction);
+						yield return RunFire(fireTag, currentAction.nestedActions, Mathf.FloorToInt(currentAction.repeat.Value));
 						break;
-				}
-			}
-		}
-	}
-
-	public IEnumerator RunNestedFire(FireTag ft, FireAction fa)
-	{
-		float deltat = Time.deltaTime;
-		float repeatC = Mathf.Floor(fa.repeat.Value);
-
-		for(int i = 0; i < repeatC; i++)
-		{
-			for(int j = 0; j < fa.nestedActions.Length; j++)
-			{
-				FireAction currentAction = fa.nestedActions[j];
-				switch(currentAction.type)
-				{
-					case(FireAction.Type.Wait):
-						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
-						break;
-						
-					case(FireAction.Type.Fire):
-						Fire(currentAction.GetSourcePosition(BPtransform.position), BPtransform.rotation, currentAction, ft.param, ft.previousRotation);
-						break;
-						
-					case(FireAction.Type.CallFireTag	):
-						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
-						
-						if(currentAction.passParam)
-							calledFireTag.param = UnityEngine.Random.Range(currentAction.paramRange.x, currentAction.paramRange.y);
-						else if(currentAction.passPassedParam)
-							calledFireTag.param = ft.param;
-
-						if(calledFireTag.actions.Length > 0)
-							yield return RunFire(calledFireTag);
-						break;
-						
-					case(FireAction.Type.Repeat):
-						yield return RunNestedFire(ft, currentAction);
-						break;
+					}
 				}
 			}
 		}
@@ -161,11 +110,11 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		if(previousRotation.prevRotationNull)
 		{
 			previousRotation.prevRotationNull = false;
-			previousRotation.previousRotation = temp.trans.localRotation;
+			previousRotation.previousRotation = temp.Transform.localRotation;
 		}
 		
-		temp.trans.position = position;
-		temp.trans.rotation = rotation;
+		temp.Transform.position = position;
+		temp.Transform.rotation = rotation;
 
 		if(action.useParam)
 		{
@@ -180,7 +129,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		{
 			case (DirectionType.TargetPlayer):
 				Quaternion originalRot = rotation;
-				float dotHeading = Vector3.Dot( temp.trans.up, Player.playerTransform.position - temp.trans.position );
+				float dotHeading = Vector3.Dot( temp.Transform.up, Player.PlayerTransform.position - temp.Transform.position );
 				
 				if(dotHeading > 0)
 				{
@@ -190,23 +139,23 @@ public class AttackPattern : MonoBehaviour, NamedObject
 				{
 					direction = 1;
 				}
-				angleDifference = Vector3.Angle(temp.trans.forward, Player.playerTransform.position - temp.trans.position);
-				temp.trans.rotation = originalRot * Quaternion.AngleAxis((direction * angleDifference) - angle, Vector3.right);
+				angleDifference = Vector3.Angle(temp.Transform.forward, Player.PlayerTransform.position - temp.Transform.position);
+				temp.Transform.rotation = originalRot * Quaternion.AngleAxis((direction * angleDifference) - angle, Vector3.right);
 				break;
 				
 			case (DirectionType.Absolute):
-				temp.trans.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
+				temp.Transform.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
 				break;
 				
 			case (DirectionType.Relative):
-				temp.trans.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
+				temp.Transform.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
 				break;
 				
 			case (DirectionType.Sequence):
-				temp.trans.localRotation = previousRotation.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
+				temp.Transform.localRotation = previousRotation.previousRotation * Quaternion.AngleAxis (-angle, Vector3.right); 
 				break;
 		}
-		previousRotation.previousRotation = temp.trans.localRotation;
+		previousRotation.previousRotation = temp.Transform.localRotation;
 		if(action.overwriteBulletSpeed)
 		{
 			speed = action.speed.Value;
@@ -226,7 +175,6 @@ public class AttackPattern : MonoBehaviour, NamedObject
 		{	
 			temp.speed = bt.speed.Value;
 		}
-		temp.actions = bt.actions;
 		
 		if(action.passParam)
 		{
@@ -238,7 +186,7 @@ public class AttackPattern : MonoBehaviour, NamedObject
 			temp.param = param;
 		}
 		temp.master = this;
-		temp.gameObj.SetActive(true);
+		temp.GameObject.SetActive(true);
 		if(action.audioClip != null)
 		{
 			AudioSource.PlayClipAtPoint(action.audioClip, position);
@@ -255,7 +203,7 @@ public interface NamedObject
 	string Name { get; set; }
 }
 
-public class FireTag : Object, NamedObject
+public class FireTag : UnityEngine.Object, NamedObject
 {
 	private string ftName = "Fire Tag";
 	public float param = 0.0f;
@@ -276,13 +224,11 @@ public class FireTag : Object, NamedObject
 	}
 }
 
-public class BulletTag : Object, NamedObject
+public class BulletTag : UnityEngine.Object, NamedObject
 {
 	private string btName = "Bullet Tag";
 	public AttackPatternProperty speed;
-	public Sprite sprite;
-	public float colliderRadius;
-	public Color colorMask;
+	public GameObject prefab;
 
 	public BulletAction[] actions;
 
@@ -353,8 +299,8 @@ public abstract class Action
 		}
 		if(randomSource)
 		{
-			value.x += randomArea.x - (2 * randomArea.x * Random.value);
-			value.y += randomArea.y - (2 * randomArea.y * Random.value);
+			value.x += randomArea.x - (2 * randomArea.x * UnityEngine.Random.value);
+			value.y += randomArea.y - (2 * randomArea.y * UnityEngine.Random.value);
 		}
 		return value;
 	}
@@ -417,7 +363,7 @@ public struct AttackPatternProperty
 
 	public float RandomValue
 	{
-		get { return Random.Range (values.x, values.y); }
+		get { return UnityEngine.Random.Range (values.x, values.y); }
 	}
 
 	public float RankValue
@@ -445,6 +391,6 @@ public class FireAction : NestedAction<FireAction, FireAction.Type>
 
 public class BulletAction : NestedAction<BulletAction, BulletAction.Type>
 {
-	public enum Type { Wait, ChangeDirection, ChangeSpeed, Repeat, Fire, VerticalChangeSpeed, Deactivate }
+	public enum Type { Wait, ChangeDirection, ChangeSpeed, ChangeScale, Repeat, Fire, VerticalChangeSpeed, Deactivate }
 	public bool waitForChange = false;
 }

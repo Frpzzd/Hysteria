@@ -5,18 +5,15 @@ using UnityEngine;
 
 public class AttackPatternActionEditorWindow : EditorWindow
 {
-    private Vector2 actionScroll;
+    private Vector2 scroll;
     public AttackPatternTagEditorWindow aptew;
-    private NamedObject currentTag;
-
-    private NamedObject tag
-    {
-        get { return aptew.currentTag; }
-    }
+    public NamedObject tag;
+    public BulletTag[] bulletTags;
+    public FireTag[] fireTags;
 
     void OnGUI()
     {
-        actionScroll = EditorGUILayout.BeginScrollView(actionScroll);
+        scroll = EditorGUILayout.BeginScrollView(scroll);
         if (tag != null)
         {
             if (tag is BulletTag)
@@ -48,15 +45,6 @@ public class AttackPatternActionEditorWindow : EditorWindow
 //                    }
 //                }
             }
-        }
-    }
-
-    void Update()
-    {
-        if (currentTag != tag)
-        {
-            currentTag = tag;
-            Repaint();
         }
     }
 
@@ -199,7 +187,7 @@ public class AttackPatternActionEditorWindow : EditorWindow
                             ac.speed = AttackPatternPropertyField("Speed", ac.speed, false);
                         }
                         EditorGUILayout.Space();
-                        ac.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", aptew.currentAp.bulletTags, ac.bulletTagIndex, "Bullet Tag");
+                        ac.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", bulletTags, ac.bulletTagIndex, "Bullet Tag");
                         break;
                 }
                 EditorGUI.indentLevel--;
@@ -269,11 +257,11 @@ public class AttackPatternActionEditorWindow : EditorWindow
                         {
                             ac.paramRange = EditorGUILayout.Vector2Field("Param Range", ac.paramRange);
                         }
-                        ac.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", aptew.currentAp.bulletTags, ac.bulletTagIndex, "Bullet Tag");
+                        ac.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", bulletTags, ac.bulletTagIndex, "Bullet Tag");
                         break;
 
                     case(FireAction.Type.CallFireTag):
-                        ac.fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", aptew.currentAp.fireTags, ac.fireTagIndex, "Fire Tag");
+                        ac.fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", bulletTags, ac.fireTagIndex, "Fire Tag");
                         EditorGUILayout.BeginHorizontal();
                         ac.passParam = EditorGUILayout.Toggle("PassParam", ac.passParam);
                         if (!ac.passParam)
