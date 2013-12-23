@@ -2,9 +2,8 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class Player : CachedObject
+public class Player : StaticGameObject<Player>
 {
-	private static Player instance;
 	private static Transform respawnLocation;
 
 	public float optionDistance;
@@ -139,7 +138,7 @@ public class Player : CachedObject
 		set { instance.JP = !value; }
 	}
 
-	public bool invincible = false;
+	private bool invincible = false;
 
 	public float deathInvincibilityTime;
 	public float invincibilityFlashInterval;
@@ -172,13 +171,7 @@ public class Player : CachedObject
 	public override void Awake()
 	{
 		base.Awake ();
-		if(instance != null)
-		{
-			Destroy (gameObject);
-			return;
-		}
 		//Cache commonly accessed components of player
-		instance = this;
 		respawnLocation = GameObject.Find ("Player Respawn Location").transform;
 		hitboxRenderer = Transform.FindChild("Death Hitbox").renderer as SpriteRenderer;
 		spriteRenderer = Transform.FindChild ("Sprite").renderer as SpriteRenderer;
@@ -314,7 +307,7 @@ public class Player : CachedObject
 	{
 		if(!invincible && !bullet.grazed)
 		{
-			Global.Graze++;
+			ScoreManager.GrazeBullet();
 			bullet.grazed = true;
 		}
 	}
@@ -324,19 +317,33 @@ public class Player : CachedObject
 		switch(type)
 		{
 			case PickupType.Point:
-				Global.Score += 10000;
+				ScoreManager.PointPickup();
 				break;
 			case PickupType.PointValue:
+				ScoreManager.PointValuePickup();
 				break;
 			case PickupType.Power:
 				instance.ChangePower(0.01f);
+				ScoreManager.PowerPickup();
 				break;
 			case PickupType.Bomb:
+				instance.bombs++;
+				if(instance.bombs > instance.maxBombs)
+				{
+					instance.bombs = instance.maxBombs;
+					ScoreManager.ExtraBomb();
+				}
 				SoundManager.PlaySoundEffect(instance.BombUpClip, instance.Transform.position);
 				break;
-		case PickupType.Life:
-			SoundManager.PlaySoundEffect(instance.ExtendClip, instance.Transform.position);
-			break;
+			case PickupType.Life:
+				instance.lives++;
+				if(instance.lives > instance.maxLives)
+				{
+					instance.lives = instance.maxLives;
+					ScoreManager.ExtraLife();
+				}
+				SoundManager.PlaySoundEffect(instance.ExtendClip, instance.Transform.position);
+				break;
 		}
 		SoundManager.PlaySoundEffect(instance.PickupClip, instance.Transform.position);
 	}
@@ -352,11 +359,11 @@ public class Player : CachedObject
 		{
 			lives--;
 			//TO-DO: Play Player death effect at player's location
-			SoundManager.PlaySoundEffect(instance.PickupClip, instance.Transform.position);
+			SoundManager.PlaySoundEffect(instance.DeathClip, instance.Transform.position);
 			Transform.position = respawnLocation.position;
 			if(lives <= 0)
 			{
-				Global.gameState = GameState.GameOver;
+				Global.GameStateChange(GameState.GameOver);
 			}
 			else
 			{

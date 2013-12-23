@@ -7,9 +7,11 @@ public class PauseMenu : MonoBehaviour
 	public GameObject[] disableOnMenu;
 	public GameObject[] enableOnMenu;
 	[NonSerialized]
-	public bool menuEnabled = false;
 	public AudioClip pauseClip;
 	private float cachedTimeScale;
+
+	private enum GUIType { None, Pause, CreditEnd, GameOver }
+	private GUIType guiType = GUIType.None;
 
 	private void Toggle(bool value)
 	{
@@ -25,16 +27,15 @@ public class PauseMenu : MonoBehaviour
 
 	private void Pause()
 	{
-		menuEnabled = true;
 		Toggle(true);
 		cachedTimeScale = Time.timeScale;
 		Time.timeScale = 0f;
+		SoundManager.PlaySoundEffect (pauseClip, 1f, Vector3.zero, false);
 		SoundManager.PauseMusic ();
 	}
 
 	private void Unpause()
 	{
-		menuEnabled = false;
 		Toggle(false);
 		Time.timeScale = cachedTimeScale;
 		SoundManager.UnpauseMusic ();
@@ -42,21 +43,31 @@ public class PauseMenu : MonoBehaviour
 
 	void Update()
 	{
-		if(Input.GetButtonDown("Pause") && !menuEnabled)
+		switch(Global.GameState)
 		{
-			Pause ();
-		}
-		else if(Input.GetButtonDown("Pause") && menuEnabled)
-		{
-			Unpause();
+			case GameState.InGame:
+				if(Input.GetButtonDown("Pause"))
+				{
+					Global.GameStateChange(GameState.Paused);
+					Pause ();
+				}
+				break;
+			case GameState.Paused:
+				if(Input.GetButtonDown("Pause"))
+				{
+					Global.GameStateChange(GameState.InGame);
+					Unpause();
+				}
+				break;
 		}
 	}
 
 	void OnGUI()
 	{
-		if (menuEnabled)
+		switch(guiType)
 		{
-
+			default:
+				return;
 		}
 	}
 }

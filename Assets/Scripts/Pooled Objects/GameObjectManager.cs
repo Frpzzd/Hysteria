@@ -11,7 +11,7 @@ public abstract class PooledGameObject<P> : CachedObject
 	}
 }
 
-public class GameObjectManager : MonoBehaviour 
+public class GameObjectManager : StaticGameObject<GameObjectManager>
 {
 	[Serializable]
 	public class GameObjectPool<T, P> : Queue<T> where T : PooledGameObject<P> , new()
@@ -156,32 +156,30 @@ public class GameObjectManager : MonoBehaviour
 	
 	public static BulletPool Bullets
 	{
-		get { return manager.bullets; }
+		get { return instance.bullets; }
 	}
 	
 	public static PickupPool Pickups
 	{
-		get { return manager.pickups; }
+		get { return instance.pickups; }
 	}
 
 	public static PlayerShotPool PlayerShots
 	{
-		get { return manager.playerShots; }
+		get { return instance.playerShots; }
 	}
 
 	public static ScorePopupPool ScorePopups
 	{
-		get { return manager.scorePopups; }
+		get { return instance.scorePopups; }
 	}
 
-	public static GameObjectManager manager;
-
-	void Awake()
+	public override void Awake()
 	{
+		base.Awake ();
 		bullets.Start ();
 		pickups.Start ();
 		playerShots.Start ();
 		scorePopups.Start ();
-		manager = this;
 	}
 }

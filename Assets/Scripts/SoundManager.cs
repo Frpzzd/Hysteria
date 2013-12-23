@@ -1,13 +1,37 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
-public class SoundManager : CachedObject
+public class SoundManager : StaticGameObject<SoundManager>
 {
 	private static SoundManager instance;
 	private static AudioSource musicSource;
-	private static Transform sfxSourceTransform;
-	private static AudioSource sfxSource;
-	
+	private static Dictionary<AudioClip, AudioObject> sfxSources;
+
+	public Vector3 offset;
+	public GameObject audioSourcePrefab;
+
+	private static Vector3 Offset
+	{
+		get { return instance.offset; }
+	}
+
+	private static GameObject prefab
+	{
+		get { return instance.audioSourcePrefab; }
+	}
+
+	private class AudioObject
+	{
+		public AudioSource source;
+		public Transform transform;
+
+		public AudioObject(AudioSource source, Transform transform)
+		{
+			this.source = source;
+			this.transform = transform;
+		}
+	}
+
 	// Use this for initialization
 	public override void Awake()
 	{
@@ -18,9 +42,8 @@ public class SoundManager : CachedObject
 			return;
 		}
 		instance = this;
-		sfxSourceTransform = Transform.FindChild ("Source");
 		musicSource = audio;
-		sfxSource = sfxSourceTransform.audio;
+		sfxSources = new Dictionary<AudioClip, AudioObject> ();
 	}
 	
 	public static void PlayMusic(AudioClip bgm)
@@ -39,16 +62,37 @@ public class SoundManager : CachedObject
 	{
 		musicSource.Play ();
 	}
+
+	private static AudioObject GetSource(AudioClip sfx)
+	{
+		if(sfxSources.ContainsKey(sfx))
+		{
+			return sfxSources[sfx];
+		}
+		else
+		{
+			GameObject newSource = (GameObject)Instantiate(prefab);
+			newSource.transform.parent = instance.Transform;
+			newSource.transform.localPosition = Vector3.zero;
+			newSource.name = sfx.name + " Source";
+			newSource.audio.clip = sfx;
+			AudioObject audObj = new AudioObject(newSource.audio, newSource.transform);
+			sfxSources.Add(sfx, audObj);
+			return audObj;
+		}
+	}
 	
 	public static void PlaySoundEffect(AudioClip sfx, Vector3 location)
 	{
-		sfxSourceTransform.position =  new Vector3 (location.x, instance.Transform.position.y + 5, -2);
-		sfxSource.PlayOneShot (sfx);
+		AudioObject source = GetSource (sfx);
+		source.transform.position =  new Vector3 (location.x + Offset.x, instance.Transform.position.y + Offset.y, Offset.z);
+		source.source.PlayOneShot (sfx);
 	}
 	
 	public static void PlaySoundEffect(AudioClip sfx, float volume, Vector3 location, bool inWorld)
 	{
-		sfxSourceTransform.position = new Vector3 ((inWorld) ? location.x : instance.Transform.position.x, instance.Transform.position.y + 5, -2);
-		sfxSource.PlayOneShot (sfx);
+		AudioObject source = GetSource (sfx);
+		source.transform.position = new Vector3 ((inWorld) ? location.x : instance.Transform.position.x + Offset.x, instance.Transform.position.y + Offset.y, Offset.z);
+		source.source.PlayOneShot (sfx);
 	}
 }

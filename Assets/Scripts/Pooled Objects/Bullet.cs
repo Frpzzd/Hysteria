@@ -228,13 +228,4 @@ public class Bullet : PooledGameObject<BulletTag>
 		GameObjectManager.Pickups.Spawn (Transform.position, PickupType.PointValue);
 		Deactivate();
 	}
-
-	void OnTriggerExit(Collider col)
-	{
-		if(col.gameObject.CompareTag("Graze Hitbox") && !grazed)
-		{
-			Global.Graze++;
-			grazed = true;
-		}
-	}
 }

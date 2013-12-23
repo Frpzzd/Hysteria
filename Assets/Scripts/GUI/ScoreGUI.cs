@@ -17,7 +17,7 @@ public class ScoreGUI : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if(Global.Score != currentScore)
+		if(ScoreManager.Score != currentScore)
 		{
 			if(!started)
 			{
@@ -30,12 +30,12 @@ public class ScoreGUI : MonoBehaviour
 				if(lerp >= 1f)
 				{
 					started = false;
-					currentScore = Global.Score;
-					gt.text = Global.Score.ToString("0,000,000,000");
+					currentScore = ScoreManager.Score;
+					gt.text = ScoreManager.Score.ToString("0,000,000,000");
 				}
 				else
 				{
-					intermediate = (ulong)Mathf.Lerp(currentScore, Global.Score, lerp);
+					intermediate = (ulong)Mathf.Lerp(currentScore, ScoreManager.Score, lerp);
 					gt.text = intermediate.ToString("0,000,000,000");
 				}
 			}
