@@ -88,6 +88,11 @@ public class SoundManager : StaticGameObject<SoundManager>
 		source.transform.position =  new Vector3 (location.x + Offset.x, instance.Transform.position.y + Offset.y, Offset.z);
 		source.source.PlayOneShot (sfx);
 	}
+
+	public static void PlaySoundEffect(AudioClip sfx)
+	{
+		PlaySoundEffect (sfx, 1f, Vector3.zero, false);
+	}
 	
 	public static void PlaySoundEffect(AudioClip sfx, float volume, Vector3 location, bool inWorld)
 	{

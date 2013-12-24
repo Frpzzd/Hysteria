@@ -11,9 +11,21 @@ Platform assembly: D:\Documents\GitHub\Hysteria\Build\Hysteria_Data\Managed\Unit
 Loading D:\Documents\GitHub\Hysteria\Build\Hysteria_Data\Managed\UnityEngine.dll into Unity Child Domain
 Platform assembly: D:\Documents\GitHub\Hysteria\Build\Hysteria_Data\Managed\Assembly-CSharp.dll (this message is harmless)
 Loading D:\Documents\GitHub\Hysteria\Build\Hysteria_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
-- Completed reload, in  0.031 seconds
+- Completed reload, in  0.030 seconds
 desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
 <RI> Initializing input.
 XInput1_3.dll not found.
 <RI> Input initialized.
 Platform assembly: D:\Documents\GitHub\Hysteria\Build\Hysteria_Data\Managed\System.dll (this message is harmless)
+MainMenu
+ 
+(Filename: C:/BuildAgent/work/d3d49558e4d408f4/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 53)
+
+DifficultySelectMenu
+ 
+(Filename: C:/BuildAgent/work/d3d49558e4d408f4/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 53)
+
+MainMenu
+ 
+(Filename: C:/BuildAgent/work/d3d49558e4d408f4/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 53)
+

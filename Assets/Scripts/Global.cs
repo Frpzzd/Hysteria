@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 
 //Use this class to pass parameters from the menu to the gameplay scene
-public class Global : StaticGameObject<Global>
+public class Global
 {
 	public static Rank Rank;
 
@@ -13,10 +13,16 @@ public class Global : StaticGameObject<Global>
 		get { return credits; }
 	}
 
-	private static GameState gameState = GameState.Initialize;
+	private static GameState gameState = GameState.MainMenu;
 	public static GameState GameState
 	{
 		get { return gameState; }
+	}
+
+	private static GameType gameType = GameType.Normal;
+	public static GameType GameType
+	{
+		get { return gameType; }
 	}
 
 	public static Pickup.PickupState defaultPickupState = Pickup.PickupState.Normal;
@@ -26,9 +32,10 @@ public class Global : StaticGameObject<Global>
 		gameState = newState;
 		switch(gameState)
 		{
-			case GameState.Initialize:
+			case GameState.GameInitialize:
 				credits = 3;
 				defaultPickupState = Pickup.PickupState.Normal;
+				GameStateChange(GameState.InGame);
 				return;
 			case GameState.CreditEnd:
 				if(ScoreManager.CheckHighScore())
@@ -38,15 +45,9 @@ public class Global : StaticGameObject<Global>
 				}
 				return;
 		}
-		GameObject[] allObjects = GameObject.FindObjectsOfType<GameObject> ();
-		Debug.Log (gameState.ToString ());
-		foreach(GameObject go in allObjects)
-		{
-			go.SendMessage(gameState.ToString());
-		}
 	}
 }
 
-public enum GameState { Initialize, InGame, Paused, CreditEnd, HighScoreEntry, GameOver }
+public enum GameState { MainMenu, GameInitialize, InGame, Paused, CreditEnd, HighScoreEntry, GameOver }
 public enum GameType {Normal, StagePractice, AttackPractice}
 public enum Rank : int { Easy = 0, Normal = 1, Hard = 2, Insane = 3 }

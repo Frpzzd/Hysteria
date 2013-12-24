@@ -15,12 +15,10 @@ public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObj
 
 		if(instance != null)
 		{
-			Debug.Log(instance.GetType().ToString() + " " + GetType());
 			Destroy (gameObject);
 			return;
 		}
 
-		Debug.Log ("Hello " + GetType());
 		instance = (T)this;
 	
 		if(keepBetweenScenes)

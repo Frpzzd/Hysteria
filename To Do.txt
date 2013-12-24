@@ -6,11 +6,11 @@ VITAL MUST DO
 		-Test Bullet Pattern
 		-Demo Stage
 		-Character Select
-		-Menus
 		-Tutorial
 		-Score Popups
 		-Lasers
 	-In Progress
+		-Menus
 		-Stage Music Handling
 		-Editors for stage development
 IDEAS
