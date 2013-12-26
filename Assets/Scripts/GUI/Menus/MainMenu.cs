@@ -13,4 +13,14 @@ public class MainMenu : Menu
 		Debug.Log ("hello");
 		selectedIndex = buttonNames.Length - 1;
 	}
+
+	protected override void OnChildSwitchImpl (int i)
+	{
+		switch(i)
+		{
+			case 0:			//Start Normal Game
+				Global.GameType = GameType.Normal;
+				break;
+		}
+	}
 }

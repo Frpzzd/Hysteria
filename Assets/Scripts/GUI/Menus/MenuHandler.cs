@@ -7,10 +7,10 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 	public AudioClip menuMoveClip = null;
 	public AudioClip menuInvalidClip = null;
 	public AudioClip menuSelectClip = null;
-	private static List<Menu> menus;
 	private static PauseMenu pauseMenu;
 	private bool downButtonDown = false;
 	private bool upButtonDown = false;
+	public GameObject background;
 
 	private const float baseScreenWidth = 1024f;
 	private const float baseScreenHeight = 768f;
@@ -19,18 +19,28 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 	{
 		base.Awake ();
 		Screen.lockCursor = true;
-		menus = new List<Menu>((Menu[])GameObject.FindObjectsOfType<Menu> ());
 		pauseMenu = GameObject.FindObjectOfType<PauseMenu> ();
-		menus.Remove (pauseMenu);
 		ChangeMenu (currentMenu);
 	}
 
 	public static void ChangeMenu(Menu menu)
 	{
-		Debug.Log (menu.GetType());
 		instance.currentMenu.Toggle (false);
 		instance.currentMenu = menu;
 		instance.currentMenu.Toggle (true);
+	}
+
+	public static void ChangeBackground(Texture2D texture)
+	{
+		if(texture !=  null)
+		{
+			instance.background.renderer.material.mainTexture = texture;
+			instance.background.SetActive(true);
+		}
+		else
+		{
+			instance.background.SetActive(false);
+		}
 	}
 
 	void Update()

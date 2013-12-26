@@ -19,11 +19,7 @@ public class Global
 		get { return gameState; }
 	}
 
-	private static GameType gameType = GameType.Normal;
-	public static GameType GameType
-	{
-		get { return gameType; }
-	}
+	public static GameType GameType = GameType.Normal;
 
 	public static Pickup.PickupState defaultPickupState = Pickup.PickupState.Normal;
 

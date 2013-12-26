@@ -5,6 +5,7 @@ using System.Collections;
 [Serializable]
 public abstract class Menu : MonoBehaviour
 {
+	public Texture2D backgroundImage;
 	public GUIStyle menuStyle;
 	public ChildMenu parent;
 	public ChildMenu[] children;
@@ -19,7 +20,7 @@ public abstract class Menu : MonoBehaviour
 
 	private int originalStyleFontSize;
 
-	public virtual void OnChildSwitch(int i)
+	public void OnChildSwitch(int i)
 	{
 		OnChildSwitchImpl (i);
 		if(children[i].menu != null)
@@ -28,9 +29,8 @@ public abstract class Menu : MonoBehaviour
 		}
 	}
 
-	public virtual void OnParentSwitch()
+	public void OnParentSwitch()
 	{
-		Debug.Log ("Hello");
 		OnParentSwitchImpl ();
 		if(parent.menu != null)
 		{
@@ -47,6 +47,10 @@ public abstract class Menu : MonoBehaviour
 		for(int i = 0; i < relatedObjects.Length; i++)
 		{
 			relatedObjects[i].SetActive(value);
+		}
+		if(value)
+		{
+			MenuHandler.ChangeBackground(backgroundImage);
 		}
 		enabled = value;
 	}
