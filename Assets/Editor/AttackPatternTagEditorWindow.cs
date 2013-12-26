@@ -4,23 +4,26 @@ using UnityEditor;
 
 public class AttackPatternTagEditorWindow : EditorWindow
 {
+	public static AttackPatternTagEditorWindow instance;
     private Vector2 scroll;
-    private AttackPatternActionEditorWindow apaew;
-    public AttackPattern[] ap;
-    public bool fireOrBullet;
-    public int apSelect;
-    public int tagSelect;
+    public static AttackPattern[] ap;
+	public static Tag tag;
+	public static AttackPattern attackPattern;
+    public static bool fireOrBullet;
+    public static int apSelect;
+    public static int tagSelect;
+	public bool windowChanged = false;
 
     [MenuItem("Window/Attack Pattern Editor")]
     public static void ShowWindow()
     {
-        AttackPatternTagEditorWindow aptew = EditorWindow.GetWindow<AttackPatternTagEditorWindow>("Tags");
-        aptew.apaew = EditorWindow.GetWindow<AttackPatternActionEditorWindow>("Actions");
-        aptew.apaew.aptew = aptew;
+		EditorWindow.GetWindow<AttackPatternTagEditorWindow>("Tags");
+		EditorWindow.GetWindow<AttackPatternActionEditorWindow>("Actions");
     }
 
     void OnGUI()
     {
+		instance = this;
         APSelect();
         TagGUI();
         BottomControls();
@@ -46,10 +49,15 @@ public class AttackPatternTagEditorWindow : EditorWindow
             {
                 changed = true;
             }
-            if(changed)
+            if(changed || windowChanged)
             {
                 ap = patterns;
                 Repaint();
+				AttackPatternActionEditorWindow.instance.Repaint();
+				if(windowChanged)
+				{
+					windowChanged = false;
+				}
             }
         }
     }
@@ -82,6 +90,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
             if(apSelect != oldSelect)
             {
                 tagSelect = -1;
+				windowChanged = true;
             }
         } 
         else
@@ -130,27 +139,22 @@ public class AttackPatternTagEditorWindow : EditorWindow
             {
                 fireOrBullet = buttonEnable;
                 tagSelect = i;
-                if(apaew == null)
-                {
-                    apaew = EditorWindow.GetWindow<AttackPatternActionEditorWindow>();
-                }
                 if(fireOrBullet)
                 {
-                    apaew.tag = ap[apSelect].bulletTags[tagSelect];
+                    tag = ap[apSelect].bulletTags[tagSelect];
                 }
                 else
                 {
-                    apaew.tag = ap[apSelect].fireTags[tagSelect];
+                	tag = ap[apSelect].fireTags[tagSelect];
                 }
-                apaew.bulletTags = ap[apSelect].bulletTags;
-                apaew.fireTags = ap[apSelect].fireTags;
-                apaew.Repaint();
+				attackPattern = ap[apSelect];
+				windowChanged = true;
             }
             tagList [i].Name = EditorGUILayout.TextField(tagList [i].Name);
             moveRemove = UpDownRemoveButtons(moveRemove, tagList.Count, i, buttonCheck);
             EditorGUILayout.EndHorizontal();
         }
-        EditorUtils.MoveRemoveAdd<T>(moveRemove, tagList);
+        EditorUtils.MoveRemoveAdd<T, T>(moveRemove, tagList);
         return tagList.ToArray();
     }
 
@@ -165,6 +169,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
             {
                 tagSelect--;
             }
+			windowChanged = true;
         }
         GUI.enabled = (i < count - 1);
         if (GUILayout.Button('\u25BC'.ToString(), GUILayout.Width(22)))
@@ -174,7 +179,8 @@ public class AttackPatternTagEditorWindow : EditorWindow
             if (buttonCheck && tagSelect == i)
             {
                 tagSelect++;
-            }
+			}
+			windowChanged = true;
         }
         GUI.enabled = (count > 1);
         if (GUILayout.Button("X", GUILayout.Width(22)))
@@ -183,7 +189,8 @@ public class AttackPatternTagEditorWindow : EditorWindow
             if (tagSelect == i)
             {
                 tagSelect--;
-            }
+			}
+			windowChanged = true;
         }
         GUI.enabled = true;
         return moveRemove;

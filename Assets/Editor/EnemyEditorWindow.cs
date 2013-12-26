@@ -6,7 +6,6 @@ public class EnemyEditorWindow : EditorWindow
 {
     private Enemy enemy = null;
     private Enemy[] excessEnemyScripts = new Enemy[0];
-    private int apSelect = -1;
 
     [MenuItem("Window/Enemy Editor")]
     public static void ShowWindow()
@@ -72,7 +71,6 @@ public class EnemyEditorWindow : EditorWindow
             enemy = null;
             excessEnemyScripts = new Enemy[0];
         }
-        apSelect = -1;
         Repaint();
     }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -10,7 +10,7 @@ public class Bullet : PooledGameObject<BulletTag>
 	[HideInInspector]
 	public GameObject prefab;
 	[HideInInspector]
-	public PreviousRotationWrapper prevRotation= new PreviousRotationWrapper();
+	public RotationWrapper prevRotation = new RotationWrapper();
 	
 	[HideInInspector]
 	public float speed = 5.0f;
@@ -70,157 +70,71 @@ public class Bullet : PooledGameObject<BulletTag>
 		}
 	}
 
-	public IEnumerator RunActions(BulletAction[] actions, int repeatC)
-	{	
-		float deltat = Time.deltaTime;
-
+	public IEnumerator RunActions(IBulletAction[] actions, int repeatC)
+	{
 		for(int j = 0; j < repeatC; j++)
 		{
 			for(int i = 0; i < actions.Length; i++)
 			{
-				switch(actions[i].type)
+				switch(actions[i].Type)
 				{
-					case(BulletAction.Type.Wait):
-						yield return new WaitForSeconds(actions[i].wait.Value * deltat);
+					case ActionType.Normal:
+						actions[i].Execute(this);
 						break;
-					case(BulletAction.Type.ChangeDirection):
-						if(actions[i].waitForChange)
-						{
-							yield return ChangeDirection(actions[i]);
-						}
-						else
-						{
-							ChangeDirection(actions[i]);
-						}
+					case ActionType.Yield:
+						yield return actions[i].YieldExecute(this);
 						break;
-					case(BulletAction.Type.ChangeSpeed):
-						if(actions[i].waitForChange)
-						{
-							yield return ChangeSpeed(actions[i], false);
-						}
-						else
-						{
-							ChangeSpeed(actions[i], false);
-						}
-						break;
-					case(BulletAction.Type.Repeat):
-						yield return RunActions(actions[i].nestedActions, Mathf.FloorToInt(actions[i].repeat.Value));
-						break;
-					case(BulletAction.Type.Fire):
-						master.Fire(actions[i].GetSourcePosition(Transform.position), Transform.rotation, actions[i], param, prevRotation);
-						break;
-					case(BulletAction.Type.VerticalChangeSpeed):
-						if(actions[i].waitForChange)
-						{
-							yield return ChangeSpeed(actions[i], true);
-						}
-						else
-						{
-							ChangeSpeed(actions[i], true);
-						}
-						break;
-					case(BulletAction.Type.Deactivate):
-						Deactivate();
+					case ActionType.Coroutine:
+						yield return StartCoroutine(actions[i].Coroutine(this));
 						break;
 				}
+//				switch(actions[i].type)
+//				{
+//					case(BulletAction.Type.Wait):
+//						yield return new WaitForSeconds(actions[i].wait.Value * deltat);
+//						break;
+//					case(BulletAction.Type.ChangeDirection):
+//						if(actions[i].waitForChange)
+//						{
+//							yield return ChangeDirection(actions[i]);
+//						}
+//						else
+//						{
+//							ChangeDirection(actions[i]);
+//						}
+//						break;
+//					case(BulletAction.Type.ChangeSpeed):
+//						if(actions[i].waitForChange)
+//						{
+//							yield return ChangeSpeed(actions[i], false);
+//						}
+//						else
+//						{
+//							ChangeSpeed(actions[i], false);
+//						}
+//						break;
+//					case(BulletAction.Type.Repeat):
+//						yield return RunActions(actions[i].nestedActions, Mathf.FloorToInt(actions[i].repeat.Value));
+//						break;
+//					case(BulletAction.Type.Fire):
+//						master.Fire(actions[i].GetSourcePosition(Transform.position), Transform.rotation, actions[i], param, prevRotation);
+//						break;
+//					case(BulletAction.Type.VerticalChangeSpeed):
+//						if(actions[i].waitForChange)
+//						{
+//							yield return ChangeSpeed(actions[i], true);
+//						}
+//						else
+//						{
+//							ChangeSpeed(actions[i], true);
+//						}
+//						break;
+//					case(BulletAction.Type.Deactivate):
+//						Deactivate();
+//						break;
+//				}
 			}
 		}
-	}
-
-	public IEnumerator ChangeDirection(BulletAction ba)
-	{
-		float t = 0.0f, d, ang;
-		int dir;
-		Quaternion newRot = Quaternion.identity;
-
-		d = ba.wait.Value * Time.deltaTime;
-		
-		Quaternion originalRot = Transform.localRotation;
-		
-		// determine offset
-		ang = ba.angle.Value;
-		
-		//and set rotation depending on angle
-		switch(ba.direction)
-		{
-			case (DirectionType.TargetPlayer):
-				float dotHeading = Vector3.Dot( Transform.up, Player.PlayerTransform.position - Transform.position );		
-				if(dotHeading > 0)
-					dir = -1;
-				else
-					dir = 1;
-				float angleDif = Vector3.Angle(Transform.forward, Player.PlayerTransform.position - Transform.position);
-				newRot = originalRot * Quaternion.AngleAxis((dir * angleDif) - ang, Vector3.right); 
-				break;
-				
-			case (DirectionType.Absolute):
-				newRot = Quaternion.Euler(-(ang - 270), 270, 0);
-				break;
-				
-			case (DirectionType.Relative):
-				newRot = originalRot * Quaternion.AngleAxis(-ang, Vector3.right);
-				break;
-			
-		}
-		
-		//Sequence has its own thing going on, continually turning a set amount until time is up
-		if(ba.direction == DirectionType.Sequence)
-		{
-			newRot = Quaternion.AngleAxis (-ang, Vector3.right); 
-			
-			while(t < d)
-			{
-				Transform.localRotation *= newRot;
-				t += Time.deltaTime;
-				yield return new WaitForFixedUpdate();
-			}
-		}
-		//all the others just linearly progress to destination rotation
-		else if(d > 0)
-		{
-			while(t < d)
-			{
-				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
-				t += Time.deltaTime;
-				yield return new WaitForFixedUpdate();
-			}
-			
-			Transform.localRotation = newRot;
-		}
-	}
-
-	//its basically the same as the above except without rotations
-	public IEnumerator ChangeSpeed(BulletAction ba, bool isVertical)
-	{
-		float t = 0.0f;
-		float s = 0.0f;
-		float d, newSpeed;
-		
-		if(isVertical)
-			useVertical = true;
-
-		d = ba.wait.Value * Time.deltaTime;	
-		
-		float originalSpeed = speed;
-
-		newSpeed = ba.speed.UnrankedValue;
-		if(ba.speed.rank)
-			d += ba.speed.RankValue;
-		
-		if(d > 0)
-		{
-			while(t < d)
-			{
-				s = Mathf.Lerp(originalSpeed, newSpeed, t/d);
-				if(isVertical) verticalSpeed = s;
-				else speed = s;
-				t += Time.deltaTime;
-				yield return new WaitForFixedUpdate();
-			}
-		}
-		
-		if(isVertical) verticalSpeed = newSpeed;
-		else speed = newSpeed;
 	}
 
 	public void Cancel()
