@@ -5,7 +5,23 @@ using UnityEngine;
 
 public class AttackPatternActionEditorWindow : EditorWindow
 {
-	public static AttackPatternActionEditorWindow instance;
+	private static AttackPatternActionEditorWindow _instance;
+	public static AttackPatternActionEditorWindow instance
+	{
+		get 
+		{
+			if(_instance == null)
+			{
+				_instance = EditorWindow.GetWindow<AttackPatternActionEditorWindow>("Actions");
+			}
+			return _instance;
+		}
+
+		set
+		{
+			_instance = value;
+		}
+	}
     private Vector2 scroll;
 	public Tag tag { get { return AttackPatternTagEditorWindow.tag; } }
 	public AttackPattern attackPattern { get { return AttackPatternTagEditorWindow.attackPattern; } }

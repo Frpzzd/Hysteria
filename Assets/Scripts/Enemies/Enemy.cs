@@ -6,35 +6,48 @@ using System.Collections.Generic;
 [Serializable]
 public class EnemyDrops
 {
-	public float radius;
 	public int point;
 	public int power;
-	public int life;
-	public int bomb;
+	public bool life;
+	public bool bomb;
 }
 
-public class Enemy : CachedObject
+public class Enemy : CachedObject, NamedObject
 {
 	public static List<Enemy> enemiesInPlay;
-	public int health;
-	private int currentHealth;
 	public bool boss;
-	private AttackPattern[] attackPatterns;
+	public AttackPattern[] attackPatterns;
+	public string enemyName;
+	public float dropRadius;
+	public string title;
 
 	static Enemy()
 	{
 		enemiesInPlay = new List<Enemy> ();
 	}
-	
-	[NonSerialized]
-	public Transform trans;
 
 	public bool Dead
 	{
 		get { return enemiesInPlay.Contains(this); }
 	}
 
-	public EnemyDrops drops;
+	public string Name
+	{
+		get 
+		{
+			if(enemyName == null)
+			{
+				enemyName = name;
+			}
+			return enemyName;
+		}
+
+		set
+		{
+			enemyName = value;
+		}
+	}
+
 	private int currentAttackPattern;
 
 	public override void Awake()
@@ -45,7 +58,6 @@ public class Enemy : CachedObject
 			attackPatterns[i].enabled = false;
 		}
 		currentAttackPattern = 0;
-		currentHealth = health;
 	}
 
 	public void Spawn()
@@ -56,55 +68,36 @@ public class Enemy : CachedObject
 	}
 	
 	// Update is called once per frame
-	void Update () {
-	
+	void Update () 
+	{
+
 	}
 
 	void Damage(int amount)
 	{
-		if(boss)
+		attackPatterns[currentAttackPattern].currentHealth -= amount;
+		if(attackPatterns[currentAttackPattern].currentHealth < 0)
 		{
-			attackPatterns[currentAttackPattern].currentHealth -= amount;
-			if(attackPatterns[currentAttackPattern].currentHealth < 0)
+			attackPatterns[currentAttackPattern].enabled = false;
+			Drop (attackPatterns[currentAttackPattern].drops);
+			currentAttackPattern++;
+			if(currentAttackPattern >= attackPatterns.Length)
 			{
-				attackPatterns[currentAttackPattern].enabled = false;
-				Drop (attackPatterns[currentAttackPattern].drops);
-				currentAttackPattern++;
-				if(currentAttackPattern > attackPatterns.Length)
-				{
-					Die ();
-				}
-				else
-				{
-					attackPatterns[currentAttackPattern].enabled = true;
-				}
+				Die ();
 			}
-		}
-		else
-		{
-			currentHealth -= amount;
-			if(currentHealth < 0)
+			else
 			{
-				Die();
+				attackPatterns[currentAttackPattern].enabled = true;
 			}
 		}
 	}
 
-	void Die()
+	public void Die()
 	{
-		if(boss)
-		{
-
-		}
-		else
-		{
-			Drop (drops);
-		}
 		enemiesInPlay.Remove (this);
-		collider2D.enabled = false;
-		renderer.enabled = false;
 		//TO-DO: Play enemy death visual effect here
 		//TO-DO: Play enemy death sound effect here
+		Destroy (gameObject);
 	}
 
 	void Drop(EnemyDrops drop)
@@ -114,26 +107,22 @@ public class Enemy : CachedObject
 		for(int i = 0; i < drop.point; i++)
 		{
 			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = drop.radius * UnityEngine.Random.value;
+			distance = dropRadius * UnityEngine.Random.value;
 			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Point);
 		}
 		for(int i = 0; i < drop.power; i++)
 		{
 			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = drop.radius * UnityEngine.Random.value;
+			distance = dropRadius * UnityEngine.Random.value;
 			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Power);
 		}
-		for(int i = 0; i < drop.life; i++)
+		if(drop.life)
 		{
-			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = drop.radius * UnityEngine.Random.value;
-			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Life);
+			GameObjectManager.Pickups.Spawn(Transform.position, PickupType.Life);
 		}
-		for(int i = 0; i < drop.bomb; i++)
+		if(drop.bomb)
 		{
-			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = drop.radius * UnityEngine.Random.value;
-			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Bomb);
+			GameObjectManager.Pickups.Spawn(Transform.position, PickupType.Bomb);
 		}
 	}
 

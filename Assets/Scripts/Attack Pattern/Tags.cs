@@ -13,15 +13,12 @@ public interface NamedObject
 [Serializable]
 public abstract class Tag
 {
-#if UNITY_EDITOR
 	public abstract void ActionGUI(AttackPattern attackPattern);
-#endif
 }
 
 [Serializable]
 public class FireTag : Tag, NamedObject
 {
-	private AttackPattern master;
 	private string ftName = "Fire Tag";
 	public float param = 0.0f;
 	public RotationWrapper previousRotation;
@@ -39,10 +36,9 @@ public class FireTag : Tag, NamedObject
 			ftName = value;
 		}
 	}
-
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
-		master = attackPattern;
+		#if UNITY_EDITOR
 		if (actions == null || actions.Length == 0)
 		{
 			actions = new IFireAction[1];
@@ -52,12 +48,12 @@ public class FireTag : Tag, NamedObject
 		EditorUtils.ExpandCollapseButtons("Fire Tag: " + Name, actions);
 		
 		actions = EditorUtils.FireActionGUI(actions, attackPattern); 
+		#endif
 	}
 }
 
 public class BulletTag : Tag, NamedObject
 {
-	private AttackPattern master;
 	private string btName = "Bullet Tag";
 	public AttackPattern.Property speed;
 	public GameObject prefab;
@@ -79,15 +75,16 @@ public class BulletTag : Tag, NamedObject
 
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
-		master = attackPattern;
+		#if UNITY_EDITOR
 		if (actions == null || actions.Length == 0)
 		{
 			actions = new BulletAction[0];
 		}
-		
+
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
 		speed.EditorGUI ("Speed", false);
 		EditorUtils.ExpandCollapseButtons("Actions", actions);
 		actions = EditorUtils.BulletActionGUI (actions, attackPattern);
+		#endif
 	}
 }

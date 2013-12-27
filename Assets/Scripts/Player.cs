@@ -198,7 +198,12 @@ public class Player : StaticGameObject<Player>
 	{
 		float deltat, speed;
 		Vector3 movementVector;
-
+		#if UNITY_EDITOR
+		if(Input.GetKeyDown(KeyCode.F12))
+		{
+			invincible = !invincible;
+		}
+		#endif
 		deltat = Time.fixedDeltaTime;
 		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;

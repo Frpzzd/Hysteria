@@ -18,21 +18,18 @@ public class EditorUtils
 		fireActionTypes = new TypeStruct (typeof(IFireAction));
 	}
 	
-	public class TypeStruct
+	public struct TypeStruct
 	{
 		public Dictionary<String, Type> types;
-		public Dictionary<string, string> nameTranslationTable;
 		public string[] names;
 		
 		public TypeStruct(Type baseType)
 		{
 			types = new Dictionary<string, Type>();
-			nameTranslationTable = new Dictionary<string, string>();
 			List<string> nameList = new List<string>();
 			foreach(Type t in AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where (p => baseType.IsAssignableFrom(p) && !p.IsAbstract))
 			{
-				types.Add(t.ToString(), t);
-				nameTranslationTable.Add(ProcessName(t), t.ToString());
+				types.Add(ProcessName(t.ToString()), t);
 				nameList.Add(ProcessName(t));
 			}
 			names = nameList.ToArray();
@@ -40,15 +37,20 @@ public class EditorUtils
 		
 		public Type this[int index]
 		{
-			get { return types [nameTranslationTable [names[index]]]; }
+			get { return types [names[index]]; }
 		}
-		
-		public static string ProcessName(Type type)
+
+		private static string ProcessName(string name)
 		{
-			string returnString = type.ToString ().Replace("+","").Replace("FireAction","").Replace("BulletAction","").Replace("SharedAction","");
+			string returnString = name.Replace("+","").Replace("FireAction","").Replace("BulletAction","").Replace("SharedAction","");
 			Regex r = new Regex("[A-Z]");
 			returnString = r.Replace (returnString, " $0");
 			return returnString;
+		}
+
+		public static string ProcessName(Type type)
+		{
+			return ProcessName(type.ToString());
 		}
 		
 		public int Index(object obj)
@@ -91,7 +93,14 @@ public class EditorUtils
                 names.Add(objects [i].Name);
             }
         }
-        selectedIndex = EditorGUILayout.Popup(label, selectedIndex, names.ToArray());
+		if(label == null)
+		{
+			selectedIndex = EditorGUILayout.Popup(label, selectedIndex, names.ToArray());
+		}
+		else
+		{
+			selectedIndex = EditorGUILayout.Popup(selectedIndex, names.ToArray());
+		}
         if (selectedIndex < 0 || selectedIndex >= objects.Length)
         {
             selectedIndex = -1;
@@ -99,11 +108,43 @@ public class EditorUtils
         return selectedIndex;
     }
 
+	public static int UnityEngineObjectPopup(string label, UnityEngine.Object[] objects, int selectedIndex, string nullName)
+	{
+		Dictionary<string, int> repeats = new Dictionary<string, int>();
+		List<string> names = new List<string>(objects.Length);
+		for (int i = 0; i < objects.Length; i++)
+		{
+			if (names.Contains(objects [i].name))
+			{
+				if (objects [i].name == null)
+				{
+					objects [i].name = nullName;
+				}
+				if (repeats.ContainsKey(objects [i].name))
+				{
+					repeats [objects [i].name]++;
+				} 
+				else
+				{
+					repeats [objects [i].name] = 1;
+				}
+				names.Add(objects [i].name + " " + (repeats [objects [i].name] + 1));
+			} else
+			{
+				names.Add(objects [i].name);
+			}
+		}
+		if (selectedIndex < 0 || selectedIndex >= objects.Length)
+		{
+			selectedIndex = -1;
+		}
+		return selectedIndex;
+	}
+
     public static void MoveRemoveAdd<T, P>(Vector3 moveRemove, List<T> list) where P : T, new()
     {
         if (moveRemove.y >= 0)
         {
-			Debug.Log("Hello");
             int removeIndex = (int)moveRemove.y;
             list.RemoveAt(removeIndex);
         }
@@ -146,10 +187,6 @@ public class EditorUtils
 			{
 				EditorGUI.indentLevel++;
 				actions[i].ActionGUI(attackPattern);
-				//                    case(BulletAction.Type.Repeat):
-				//                        ac.repeat = AttackPatternPropertyField("Repeat", ac.repeat, true);
-				//                        NestedBulletActionsGUI(ac);
-				//                        break;
 				EditorGUI.indentLevel--;
 			}
 			EditorGUILayout.EndVertical();
@@ -237,7 +274,7 @@ public class EditorUtils
 		return moveRemove;
 	}
 
-    private static void Swap<T>(List<T> list, int a, int b)
+    public static void Swap<T>(List<T> list, int a, int b)
     {
         T temp = list [a];
         list [a] = list [b];

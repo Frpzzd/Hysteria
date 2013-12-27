@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(AttackPattern))]
-public class AttackPatternEditor : Editor 
+[CustomEditor(typeof(Enemy))]
+public class EnemyEditor : Editor 
 {
 	public override void OnInspectorGUI() 
 	{

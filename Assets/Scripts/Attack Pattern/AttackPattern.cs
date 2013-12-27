@@ -8,16 +8,18 @@ using UnityEditor;
 
 public class AttackPattern : CachedObject, NamedObject
 {
-	public bool bossPattern;
+	public Enemy parent;
 	public string bpName = "Attack Pattern";
 	public int health;
-	public int currentHealth;
 	public int timeout;
 	public int secondsRemaining;
 	public int bonus;
-	public int remainingBonus;
 	public bool survival;
-	public int bonusPerSecond;
+
+	[NonSerialized]
+	public int currentHealth;
+	[NonSerialized]
+	public int remainingBonus;
 
 	public EnemyDrops drops;
 

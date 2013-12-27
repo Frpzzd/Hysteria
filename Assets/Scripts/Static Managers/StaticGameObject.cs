@@ -27,4 +27,3 @@ public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObj
 		}
 	}
 }
-

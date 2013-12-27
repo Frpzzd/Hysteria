@@ -31,7 +31,7 @@ public interface INestedAction
 
 public abstract class AbstractAction : Action
 {
-#if UNITY_EDITOR
+	#if UNITY_EDITOR
 	private bool foldout = true;
 	public bool Foldout
 	{
@@ -41,7 +41,7 @@ public abstract class AbstractAction : Action
 
 	public abstract void ActionGUI(AttackPattern master);
 	public abstract void DrawHandles();
-#endif
+	#endif
 
 	protected AttackPattern master;
 	public abstract ActionType Type{ get; }
@@ -53,7 +53,11 @@ public abstract class AbstractAction : Action
 
 	public override string ToString ()
 	{
+		#if UNITY_EDITOR
 		return EditorUtils.TypeStruct.ProcessName(GetType());
+		#else
+		return base.ToString();
+		#endif
 	}
 }
 
