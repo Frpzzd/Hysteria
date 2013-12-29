@@ -9,25 +9,26 @@ using UnityEngine;
 
 public class EditorUtils
 {
-	public static TypeStruct bulletActionTypes;
-	public static TypeStruct fireActionTypes;
+	public static Dictionary<Type, TypeDictionary> actionTypes;
 	
-	public static void RefreshReflection()
-	{
-		bulletActionTypes = new TypeStruct (typeof(IBulletAction));
-		fireActionTypes = new TypeStruct (typeof(IFireAction));
-	}
-	
-	public struct TypeStruct
+	public class TypeDictionary
 	{
 		public Dictionary<String, Type> types;
 		public string[] names;
+		public Type baseType;
 		
-		public TypeStruct(Type baseType)
+		public TypeDictionary(Type type)
+		{
+			baseType = type;
+			types = new Dictionary<string, Type>();
+			names = null;
+		}
+
+		public void Refresh()
 		{
 			types = new Dictionary<string, Type>();
 			List<string> nameList = new List<string>();
-			foreach(Type t in AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where (p => baseType.IsAssignableFrom(p) && !p.IsAbstract))
+			foreach(Type t in AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where (p => baseType.IsAssignableFrom(p) && !p.IsAbstract && !p.IsGenericType))
 			{
 				types.Add(ProcessName(t.ToString()), t);
 				nameList.Add(ProcessName(t));
@@ -42,9 +43,13 @@ public class EditorUtils
 
 		private static string ProcessName(string name)
 		{
-			string returnString = name.Replace("+","").Replace("FireAction","").Replace("BulletAction","").Replace("SharedAction","");
-			Regex r = new Regex("[A-Z]");
-			returnString = r.Replace (returnString, " $0");
+			string returnString = name;
+			Regex capitalSpacing = new Regex("[A-Z]");
+			Regex nestedClassing = new Regex (".*\\+");
+			Regex generics = new Regex("\\`[0-9]*\\[.*\\]");
+			returnString = generics.Replace (returnString, "");
+			returnString = nestedClassing.Replace (returnString, "");
+			returnString = capitalSpacing.Replace (returnString, " $0");
 			return returnString;
 		}
 
@@ -145,8 +150,8 @@ public class EditorUtils
     {
         if (moveRemove.y >= 0)
         {
-            int removeIndex = (int)moveRemove.y;
-            list.RemoveAt(removeIndex);
+			Debug.Log((int)moveRemove.y);
+			list.RemoveAt((int)moveRemove.y);
         }
         if (moveRemove.x >= 0)
         {
@@ -169,54 +174,49 @@ public class EditorUtils
         EditorGUILayout.EndHorizontal();
     }
 
-	public static IBulletAction[] BulletActionGUI(IBulletAction[] bulletActions, AttackPattern attackPattern)
+	public static T[] ActionGUI<T, P>(T[] actions, bool zeroed, params object[] param) where T : Action where P : T, new()
 	{
-		List<IBulletAction> actions = new List<IBulletAction>(bulletActions);
-		
-		Vector3 moveRemove = new Vector3(-1f, -1f, 0f);
-		for (int i = 0; i < actions.Count; i++)
+		List<T> actionList = new List<T> (actions);
+		Vector3 moveRemove = new Vector3 (-1f, -1f, 0f);
+		for(int i = 0; i < actionList.Count; i++)
 		{
+			EditorGUILayout.BeginHorizontal();
+			GUILayout.Space(10 * EditorGUI.indentLevel);
 			Rect boundingRect = EditorGUILayout.BeginVertical();
 			GUI.Box(boundingRect, "");
 			EditorGUILayout.BeginHorizontal();
-			actions[i].Foldout = EditorGUILayout.Foldout(actions[i].Foldout, "");
+			actionList[i].Foldout = EditorGUILayout.Foldout(actionList[i].Foldout, actionList[i].ToString());
 
-			moveRemove = UpDownRemoveButtons(moveRemove, actions.Count, i, true);
+			moveRemove = UpDownRemoveButtons(moveRemove, actionList.Count, i, zeroed);
 			EditorGUILayout.EndHorizontal();
-			if (actions[i].Foldout)
+			if (actionList[i].Foldout)
 			{
 				EditorGUI.indentLevel++;
-				actions[i].ActionGUI(attackPattern);
+				Type tType = typeof(T);
+				if(actionTypes == null)
+				{
+					actionTypes = new Dictionary<Type, TypeDictionary>();
+				}
+				if(!actionTypes.ContainsKey(tType))
+				{
+					actionTypes.Add(tType, new TypeDictionary(tType));
+				}
+				TypeDictionary typeStruct = actionTypes[tType];
+				typeStruct.Refresh();
+				Type actionType = typeStruct[EditorGUILayout.Popup(typeStruct.Index(actionList[i]), typeStruct.names)];
+				if(actionType != actionList[i].GetType())
+				{
+					actionList[i] = (T)Activator.CreateInstance(actionType);
+				}
+				actionList[i].ActionGUI(param);
 				EditorGUI.indentLevel--;
 			}
 			EditorGUILayout.EndVertical();
-		}
-		MoveRemoveAdd<IBulletAction, SharedAction.Wait>(moveRemove, actions);
-		return actions.ToArray();
-	}
-
-	public static IFireAction[] FireActionGUI(IFireAction[] fireActions, AttackPattern attackPattern)
-	{
-		List<IFireAction> actions = new List<IFireAction>(fireActions);
-		
-		Vector3 moveRemove = new Vector3(-1f, -1f, -1f);
-		for (int i = 0; i < actions.Count; i++)
-		{
-			Rect boundingRect = EditorGUILayout.BeginVertical();
-			GUI.Box(boundingRect, "");
-			EditorGUILayout.BeginHorizontal();
-			actions[i].Foldout = EditorGUILayout.Foldout(actions[i].Foldout, actions[i].ToString());
-			moveRemove = UpDownRemoveButtons(moveRemove, actions.Count, i);
 			EditorGUILayout.EndHorizontal();
-			if (actions[i].Foldout)
-			{
-				EditorGUI.indentLevel++;
-				Type actionType = fireActionTypes[EditorGUILayout.Popup(fireActionTypes.Index(actions[i]),fireActionTypes.names)];
-				if(actionType != actions[i].GetType())
-				{
-					actions[i] = (IFireAction)Activator.CreateInstance(actionType);
-				}
-				actions[i].ActionGUI(attackPattern);
+		}
+		MoveRemoveAdd<T, P> (moveRemove, actionList);
+		return actionList.ToArray ();
+	}
 				//                    case(FireAction.Type.CallFireTag):
 				//                        ac.fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", bulletTags, ac.fireTagIndex, "Fire Tag");
 				//                        EditorGUILayout.BeginHorizontal();
@@ -237,14 +237,6 @@ public class EditorUtils
 				//                        NestedFireActionsGUI(ac);
 				//                        break;
 				//                }
-				EditorGUI.indentLevel--;
-			}
-			EditorGUILayout.EndVertical();
-		}
-		MoveRemoveAdd<IFireAction, SharedAction.Wait>(moveRemove, actions);
-		
-		return actions.ToArray();
-	}
 
 	public static Vector3 UpDownRemoveButtons(Vector3 moveRemove, int count, int i)
 	{

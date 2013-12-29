@@ -22,7 +22,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
 		}
 	}
     private Vector2 scroll;
-	public static Tag tag;
+	public static ITag tag;
 	public static AttackPattern attackPattern { get { return EnemyEditorWindow.attackPattern; } }
 	public static Enemy enemy { get { return EnemyEditorWindow.enemy; } }
     public static bool fireOrBullet;
@@ -63,20 +63,14 @@ public class AttackPatternTagEditorWindow : EditorWindow
         BottomControls();
     }
 
-    void OnSelectionChange()
-    {
-//        if (Selection.activeGameObject != null)
-//        {
-//            ap = Selection.activeGameObject.GetComponents<AttackPattern>();
-//        } 
-//        else
-//        {
-//            ap = new AttackPattern[0];
-//        }
-//        apSelect = -1;
-        tagSelect = -1;
-        Repaint();
-    }
+	void Update()
+	{
+		if(windowChanged)
+		{
+			Repaint();
+			AttackPatternActionEditorWindow.instance.Repaint();
+		}
+	}
 
     private void TagGUI()
     {

@@ -6,6 +6,6 @@ public class DifficultySelectMenu : Menu
 {
 	protected override void OnChildSwitchImpl (int i)
 	{
-		Global.Rank = (Rank)Enum.Parse(typeof(Rank), children [i].content.text);
+		Global.Rank = (Rank)Enum.Parse(typeof(Rank), children [i].Content.text);
 	}
 }

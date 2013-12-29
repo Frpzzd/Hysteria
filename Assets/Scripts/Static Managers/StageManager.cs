@@ -1,36 +1,54 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 
 public class StageManager : StaticGameObject<StageManager> 
 {
-	public Stage[] stages;
-	public static int currentStage;
-	private static bool stageRunning;
+	public int[] stageSceneNumbers;
+	public static Stage currentStage;
+	private static int startingStage;
 
 	public static void NextStage()
-	{
-		stageRunning = false;
+	{			
+		switch(Global.GameType)
+		{
+		case GameType.Normal:
+			int nextLevel = currentStage.nextStageSceneNumber;
+			currentStage = null;
+			Application.LoadLevel(nextLevel);
+			break;
+		case GameType.StagePractice:
+		case GameType.AttackPractice:
+			break;
+		}
 	}
 
-	void FixedUpdate()
+	public static void SetStartLevel(int startStage)
 	{
-		if(!stageRunning)
+		startingStage = startStage - 1;
+	}
+
+	public static void StartGame()
+	{
+		LoadStage (startingStage);
+	}
+
+	public static void LoadStage(int stage)
+	{
+		currentStage = null;
+		Application.LoadLevel (instance.stageSceneNumbers [stage]);
+	}
+
+	void OnLevelWasLoaded(int level)
+	{
+		Stage[] stageScripts = (Stage[])FindObjectsOfType (typeof(Stage));
+		if(stageScripts == null || stageScripts.Length != 1)
 		{
-			switch(Global.GameType)
-			{
-				case GameType.Normal:
-					currentStage++;
-					if(currentStage >= stages.Length)
-					{
-						//The Player wins the entire game
-					}
-					stages[currentStage].Initialize();
-					StartCoroutine(stages[currentStage].ExecuteStage());
-					break;
-				case GameType.StagePractice:
-				case GameType.AttackPractice:
-					break;
-			}
+			currentStage = null;
+		}
+		else
+		{
+			currentStage = stageScripts[0];
 		}
 	}
 }

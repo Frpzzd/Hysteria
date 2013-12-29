@@ -10,19 +10,23 @@ public interface NamedObject
 	string Name { get; set; }
 }
 
+public interface ITag
+{
+	void ActionGUI(AttackPattern attackPattern);
+}
+
 [Serializable]
-public abstract class Tag
+public abstract class Tag<T> : AbstractActionGroup<T>, ITag where T : Action
 {
 	public abstract void ActionGUI(AttackPattern attackPattern);
 }
 
 [Serializable]
-public class FireTag : Tag, NamedObject
+public class FireTag : Tag<IFireAction>, NamedObject
 {
 	private string ftName = "Fire Tag";
 	public float param = 0.0f;
 	public RotationWrapper previousRotation;
-	public IFireAction[] actions;
 	
 	public string Name
 	{
@@ -36,6 +40,15 @@ public class FireTag : Tag, NamedObject
 			ftName = value;
 		}
 	}
+
+	public override void Run(params object[] param)
+	{
+		for(int i = 0; i < actions.Length; i++)
+		{
+			ActionExecutor.ExecuteAction(actions[i], this);
+		}
+	}
+
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
 		#if UNITY_EDITOR
@@ -47,18 +60,16 @@ public class FireTag : Tag, NamedObject
 		
 		EditorUtils.ExpandCollapseButtons("Fire Tag: " + Name, actions);
 		
-		actions = EditorUtils.FireActionGUI(actions, attackPattern); 
+		actions = EditorUtils.ActionGUI<IFireAction, SharedAction.Wait> (actions, false, attackPattern);
 		#endif
 	}
 }
 
-public class BulletTag : Tag, NamedObject
+public class BulletTag : Tag<IBulletAction>, NamedObject
 {
 	private string btName = "Bullet Tag";
 	public AttackPattern.Property speed;
 	public GameObject prefab;
-	
-	public IBulletAction[] actions;
 	
 	public string Name
 	{
@@ -73,18 +84,23 @@ public class BulletTag : Tag, NamedObject
 		}
 	}
 
+	public override void Run(params object[] param)
+	{
+
+	}
+
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
 		#if UNITY_EDITOR
 		if (actions == null || actions.Length == 0)
 		{
-			actions = new BulletAction[0];
+			actions = new IBulletAction[0];
 		}
 
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
 		speed.EditorGUI ("Speed", false);
 		EditorUtils.ExpandCollapseButtons("Actions", actions);
-		actions = EditorUtils.BulletActionGUI (actions, attackPattern);
+		actions = EditorUtils.ActionGUI<IBulletAction, SharedAction.Wait>(actions, true, attackPattern);
 		#endif
 	}
 }

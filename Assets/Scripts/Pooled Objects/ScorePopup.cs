@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ScorePopup : PooledGameObject<ScorePopup.Params>
+public class ScorePopup : GameObjectManager.PooledGameObject<ScorePopup, ScorePopup.Params>
 {
 	private GUIText gt;
 	public float fadeSpeed;

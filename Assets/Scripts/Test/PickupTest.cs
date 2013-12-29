@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PickupTest : MonoBehaviour 
+public class PickupTest : TestScript
 {
+	#if UNITY_EDITOR
 	public int delay = 1;
 	private float timer;
 
@@ -10,13 +11,13 @@ public class PickupTest : MonoBehaviour
 	public int width = 20;
 	public int number = 20;
 
-	void Start()
+	public override void Awake ()
 	{
 		timer = delay;
 	}
 
 	// Update is called once per frame
-	void Update () 
+	public override void Update () 
 	{
 		timer -= Time.deltaTime;
 		if(timer <= 0)
@@ -37,4 +38,5 @@ public class PickupTest : MonoBehaviour
 			timer = delay;
 		}
 	}
+	#endif
 }

@@ -21,16 +21,6 @@ public class TimerManager : MonoBehaviour
 		}
 	}
 
-	void Awake()
-	{
-		if(instance != null && this != instance)
-		{
-			Destroy(gameObject);
-			return;
-		}
-		instance = this;
-	}
-
 	void FixedUpdate()
 	{
 		float deltat = Time.fixedDeltaTime;

@@ -10,6 +10,8 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 	private static PauseMenu pauseMenu;
 	private bool downButtonDown = false;
 	private bool upButtonDown = false;
+	private bool leftButtonDown = false;
+	private bool rightButtonDown = false;
 	public GameObject background;
 
 	private const float baseScreenWidth = 1024f;
@@ -18,7 +20,6 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 	public override void Awake ()
 	{
 		base.Awake ();
-		Screen.lockCursor = true;
 		pauseMenu = GameObject.FindObjectOfType<PauseMenu> ();
 		ChangeMenu (currentMenu);
 	}
@@ -55,6 +56,20 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 		if(CheckUp())
 		{
 			if(currentMenu.MoveUp())
+			{
+				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+			}
+		}
+		if(CheckLeft())
+		{
+			if(currentMenu.SlideOptionLeft())
+			{
+				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+			}
+		}
+		if(CheckRight())
+		{
+			if(currentMenu.SlideOptionRight())
 			{
 				SoundManager.PlaySoundEffect(instance.menuMoveClip);
 			}
@@ -118,6 +133,40 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 		else
 		{
 			upButtonDown = false;
+		}
+		return false;
+	}
+
+	private bool CheckLeft()
+	{
+		if(Input.GetAxisRaw("Horizontal") < 0)
+		{
+			if(!leftButtonDown)
+			{
+				leftButtonDown = true;
+				return true;
+			}
+		}
+		else
+		{
+			leftButtonDown = false;
+		}
+		return false;
+	}
+	
+	private bool CheckRight()
+	{
+		if(Input.GetAxisRaw("Horizontal") > 0)
+		{
+			if(!rightButtonDown)
+			{
+				rightButtonDown = true;
+				return true;
+			}
+		}
+		else
+		{
+			rightButtonDown = false;
 		}
 		return false;
 	}

@@ -2,19 +2,10 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 
-public abstract class PooledGameObject<P> : CachedObject
-{
-	public abstract void Activate(P param);
-
-	public virtual void LateActivate()
-	{
-	}
-}
-
 public class GameObjectManager : StaticGameObject<GameObjectManager>
 {
 	[Serializable]
-	public class GameObjectPool<T, P> : Queue<T> where T : PooledGameObject<P> , new()
+	public class GameObjectPool<T, P> : Stack<T> where T : PooledGameObject<T, P>
 	{
 		public GameObject blankPrefab;
 		public GameObject container;
@@ -30,7 +21,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 			{
 				for(int i = 0; i < Preallocation; i++)
 				{
-					Enqueue(CreateNew());
+					Push(CreateNew());
 				}
 				started = true;
 			}
@@ -52,10 +43,10 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 			{
 				for(int i = 0; i < UponEmptySpawn; i++)
 				{
-					Enqueue(CreateNew());
+					Push(CreateNew());
 				}
 			}
-			return Dequeue();
+			return Pop();
 		}
 
 		public T Get(P param)
@@ -83,7 +74,35 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		public void Return(T t)
 		{
 			t.GameObject.SetActive (false);
-			Enqueue(t);
+			Push(t);
+		}
+
+		public void Return(object obj)
+		{
+			Return ((T)obj);
+		}
+	}
+
+	public abstract class PooledGameObject<T, P> : CachedObject where T : PooledGameObject<T, P>
+	{
+		[NonSerialized]
+		private GameObjectManager.GameObjectPool<T, P> pool;
+		
+		public void Initialize(GameObjectManager.GameObjectPool<T, P> pool)
+		{
+			this.pool = pool;
+		}
+		
+		public abstract void Activate(P param);
+		
+		public virtual void LateActivate()
+		{
+		}
+		
+		//Indiscriminately return all pooled objects back to the pool each time a level is loaded
+		public void OnLevelWasLoaded(int level)
+		{
+			pool.Return (this);
 		}
 	}
 

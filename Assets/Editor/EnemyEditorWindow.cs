@@ -137,6 +137,12 @@ public class EnemyEditorWindow : EditorWindow
 			{
 				foreach(Enemy enemy in go.GetComponents<Enemy>())
 				{
+					if(enemy.attackPatterns == null)
+					{
+						enemy.attackPatterns = new AttackPattern[1];
+						enemy.attackPatterns[0] = enemy.gameObject.AddComponent<AttackPattern>();
+					}
+
 					List<AttackPattern> patterns = new List<AttackPattern>(enemy.attackPatterns);
 					List<int> toRemove = new List<int>();
 					for(int i = 0; i < patterns.Count; i++)
@@ -210,7 +216,6 @@ public class EnemyEditorWindow : EditorWindow
 			if (GUILayout.Button((i == apSelect) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
 			{
 				apSelect = i;
-				Debug.Log(apSelect);
 				attackPattern = enemy.attackPatterns[i];
 			}
 			apList [i].Name = EditorGUILayout.TextField(apList [i].Name);

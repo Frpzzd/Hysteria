@@ -20,6 +20,7 @@ public class MainMenu : Menu
 		{
 			case 0:			//Start Normal Game
 				Global.GameType = GameType.Normal;
+				StageManager.SetStartLevel(1);
 				break;
 		}
 	}

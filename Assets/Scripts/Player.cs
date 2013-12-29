@@ -172,7 +172,6 @@ public class Player : StaticGameObject<Player>
 	{
 		base.Awake ();
 		//Cache commonly accessed components of player
-		respawnLocation = GameObject.Find ("Player Respawn Location").transform;
 		hitboxRenderer = Transform.FindChild("Death Hitbox").renderer as SpriteRenderer;
 		spriteRenderer = Transform.FindChild ("Sprite").renderer as SpriteRenderer;
 		atMovementLimit = new bool[4];
@@ -280,6 +279,11 @@ public class Player : StaticGameObject<Player>
 		}
 	}
 
+	void OnLevelWasLoaded(int level)
+	{
+		respawnLocation = GameObject.Find ("Player Respawn Location").transform;
+	}
+
 	private IEnumerator Invincibility(bool flash, float time, float intervalTime)
 	{
 		invincible = true;
@@ -363,7 +367,7 @@ public class Player : StaticGameObject<Player>
 		if(!invincible)
 		{
 			lives--;
-			//TO-DO: Play Player death effect at player's location
+			//TODO: Play Player death effect at player's location
 			SoundManager.PlaySoundEffect(instance.DeathClip, instance.Transform.position);
 			Transform.position = respawnLocation.position;
 			if(lives <= 0)

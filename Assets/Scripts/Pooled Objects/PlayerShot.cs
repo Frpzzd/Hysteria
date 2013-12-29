@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerShot : PooledGameObject<bool>
+public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 {
 	public bool mainShot;
 	public float mainSpeed;

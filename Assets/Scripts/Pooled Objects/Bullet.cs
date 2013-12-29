@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Bullet : PooledGameObject<BulletTag>
+public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 {
 	[HideInInspector]
 	public AttackPattern master;
@@ -59,7 +59,7 @@ public class Bullet : PooledGameObject<BulletTag>
 
 	public override void LateActivate ()
 	{
-		RunActions (bulletTag.actions, 1);
+		bulletTag.Run (this);
 	}
 
 	public void Deactivate()
@@ -70,24 +70,13 @@ public class Bullet : PooledGameObject<BulletTag>
 		}
 	}
 
-	public IEnumerator RunActions(IBulletAction[] actions, int repeatC)
-	{
-		for(int j = 0; j < repeatC; j++)
-		{
-			for(int i = 0; i < actions.Length; i++)
-			{
-				switch(actions[i].Type)
-				{
-					case ActionType.Normal:
-						actions[i].Execute(this);
-						break;
-					case ActionType.Yield:
-						yield return actions[i].YieldExecute(this);
-						break;
-					case ActionType.Coroutine:
-						yield return StartCoroutine(actions[i].Coroutine(this));
-						break;
-				}
+//	public IEnumerator RunActions(IBulletAction[] actions, int repeatC)
+//	{
+//		for(int j = 0; j < repeatC; j++)
+//		{
+//			for(int i = 0; i < actions.Length; i++)
+//			{
+//				ActionExecutor.ExecuteAction(actions[i], this);
 //				switch(actions[i].type)
 //				{
 //					case(BulletAction.Type.Wait):
@@ -133,9 +122,9 @@ public class Bullet : PooledGameObject<BulletTag>
 //						Deactivate();
 //						break;
 //				}
-			}
-		}
-	}
+//			}
+//		}
+//	}
 
 	public void Cancel()
 	{

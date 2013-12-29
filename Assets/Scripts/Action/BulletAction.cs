@@ -7,20 +7,14 @@ using UnityEditor;
 
 public interface IBulletAction : Action
 {
-	void Execute(Bullet bullet);
-	YieldInstruction YieldExecute(Bullet bullet);
-	IEnumerator Coroutine(Bullet bullet);
 }
 
-public abstract class BulletAction : AbstractAction, IBulletAction
+public abstract class BulletAction : AttackPatternAction, IBulletAction
 {
 	//	public enum Type { Wait, ChangeDirection, ChangeSpeed, ChangeScale, Repeat, Fire, VerticalChangeSpeed, Deactivate }
 	//	public bool waitForChange = false;
 	public bool WaitForChange;
 	public AttackPattern.Property wait;
-	public abstract void Execute(Bullet bullet);
-	public abstract YieldInstruction YieldExecute (Bullet Bullet);
-	public abstract IEnumerator Coroutine (Bullet Bullet);
 
 	public BulletAction()
 	{
@@ -47,18 +41,20 @@ public abstract class BulletAction : AbstractAction, IBulletAction
 		}
 		#endif
 		
-		public override void Execute(Bullet bullet)
+		public override void Execute(params object[] param)
 		{
-			Coroutine (bullet);
+			CoroutineExecute (param);
 		}
 		
-		public override YieldInstruction YieldExecute(Bullet bullet)
+		public override YieldInstruction YieldExecute(params object[] param)
 		{
 			throw new InvalidOperationException();
 		}
 		
-		public override IEnumerator Coroutine(Bullet bullet)
+		public override IEnumerator CoroutineExecute(params object[] param)
 		{
+			Bullet bullet = param [0] as Bullet;
+
 			float t = 0.0f, d, ang;
 			int dir;
 			Quaternion newRot = Quaternion.identity;
@@ -141,24 +137,28 @@ public abstract class BulletAction : AbstractAction, IBulletAction
 		}
 		#endif
 		
-		public override void Execute (Bullet bullet)
+		public override void Execute (params object[] param)
 		{
-			Coroutine (bullet);
+			CoroutineExecute (param);
 		}
 		
-		public override YieldInstruction YieldExecute (Bullet Bullet)
+		public override YieldInstruction YieldExecute (params object[] param)
 		{
 			throw new InvalidOperationException ();
 		}
 		
-		public override IEnumerator Coroutine(Bullet bullet)
+		public override IEnumerator CoroutineExecute(params object[] param)
 		{
+			Bullet bullet = param [0] as Bullet;
+
 			float t = 0.0f;
 			float s = 0.0f;
 			float d, newSpeed;
 			
 			if(isVertical)
+			{
 				bullet.useVertical = true;
+			}
 			
 			d = wait.Value * Time.deltaTime;	
 			
@@ -197,85 +197,8 @@ public abstract class BulletAction : AbstractAction, IBulletAction
 		}
 	}
 
-	public class Repeat : BulletAction, INestedAction
+	public class Repeat : SharedAction.Repeat<IBulletAction, SharedAction.Wait>, IBulletAction
 	{
-		public override ActionType Type { get { return ActionType.Normal; } }
-		public AttackPattern.Property repeat;
-		public IBulletAction[] nestedActions;
-
-#if UNITY_EDITOR
-		public override void ActionGUI (AttackPattern master)
-		{
-			this.master = master;
-			if (nestedActions == null || nestedActions.Length == 0)
-			{
-				nestedActions = new BulletAction[1];
-				nestedActions [0] = new SharedAction.Wait();
-			}
-			
-			nestedActions = EditorUtils.BulletActionGUI (nestedActions, master);
-		}
-
-		public override void DrawHandles ()
-		{
-			//TO-DO
-		}
-		
-		public void Expand(bool recursive)
-		{
-			SetAll (true, recursive);
-		}
-		
-		public void Collapse(bool recursive)
-		{
-			SetAll (false, recursive);
-		}
-		
-		public void SetAll(bool value, bool recursive)
-		{
-			Foldout = value;
-			if(recursive && nestedActions != null && nestedActions.Length > 0)
-			{
-				for(int i = 0; i < nestedActions.Length; i++)
-				{
-					if(nestedActions[i] is INestedAction)
-					{
-						(nestedActions[i] as INestedAction).SetAll(value, recursive);
-					}
-				}
-			}
-		}
-#endif
-		public override void Execute (Bullet bullet)
-		{
-			Coroutine (bullet);
-		}
-
-		public override IEnumerator Coroutine (Bullet bullet)
-		{
-			for(int j = 0; j < Mathf.FloorToInt(repeat.Value); j++)
-			{
-				for(int i = 0; i < nestedActions.Length; i++)
-				{
-					switch(nestedActions[i].Type)
-					{
-					case ActionType.Normal:
-						nestedActions[i].Execute(bullet);
-						break;
-					case ActionType.Yield:
-						yield return nestedActions[i].YieldExecute(bullet);
-						break;
-					case ActionType.Coroutine:
-						yield return bullet.StartCoroutine(nestedActions[i].Coroutine(bullet));
-						break;
-					}
-				}
-			}
-		}
-
-		public override YieldInstruction YieldExecute (Bullet bullet)
-		{
-			throw new NotImplementedException ();
-		}
+		//Copy of SharedAction.Repeat for Bullet Actions
 	}
 }

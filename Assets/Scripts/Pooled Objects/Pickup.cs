@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public enum PickupType { Power, Point, PointValue, Life, Bomb }
 
-public class Pickup : PooledGameObject<PickupType>
+public class Pickup : GameObjectManager.PooledGameObject<Pickup, PickupType>
 {
 	public enum PickupState { Normal, AutoCollect, ProximityCollect }
 	public PickupState state;

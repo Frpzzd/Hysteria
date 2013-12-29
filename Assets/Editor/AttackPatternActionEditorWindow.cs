@@ -23,7 +23,7 @@ public class AttackPatternActionEditorWindow : EditorWindow
 		}
 	}
     private Vector2 scroll;
-	public Tag tag { get { return AttackPatternTagEditorWindow.tag; } }
+	public ITag tag { get { return AttackPatternTagEditorWindow.tag; } }
 	public AttackPattern attackPattern { get { return AttackPatternTagEditorWindow.attackPattern; } }
 
     void OnGUI()
@@ -40,6 +40,5 @@ public class AttackPatternActionEditorWindow : EditorWindow
 	void Update()
 	{
 		instance = this;
-		EditorUtils.RefreshReflection ();
 	}
 }

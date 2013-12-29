@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 public class SoundManager : StaticGameObject<SoundManager>
 {
-	private static SoundManager instance;
 	private static AudioSource musicSource;
 	private static Dictionary<AudioClip, AudioObject> sfxSources;
 
@@ -36,12 +35,6 @@ public class SoundManager : StaticGameObject<SoundManager>
 	public override void Awake()
 	{
 		base.Awake ();
-		if(instance != null)
-		{
-			Destroy(gameObject);
-			return;
-		}
-		instance = this;
 		musicSource = audio;
 		sfxSources = new Dictionary<AudioClip, AudioObject> ();
 	}

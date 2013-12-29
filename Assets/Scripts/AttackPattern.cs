@@ -60,11 +60,11 @@ public class AttackPattern : CachedObject, NamedObject
 		}
 	}
 
-	private IEnumerator RunFire(FireTag fireTag, IFireAction[] actions, int repeatC)
+	private void RunFire(FireTag fireTag, IFireAction[] actions, int repeatC)
 	{
 		if(actions.Length == 0)
 		{
-			return false;
+			return;
 		}
 		else
 		{
@@ -72,18 +72,7 @@ public class AttackPattern : CachedObject, NamedObject
 			{
 				for(int i = 0; i < actions.Length; i++)
 				{
-					switch(actions[i].Type)
-					{
-						case ActionType.Normal:
-							actions[i].Execute(fireTag);
-							break;
-						case ActionType.Yield:
-							yield return actions[i].YieldExecute(fireTag);
-							break;
-						case ActionType.Coroutine:
-							yield return StartCoroutine(actions[i].Coroutine(fireTag));
-							break;
-					}
+					ActionExecutor.ExecuteAction(fireTag[i], fireTag);
 //					FireAction currentAction = actions[i];
 //					switch(currentAction.type)
 //					{
