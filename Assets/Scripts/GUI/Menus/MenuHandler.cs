@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class MenuHandler : StaticGameObject<MenuHandler>
@@ -78,13 +78,17 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 		{
 			if(Input.GetButtonDown("Pause") || Input.GetButtonDown("Bomb"))
 			{
-				SoundManager.PlaySoundEffect(menuSelectClip);
-				currentMenu.ReturnToParent();
+				if(currentMenu.ReturnToPrevious())
+				{
+					SoundManager.PlaySoundEffect(menuSelectClip);
+				}
 			}
 			if(Input.GetButtonDown("Shoot"))
 			{
-				SoundManager.PlaySoundEffect(menuSelectClip);
-				currentMenu.Select();
+				if(currentMenu.Select())
+				{
+					SoundManager.PlaySoundEffect(menuSelectClip);
+				}
 			}
 		}
 		else

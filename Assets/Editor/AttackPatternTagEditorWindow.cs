@@ -22,19 +22,19 @@ public class AttackPatternTagEditorWindow : EditorWindow
 		}
 	}
     private Vector2 scroll;
-	public static ITag tag;
 	public static AttackPattern attackPattern { get { return EnemyEditorWindow.attackPattern; } }
 	public static Enemy enemy { get { return EnemyEditorWindow.enemy; } }
-    public static bool fireOrBullet;
+    private static SelectionType selectType = SelectionType.None;
     public static int tagSelect;
 	public bool windowChanged = false;
+	private enum SelectionType { None, Movement, Fire, Bullet }
 
     [MenuItem("Window/Enemy Editor")]
     public static void ShowWindow()
     {
 		EnemyEditorWindow.instance = EditorWindow.GetWindow<EnemyEditorWindow> ("Enemy");
 		instance = EditorWindow.GetWindow<AttackPatternTagEditorWindow>("Attack Pattern");
-		AttackPatternActionEditorWindow.instance = EditorWindow.GetWindow<AttackPatternActionEditorWindow>("Actions");
+		ActionGroupEditorWindow.instance = EditorWindow.GetWindow<ActionGroupEditorWindow>("Actions");
     }
 
     void OnGUI()
@@ -56,7 +56,14 @@ public class AttackPatternTagEditorWindow : EditorWindow
 			EditorGUI.indentLevel++;
 			attackPattern.drops.power = EditorGUILayout.IntField("Power", attackPattern.drops.power);
 			attackPattern.drops.point = EditorGUILayout.IntField("Point", attackPattern.drops.point);
+			attackPattern.drops.life = EditorGUILayout.Toggle("Life", attackPattern.drops.life);
+			attackPattern.drops.bomb = EditorGUILayout.Toggle("Bomb", attackPattern.drops.bomb);
 			EditorGUI.indentLevel--;
+			if(GUI.changed)
+			{
+				EditorUtility.SetDirty(enemy);
+				EditorUtility.SetDirty(attackPattern);
+			}
 		}
 		TagGUI();
 		EditorGUILayout.EndScrollView();
@@ -68,7 +75,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
 		if(windowChanged)
 		{
 			Repaint();
-			AttackPatternActionEditorWindow.instance.Repaint();
+			ActionGroupEditorWindow.instance.Repaint();
 		}
 	}
 
@@ -76,8 +83,18 @@ public class AttackPatternTagEditorWindow : EditorWindow
     {
         if (attackPattern != null)
         {
-            attackPattern.fireTags = TagGUI<FireTag>("Fire Tags", false, attackPattern.fireTags);
-            attackPattern.bulletTags = TagGUI<BulletTag>("Bullet Tags", true, attackPattern.bulletTags);
+			EditorGUILayout.BeginHorizontal();
+			if (GUILayout.Button((selectType == SelectionType.Movement) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
+			{
+				selectType = SelectionType.Movement;
+				tagSelect = -1;
+				ChangeActionGroup(attackPattern);
+				windowChanged = true;
+			}
+			EditorGUILayout.LabelField("Movement Pattern");
+			EditorGUILayout.EndHorizontal();
+            attackPattern.fireTags = TagGUI<FireTag>("Fire Tags", SelectionType.Fire, attackPattern.fireTags);
+            attackPattern.bulletTags = TagGUI<BulletTag>("Bullet Tags", SelectionType.Bullet, attackPattern.bulletTags);
         }
     }
 
@@ -89,7 +106,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
-    private T[] TagGUI<T>(string label, bool buttonEnable, T[] tags) where T : NamedObject, new()
+    private T[] TagGUI<T>(string label, SelectionType buttonEnable, T[] tags) where T : NamedObject, new()
     {
 		if(attackPattern != null)
 		{
@@ -102,7 +119,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
 			
 			List<T> tagList = new List<T>(tags);
 			
-			bool buttonCheck = (fireOrBullet == buttonEnable);
+			bool buttonCheck = (selectType == buttonEnable);
 			
 			Vector3 moveRemove = new Vector3(-1f, -1f, 0f);
 			for (int i = 0; i < tagList.Count; i++)
@@ -110,15 +127,16 @@ public class AttackPatternTagEditorWindow : EditorWindow
 				EditorGUILayout.BeginHorizontal();
 				if (GUILayout.Button((buttonCheck && (i == tagSelect)) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
 				{
-					fireOrBullet = buttonEnable;
+					selectType = buttonEnable;
 					tagSelect = i;
-					if(fireOrBullet)
+					switch(selectType)
 					{
-						tag = attackPattern.bulletTags[tagSelect];
-					}
-					else
-					{
-						tag = attackPattern.fireTags[tagSelect];
+						case SelectionType.Fire:
+							ChangeActionGroup(attackPattern.fireTags[tagSelect]);
+							break;
+						case SelectionType.Bullet:
+							ChangeActionGroup(attackPattern.bulletTags[tagSelect]);
+							break;
 					}
 					windowChanged = true;
 				}
@@ -142,7 +160,7 @@ public class AttackPatternTagEditorWindow : EditorWindow
 				}
 				EditorGUILayout.EndHorizontal();
 			}
-			EditorUtils.MoveRemoveAdd<T, T>(moveRemove, tagList);
+			EditorUtils.MoveRemoveAdd<T>(moveRemove, tagList);
 			return tagList.ToArray();
 		}
 		else
@@ -150,4 +168,13 @@ public class AttackPatternTagEditorWindow : EditorWindow
 			return tags;
 		}
     }
+
+	private static void ChangeActionGroup(IActionGroup group)
+	{
+		ActionGroupEditorWindow.editing = true;
+		ActionGroupEditorWindow.parameters = new object[]{ attackPattern };
+		ActionGroupEditorWindow.actionGroup = group;
+		ActionGroupEditorWindow.editing = false;
+		ActionGroupEditorWindow.instance.Repaint();
+	}
 }

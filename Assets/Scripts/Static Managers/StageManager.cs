@@ -8,18 +8,25 @@ public class StageManager : StaticGameObject<StageManager>
 	public static Stage currentStage;
 	private static int startingStage;
 
+	public static void EndStage()
+	{
+		//TODO Show end of stage summary before starting next stage
+		Debug.Log ("End Stage");
+	}
+
 	public static void NextStage()
-	{			
+	{
+		Debug.Log ("Next Stage");
 		switch(Global.GameType)
 		{
-		case GameType.Normal:
-			int nextLevel = currentStage.nextStageSceneNumber;
-			currentStage = null;
-			Application.LoadLevel(nextLevel);
-			break;
-		case GameType.StagePractice:
-		case GameType.AttackPractice:
-			break;
+			case GameType.Normal:
+				int nextLevel = currentStage.nextStageSceneNumber;
+				currentStage = null;
+				Application.LoadLevel(nextLevel);
+				break;
+			case GameType.StagePractice:
+			case GameType.AttackPractice:
+				break;
 		}
 	}
 
@@ -49,6 +56,7 @@ public class StageManager : StaticGameObject<StageManager>
 		else
 		{
 			currentStage = stageScripts[0];
+			currentStage.Run();
 		}
 	}
 }

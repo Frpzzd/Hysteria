@@ -9,69 +9,6 @@ using UnityEngine;
 
 public class EditorUtils
 {
-	public static Dictionary<Type, TypeDictionary> actionTypes;
-	
-	public class TypeDictionary
-	{
-		public Dictionary<String, Type> types;
-		public string[] names;
-		public Type baseType;
-		
-		public TypeDictionary(Type type)
-		{
-			baseType = type;
-			types = new Dictionary<string, Type>();
-			names = null;
-		}
-
-		public void Refresh()
-		{
-			types = new Dictionary<string, Type>();
-			List<string> nameList = new List<string>();
-			foreach(Type t in AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes()).Where (p => baseType.IsAssignableFrom(p) && !p.IsAbstract && !p.IsGenericType))
-			{
-				types.Add(ProcessName(t.ToString()), t);
-				nameList.Add(ProcessName(t));
-			}
-			names = nameList.ToArray();
-		}
-		
-		public Type this[int index]
-		{
-			get { return types [names[index]]; }
-		}
-
-		private static string ProcessName(string name)
-		{
-			string returnString = name;
-			Regex capitalSpacing = new Regex("[A-Z]");
-			Regex nestedClassing = new Regex (".*\\+");
-			Regex generics = new Regex("\\`[0-9]*\\[.*\\]");
-			returnString = generics.Replace (returnString, "");
-			returnString = nestedClassing.Replace (returnString, "");
-			returnString = capitalSpacing.Replace (returnString, " $0");
-			return returnString;
-		}
-
-		public static string ProcessName(Type type)
-		{
-			return ProcessName(type.ToString());
-		}
-		
-		public int Index(object obj)
-		{
-			string name = ProcessName (obj.GetType ());
-			for(int i = 0; i < names.Length; i++)
-			{
-				if(name == names[i])
-				{
-					return i;
-				}
-			}
-			return -1;
-		}
-	}
-
     public static int NamedObjectPopup(string label, NamedObject[] objects, int selectedIndex, string nullName)
     {
         Dictionary<string, int> repeats = new Dictionary<string, int>();
@@ -100,11 +37,11 @@ public class EditorUtils
         }
 		if(label == null)
 		{
-			selectedIndex = EditorGUILayout.Popup(label, selectedIndex, names.ToArray());
+			selectedIndex = EditorGUILayout.Popup(selectedIndex, names.ToArray());
 		}
 		else
 		{
-			selectedIndex = EditorGUILayout.Popup(selectedIndex, names.ToArray());
+			selectedIndex = EditorGUILayout.Popup(label, selectedIndex, names.ToArray());
 		}
         if (selectedIndex < 0 || selectedIndex >= objects.Length)
         {
@@ -146,11 +83,10 @@ public class EditorUtils
 		return selectedIndex;
 	}
 
-    public static void MoveRemoveAdd<T, P>(Vector3 moveRemove, List<T> list) where P : T, new()
+    public static void MoveRemoveAdd<T>(Vector3 moveRemove, List<T> list) where T : new()
     {
         if (moveRemove.y >= 0)
         {
-			Debug.Log((int)moveRemove.y);
 			list.RemoveAt((int)moveRemove.y);
         }
         if (moveRemove.x >= 0)
@@ -169,74 +105,39 @@ public class EditorUtils
         GUILayout.Space(10 * EditorGUI.indentLevel);
         if (GUILayout.Button("Add"))
         {
-            list.Add(new P());
+            list.Add(new T());
 		}
         EditorGUILayout.EndHorizontal();
     }
 
-	public static T[] ActionGUI<T, P>(T[] actions, bool zeroed, params object[] param) where T : Action where P : T, new()
+	public static T[] ActionGUI<T, P> (T[] actions, bool zeroed, MonoBehaviour parent, params object[] param) 
+		where T : NestedAction<T, P>, new()
+		where P : struct, IConvertible
 	{
 		List<T> actionList = new List<T> (actions);
 		Vector3 moveRemove = new Vector3 (-1f, -1f, 0f);
 		for(int i = 0; i < actionList.Count; i++)
 		{
 			EditorGUILayout.BeginHorizontal();
-			GUILayout.Space(10 * EditorGUI.indentLevel);
 			Rect boundingRect = EditorGUILayout.BeginVertical();
 			GUI.Box(boundingRect, "");
 			EditorGUILayout.BeginHorizontal();
-			actionList[i].Foldout = EditorGUILayout.Foldout(actionList[i].Foldout, actionList[i].ToString());
+			actionList[i].foldout = EditorGUILayout.Foldout(actionList[i].foldout, actionList[i].ToString());
 
 			moveRemove = UpDownRemoveButtons(moveRemove, actionList.Count, i, zeroed);
 			EditorGUILayout.EndHorizontal();
-			if (actionList[i].Foldout)
+			if (actionList[i].foldout)
 			{
 				EditorGUI.indentLevel++;
-				Type tType = typeof(T);
-				if(actionTypes == null)
-				{
-					actionTypes = new Dictionary<Type, TypeDictionary>();
-				}
-				if(!actionTypes.ContainsKey(tType))
-				{
-					actionTypes.Add(tType, new TypeDictionary(tType));
-				}
-				TypeDictionary typeStruct = actionTypes[tType];
-				typeStruct.Refresh();
-				Type actionType = typeStruct[EditorGUILayout.Popup(typeStruct.Index(actionList[i]), typeStruct.names)];
-				if(actionType != actionList[i].GetType())
-				{
-					actionList[i] = (T)Activator.CreateInstance(actionType);
-				}
-				actionList[i].ActionGUI(param);
+				actionList[i].ActionGUI(parent, param);
 				EditorGUI.indentLevel--;
 			}
 			EditorGUILayout.EndVertical();
 			EditorGUILayout.EndHorizontal();
 		}
-		MoveRemoveAdd<T, P> (moveRemove, actionList);
+		MoveRemoveAdd<T> (moveRemove, actionList);
 		return actionList.ToArray ();
 	}
-				//                    case(FireAction.Type.CallFireTag):
-				//                        ac.fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", bulletTags, ac.fireTagIndex, "Fire Tag");
-				//                        EditorGUILayout.BeginHorizontal();
-				//                        ac.passParam = EditorGUILayout.Toggle("PassParam", ac.passParam);
-				//                        if (!ac.passParam)
-				//                        {
-				//                            ac.passPassedParam = EditorGUILayout.Toggle("PassMyParam", ac.passPassedParam);
-				//                        }
-				//                        EditorGUILayout.EndHorizontal();    
-				//                        if (ac.passParam)
-				//                        {
-				//                            ac.paramRange = EditorGUILayout.Vector2Field("Param Range", ac.paramRange);
-				//                        }
-				//                        break;
-				//
-				//                    case(FireAction.Type.Repeat):
-				//                        ac.repeat = AttackPatternPropertyField("Repeat", ac.repeat, true);
-				//                        NestedFireActionsGUI(ac);
-				//                        break;
-				//                }
 
 	public static Vector3 UpDownRemoveButtons(Vector3 moveRemove, int count, int i)
 	{
@@ -273,28 +174,24 @@ public class EditorUtils
         list [b] = temp;
     }
 
-	public static void ExpandCollapseButtons(string label, Action[] actions)
+	public static void ExpandCollapseButtons<T, P>(string label, T[] actions) 
+		where T : NestedAction<T, P>
+		where P : struct, IConvertible
 	{
 		EditorGUILayout.BeginHorizontal();
 		EditorGUILayout.LabelField(label);
-		if (GUILayout.Button("Expand All", GUILayout.Width(80)))
+		if (GUILayout.Button("+", GUILayout.Width(20)))
 		{
 			for(int i = 0; i < actions.Length; i++)
 			{
-				if(actions[i] is INestedAction)
-				{
-					(actions[i] as INestedAction).Expand(true);
-				}
+				actions[i].Expand(true);
 			}
 		}
-		if (GUILayout.Button("Collapse All", GUILayout.Width(80)))
+		if (GUILayout.Button('\u2013'.ToString(), GUILayout.Width(20)))
 		{
 			for(int i = 0; i < actions.Length; i++)
 			{
-				if(actions[i] is INestedAction)
-				{
-					(actions[i] as INestedAction).Collapse(true);
-				}
+				actions[i].Collapse(true);
 			}
 		}
 		EditorGUILayout.EndHorizontal();

@@ -52,10 +52,25 @@ public class Enemy : CachedObject, NamedObject
 
 	public override void Awake()
 	{
-		attackPatterns = GetComponents<AttackPattern> ();
-		for(int i = 0; i < attackPatterns.Length; i++)
+		foreach(Enemy e in GetComponentsInChildren<Enemy>(true))
 		{
-			attackPatterns[i].enabled = false;
+			if(e != this)
+			{
+				Destroy(e);
+			}
+		}
+		List<AttackPattern> myAttackPatterns = new List<AttackPattern> (attackPatterns);
+		AttackPattern[] allAttackPatterns = GetComponentsInChildren<AttackPattern> (true);
+		for(int i = 0; i < allAttackPatterns.Length; i++)
+		{
+			if(!myAttackPatterns.Contains(allAttackPatterns[i]))
+			{
+				Destroy(allAttackPatterns[i]);
+			}
+			else
+			{
+				allAttackPatterns[i].enabled = false;
+			}
 		}
 		currentAttackPattern = 0;
 	}

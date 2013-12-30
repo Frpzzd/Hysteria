@@ -7,16 +7,16 @@ public abstract class Menu : MonoBehaviour
 {
 	public Texture2D backgroundImage;
 	public GUIStyle menuStyle;
-	public ChildMenu parent;
+	public ChildMenu title;
 	public ChildMenu[] children;
 	public GameObject[] relatedObjects;
 	public GameObject[] unrelatedObjects;
-
-	protected string[] buttonNames;
+	[HideInInspector]
+	public Menu previousMenu;
 	protected int selectedIndex = 0;
 
 	protected virtual void OnChildSwitchImpl(int i) { }
-	protected virtual void OnParentSwitchImpl() { }
+	protected virtual void OnReturnToPreviousImpl() { }
 
 	private int originalStyleFontSize;
 
@@ -25,17 +25,20 @@ public abstract class Menu : MonoBehaviour
 		OnChildSwitchImpl (i);
 		if(children[i].menu != null)
 		{
+			children[i].menu.previousMenu = this;
 			MenuHandler.ChangeMenu(children[i].menu);
 		}
 	}
 
-	public void OnParentSwitch()
+	public bool OnReturnToPrevious()
 	{
-		OnParentSwitchImpl ();
-		if(parent.menu != null)
+		OnReturnToPreviousImpl ();
+		if(previousMenu != null)
 		{
-			MenuHandler.ChangeMenu(parent.menu);
+			MenuHandler.ChangeMenu(previousMenu);
+			return true;
 		}
+		return false;
 	}
 
 	public virtual void Toggle(bool value)
@@ -71,35 +74,20 @@ public abstract class Menu : MonoBehaviour
 	{
 	}
 
-	public virtual void ReturnToParent()
+	public virtual bool ReturnToPrevious()
 	{
-		OnParentSwitch ();
+		return OnReturnToPrevious ();
 	}
 
-	public void Select()
+	public bool Select()
 	{
-		if(selectedIndex == buttonNames.Length - 1 && parent.content.Length >= 1)
-		{
-			OnParentSwitch();
-		}
-		else
-		{
-			OnChildSwitch (selectedIndex);
-		}
+		OnChildSwitch (selectedIndex);
+		return !children [selectedIndex].selection;
 	}
 
 	public virtual void Awake()
 	{
 		originalStyleFontSize = menuStyle.fontSize;
-		buttonNames = new string[children.Length + ((parent.content.Length >= 1) ? 1 : 0)];
-		for(int i = 0; i < children.Length; i++)
-		{
-			buttonNames[i] = children[i].controlName;
-		}
-		if(parent.content.Length >= 1)
-		{
-			buttonNames [buttonNames.Length - 1] = parent.controlName;
-		}
 	}
 
 	public bool MoveUp()
@@ -111,59 +99,31 @@ public abstract class Menu : MonoBehaviour
 
 	public bool MoveDown()
 	{
-		bool success = (selectedIndex + 1 <  buttonNames.Length);
-		selectedIndex = (success) ? selectedIndex + 1 : buttonNames.Length - 1;
+		bool success = (selectedIndex + 1 < children.Length);
+		selectedIndex = (success) ? selectedIndex + 1 : children.Length - 1;
 		return success;
 	}
 
 	public virtual void OnGUI()
 	{
-		if(menuStyle != null)
-		{
-			MenuHandler.ScaleTextSize (menuStyle, originalStyleFontSize);
-		}
+		MenuHandler.ScaleTextSize (menuStyle, originalStyleFontSize);
 		for(int i = 0; i < children.Length; i++)
 		{
-			if(children[i].content.Length >= 1)
-			{
-				GUI.SetNextControlName(children[i].controlName);
-				GUI.Button (screenRect(children[i].screenRect), children[i].Content, menuStyle);
-			}
+			children[i].Draw(menuStyle);
 		}
-		if(parent.content.Length >= 1)
-		{
-			GUI.SetNextControlName (parent.controlName);
-			GUI.Button (screenRect (parent.screenRect), parent.Content, menuStyle);
-		}
-		GUI.FocusControl (buttonNames[selectedIndex]);
+		children[selectedIndex].Focus();
 	}
 
 	public bool SlideOptionLeft()
 	{
-		if(selectedIndex > children.Length)
-		{
-			parent.ShiftLeft();
-			return parent.selection;
-		}
-		else
-		{
-			children[selectedIndex].ShiftLeft();
-			return children[selectedIndex].selection;
-		}
+		children[selectedIndex].ShiftLeft();
+		return children[selectedIndex].selection;
 	}
 
 	public bool SlideOptionRight()
 	{
-		if(selectedIndex > children.Length)
-		{
-			parent.ShiftRight();
-			return parent.selection;
-		}
-		else
-		{
-			children[selectedIndex].ShiftRight();
-			return children[selectedIndex].selection;
-		}
+		children[selectedIndex].ShiftRight();
+		return children[selectedIndex].selection;
 	}
 
 	[Serializable]
@@ -177,6 +137,13 @@ public abstract class Menu : MonoBehaviour
 		public GUIStyle customStyle;
 		public GUIContent[] content;
 		public int selected = 0;
+
+		private int originalCustomFontSize;
+
+		public void Initialize()
+		{
+			originalCustomFontSize = customStyle.fontSize;
+		}
 
 		public GUIContent Content
 		{
@@ -207,10 +174,27 @@ public abstract class Menu : MonoBehaviour
 			}
 		}
 
-	}
+		public void  Draw(GUIStyle menuStyle)
+		{
+			if(content.Length >= 1)
+			{
+				if(useCustomStyle)
+				{
+					MenuHandler.ScaleTextSize(customStyle, originalCustomFontSize);
+				}
+				GUI.SetNextControlName(controlName);
+				GUI.Button (ScreenRect(screenRect), Content, (useCustomStyle) ? customStyle : menuStyle);
+			}
+		}
 
-	private Rect screenRect(Rect input)
-	{
-		return new Rect (input.x * Screen.width, input.y * Screen.height, input.width * Screen.width, input.height * Screen.height);
+		public void Focus()
+		{
+			GUI.FocusControl (controlName);
+		}
+
+		private static Rect ScreenRect(Rect input)
+		{
+			return new Rect (input.x * Screen.width, input.y * Screen.height, input.width * Screen.width, input.height * Screen.height);
+		}
 	}
 }

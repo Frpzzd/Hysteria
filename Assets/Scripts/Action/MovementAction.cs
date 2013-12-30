@@ -5,14 +5,11 @@ using System.Collections;
 using UnityEditor;
 #endif
 
-public interface IMovementAction : Action
+public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 {
-}
-
-public abstract class MovementAction : AbstractAction, IMovementAction
-{
+	public override ActionType ActionType { get { return ActionType.Normal; } }
+	public enum Type { Wait, Repeat, Absolute, Relative, Teleport }
 	public Vector3 targetLocation;
-	public override ActionType Type { get { return ActionType.Normal; } }
 
 	protected static IEnumerator LinearMove(Transform transform, Vector3 start, Vector3 end, float totalTime)
 	{
@@ -27,83 +24,58 @@ public abstract class MovementAction : AbstractAction, IMovementAction
 	}
 
 	#if UNITY_EDITOR
-	public override void ActionGUI (params object[] param)
+	protected override void ActionGUIImpl (MonoBehaviour parent, params object[] param)
 	{
-
+		type = (Type)EditorGUILayout.EnumPopup("Type", type);
+		if(type != Type.Wait  && type != Type.Repeat)
+		{
+			targetLocation = EditorGUILayout.Vector2Field("Target", targetLocation);
+		}
+		switch(type)
+		{
+			case Type.Wait:
+				wait = AttackPattern.Property.EditorGUI ("Wait", wait, false);
+				break;
+			case Type.Repeat:
+				SharedAction.Repeat.ActionGUI<MovementAction, MovementAction.Type>(this, parent);
+				break;
+			case Type.Absolute:
+			case Type.Relative:
+				wait = AttackPattern.Property.EditorGUI ("Total Time", wait, false);
+				break;
+		}
 	}
 
-	public override void DrawHandles()
+	public override void DrawGizmosImpl (MovementAction previous)
 	{
-
+		
 	}
 	#endif
 
-	public class Absolute : MovementAction
+	public override IEnumerator Execute (params object[] param)
 	{
-		public float totalTime;
-
-		public override void Execute (params object[] param)
+		Transform transform = param [0] as Transform;
+		switch(type)
 		{
-			//TODO: Spline interpolation
-			Transform transform = param [0] as Transform;
-			LinearMove (transform, transform.position, targetLocation, totalTime);
+			case Type.Absolute:
+				//TODO: Spline interpolation
+				LinearMove (transform, transform.position, targetLocation, wait.Value);
+				break;
+			case Type.Relative:
+				//TODO: Spline interpolation
+				LinearMove (transform, transform.position, transform.position + targetLocation, wait.Value);
+				break;
+			case Type.Teleport:
+				//TODO: Play open teleport effect here
+				(param[0] as Transform).position = targetLocation;
+				//TODO: Play close teleport effect here
+				break;
+			case Type.Repeat:
+				SharedAction.Repeat.Execute<MovementAction, MovementAction.Type>(nestedActions, repeat, param);
+				break;
+			case Type.Wait:
+				yield return new WaitForSeconds(wait.Value);
+				break;
 		}
-
-		public override YieldInstruction YieldExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-
-		public override IEnumerator CoroutineExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-	}
-
-	public class Relative : MovementAction
-	{
-		public float totalTime;
-
-		public override void Execute (params object[] param)
-		{
-			//TODO: Spline interpolation
-			Transform transform = param [0] as Transform;
-			LinearMove (transform, transform.position, transform.position + targetLocation, totalTime);
-		}
-		
-		public override YieldInstruction YieldExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-		
-		public override IEnumerator CoroutineExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-	}
-
-	public class Teleport : MovementAction
-	{
-		public override void Execute (params object[] param)
-		{
-			//TODO: Play open teleport effect here
-			(param[0] as Transform).position = targetLocation;
-			//TODO: Play close teleport effect here
-		}
-		
-		public override YieldInstruction YieldExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-		
-		public override IEnumerator CoroutineExecute (params object[] param)
-		{
-			throw new InvalidOperationException ();
-		}
-	}
-
-	public class Repeat : SharedAction.Repeat<IMovementAction, SharedAction.Wait>, IMovementAction
-	{
-		//Copy of Repeat for Movement Actions
 	}
 }

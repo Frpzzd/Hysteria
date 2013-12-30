@@ -4,14 +4,24 @@ using System.Collections;
 public abstract class TestScript : MonoBehaviour 
 {
 	#if UNITY_EDITOR
-	public abstract void Awake();
+	public virtual void Awake()
+	{
+	}
 	public virtual void Update()
 	{
 	}
 	#else
-	void Start()
+	public virtual void Awake()
+	{
+		Destroy(this);
+	}
+	public virtual void Start()
 	{
 		Destroy (this);
+	}
+	public virtual void Update()
+	{
+		Destroy(this);
 	}
 	#endif
 }

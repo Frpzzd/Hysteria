@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using UnityEditor;
 #endif
 
-public class AttackPattern : CachedObject, NamedObject
+[Serializable]
+public class AttackPattern : AbstractActionBehavior<MovementAction, MovementAction.Type>, IActionGroup, NamedObject
 {
+	public override string ActionGUITitle { get { return "Movement Pattern"; } }
+	public override object[] ActionParameters { get { return new object[] { Transform }; } }
 	public Enemy parent;
 	public string bpName = "Attack Pattern";
 	public int health;
@@ -31,20 +34,10 @@ public class AttackPattern : CachedObject, NamedObject
 
 	public FireTag[] fireTags;
 	public BulletTag[] bulletTags;
+
 	public float sequenceSpeed = 0.0f;
 	
 	bool started = false;
-
-	// Use this for initialization
-	void Start () 
-	{
-		InitateFire();
-	}
-
-	void OnEnable()
-	{
-		InitateFire();
-	}
 
 	private IEnumerator InitateFire()
 	{
@@ -60,56 +53,12 @@ public class AttackPattern : CachedObject, NamedObject
 		}
 	}
 
-	private void RunFire(FireTag fireTag, IFireAction[] actions, int repeatC)
+	[Serializable]
+	public class Property
 	{
-		if(actions.Length == 0)
-		{
-			return;
-		}
-		else
-		{
-			for(int j = 0; j < repeatC; j++)
-			{
-				for(int i = 0; i < actions.Length; i++)
-				{
-					ActionExecutor.ExecuteAction(fireTag[i], fireTag);
-//					FireAction currentAction = actions[i];
-//					switch(currentAction.type)
-//					{
-//					case(FireAction.Type.Wait):
-//						yield return new WaitForSeconds(currentAction.wait.Value * deltat);
-//						break;
-//						
-//					case(FireAction.Type.Fire):
-//						Fire(currentAction.GetSourcePosition(Transform.position), Transform.rotation, currentAction, fireTag.param, fireTag.previousRotation);
-//						break;
-//						
-//					case(FireAction.Type.CallFireTag	):
-//						FireTag calledFireTag = fireTags[currentAction.fireTagIndex];
-//						
-//						if(currentAction.passParam)
-//							calledFireTag.param = UnityEngine.Random.Range(currentAction.paramRange.x, currentAction.paramRange.y);
-//						else if(currentAction.passPassedParam)
-//							calledFireTag.param = fireTag.param;
-//						
-//						if(calledFireTag.actions.Length > 0)
-//							yield return RunFire(calledFireTag, calledFireTag.actions, 1);
-//						break;
-//						
-//					case(FireAction.Type.Repeat):
-//						yield return RunFire(fireTag, currentAction.nestedActions, Mathf.FloorToInt(currentAction.repeat.Value));
-//						break;
-//					}
-				}
-			}
-		}
-	}
-
-	public struct Property
-	{
-		private Vector3 values;
-		public bool rank;
-		public bool random;
+		public Vector3 values = Vector3.zero;
+		public bool rank = false;
+		public bool random = false;
 		
 		public float Value
 		{
@@ -149,49 +98,88 @@ public class AttackPattern : CachedObject, NamedObject
 			set { values.x = value.x; values.y = value.y; }
 		}
 
-#if UNITY_EDITOR
-		public void EditorGUI(string propName, bool isInt)
+		#if UNITY_EDITOR
+		public static AttackPattern.Property EditorGUI(string propName, AttackPattern.Property prop, bool isInt)
 		{
+			AttackPattern.Property property = prop;
+
+			if(property == null)
+			{
+				property = new AttackPattern.Property();
+			}
+
 			EditorGUILayout.BeginHorizontal();
-			if (!random)
+			if (!property.random)
 			{
 				if(isInt)
 				{
-					FixedValue = (float)EditorGUILayout.IntField(propName, (int)FixedValue);
+					property.FixedValue = (float)EditorGUILayout.IntField(propName, (int)property.FixedValue);
 				}
 				else
 				{
-					FixedValue = EditorGUILayout.FloatField(propName, FixedValue);
+					property.FixedValue = EditorGUILayout.FloatField(propName, property.FixedValue);
 				}
 			} 
 			else
 			{
-				RandomRange = EditorGUILayout.Vector2Field(propName + " Range", RandomRange);
+				property.RandomRange = EditorGUILayout.Vector2Field(propName + " Range", property.RandomRange);
 			}
 			if (isInt)
 			{
-				random = false;
+				property.random = false;
 			}
 			else
 			{
-				random = EditorGUILayout.Toggle("Randomize", random);
+				property.random = EditorGUILayout.Toggle("Randomize", property.random);
 			}
 			EditorGUILayout.EndHorizontal();
 			EditorGUILayout.BeginHorizontal();
-			rank = EditorGUILayout.Toggle("Add Rank", rank);
-			if (rank)
+			property.rank = EditorGUILayout.Toggle("Add Rank", property.rank);
+			if (property.rank)
 			{
-				RankParam = EditorGUILayout.FloatField("Rank Increase", RankParam);
+				property.RankParam = EditorGUILayout.FloatField("Rank Increase", property.RankParam);
 			}
 			EditorGUILayout.EndHorizontal();
+			return property;
 		}
-#endif
+		#endif
 	}
 }
 
 public enum DirectionType { TargetPlayer, Absolute, Relative, Sequence }
+public enum SourceType { Attacker, Absolute, Relative, AnotherObject }
+public enum RandomStyle { None, Rectangular, Elliptical }
 
-public enum SourceType { Attacker, Absolute, Relative, AnotherObject, ScreenEdge }
+[Serializable]
+public abstract class AttackPatternAction<T, P> : NestedAction<T, P> where T : NestedAction<T, P> where P : struct, IConvertible
+{	
+	public AttackPattern.Property angle;
+	public AttackPattern.Property speed;
+	public DirectionType direction;
+	public bool waitForFinish = false;
+	
+	public SourceType source;
+	public RandomStyle randomStyle = RandomStyle.None;
+	public Vector2 randomArea = Vector2.zero;
+	public Vector2 location = Vector3.zero;
+	public Transform alternateSource;
+
+	public int bulletTagIndex;
+	
+	public BulletTag bulletTag;
+	
+	public bool useParam = false;
+	public bool overwriteBulletSpeed = false;
+	public bool useSequenceSpeed = false;
+	
+	public bool passParam = false;
+	public bool passPassedParam = false;
+	public Vector2 paramRange;
+	
+	public DirectionType Direction;
+	
+	public AudioClip audioClip = null;
+}
 
 public class RotationWrapper
 {

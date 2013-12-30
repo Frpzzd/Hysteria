@@ -46,8 +46,11 @@ public class EnemyEditorWindow : EditorWindow
 	private static int goSelect;
 	private static int apSelect;
 
+	private static Vector2 scroll;
+
     void OnGUI()
     {
+		scroll = EditorGUILayout.BeginScrollView(scroll);
 		if(Selection.gameObjects != null)
 		{
 			SelectionGUI();
@@ -71,7 +74,7 @@ public class EnemyEditorWindow : EditorWindow
 					int keepIndex = -1;
 					for(int i = 0; i < scripts.Length; i++)
 					{
-						if(GUILayout.Button("Keep " + scripts[i].name))
+						if(GUILayout.Button("Keep " + scripts[i].Name))
 						{
 							keepIndex = i;
 						}
@@ -102,6 +105,10 @@ public class EnemyEditorWindow : EditorWindow
 					{
 						enemy.title = "";
 						enemy.attackPatterns[0].health = EditorGUILayout.IntField("Health", enemy.attackPatterns[0].health);
+						if(enemy.attackPatterns.Length > 1)
+						{
+							enemy.attackPatterns = new AttackPattern[] { enemy.attackPatterns[0] };
+						}
 					}
 					enemy.dropRadius = EditorGUILayout.FloatField("Drop Radius", enemy.dropRadius);
 					AttackPatternGUI();
@@ -112,6 +119,7 @@ public class EnemyEditorWindow : EditorWindow
 		{
 			RepaintImpl ();
 		}
+		EditorGUILayout.EndScrollView ();
     }
 
 	public void RepaintImpl ()
@@ -120,7 +128,7 @@ public class EnemyEditorWindow : EditorWindow
 		apSelect = -1;
 		Repaint();
 		AttackPatternTagEditorWindow.instance.Repaint();
-		AttackPatternActionEditorWindow.instance.Repaint();
+		ActionGroupEditorWindow.instance.Repaint();
 	}
 
 	void OnSelectionChange()
@@ -135,8 +143,13 @@ public class EnemyEditorWindow : EditorWindow
 			bool changed = false;
 			foreach(GameObject go in Selection.gameObjects)
 			{
+				if(go.GetComponents<Enemy>().Length > 1)
+				{
+					changed = true;
+				}
 				foreach(Enemy enemy in go.GetComponents<Enemy>())
 				{
+					enemy.enabled = true;
 					if(enemy.attackPatterns == null)
 					{
 						enemy.attackPatterns = new AttackPattern[1];
@@ -166,7 +179,25 @@ public class EnemyEditorWindow : EditorWindow
 						enemy.attackPatterns = patterns.ToArray();
 					}
 				}
+				foreach(AttackPattern attackPattern in go.GetComponents<AttackPattern>())
+				{
+					attackPattern.enabled = false;
+					bool used = false;
+					foreach(Enemy enemy in go.GetComponents<Enemy>())
+					{
+						List<AttackPattern> patterns = new List<AttackPattern>(enemy.attackPatterns);
+						if(patterns.Contains(attackPattern))
+						{
+							used = true;
+						}
+					}
+					if(!used)
+					{
+						DestroyImmediate(attackPattern);
+					}
+				}
 			}
+
 			if(changed)
 			{
 				RepaintImpl();

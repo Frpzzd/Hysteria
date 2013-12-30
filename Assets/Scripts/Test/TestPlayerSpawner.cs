@@ -12,7 +12,6 @@ public class TestPlayerSpawner : TestScript
 		{
 			Instantiate (playerPrefab);
 		}
-		Debug.Log ("Hello");
 		Destroy (this);
 	}
 	#endif 

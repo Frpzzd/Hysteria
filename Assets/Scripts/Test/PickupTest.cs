@@ -3,7 +3,6 @@ using System.Collections;
 
 public class PickupTest : TestScript
 {
-	#if UNITY_EDITOR
 	public int delay = 1;
 	private float timer;
 
@@ -13,6 +12,7 @@ public class PickupTest : TestScript
 
 	public override void Awake ()
 	{
+		base.Awake ();
 		timer = delay;
 	}
 
@@ -38,5 +38,4 @@ public class PickupTest : TestScript
 			timer = delay;
 		}
 	}
-	#endif
 }

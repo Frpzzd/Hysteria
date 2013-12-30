@@ -20,6 +20,7 @@ public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObj
 		base.Awake ();
 		if(instance != null)
 		{
+			Debug.Log(typeof(T));
 			if(instance.destroyNewInstances)
 			{
 				Destroy (gameObject);
@@ -30,8 +31,6 @@ public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObj
 				Destroy (instance.GameObject);
 			}
 		}
-
-		Debug.Log("Initializing " + typeof(T));
 
 		instance = (T)this;
 	

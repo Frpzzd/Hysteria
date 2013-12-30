@@ -10,19 +10,21 @@ public interface NamedObject
 	string Name { get; set; }
 }
 
-public interface ITag
-{
-	void ActionGUI(AttackPattern attackPattern);
-}
-
 [Serializable]
-public abstract class Tag<T> : AbstractActionGroup<T>, ITag where T : Action
+public abstract class Tag<T, P> : AbstractActionGroup<T, P> where T : NestedAction<T, P> where P : struct, IConvertible
 {
+	#if UNITY_EDITOR
+	public override void ActionGUI(params object[] param)
+	{
+		ActionGUI (param [0] as AttackPattern);
+	}
+
 	public abstract void ActionGUI(AttackPattern attackPattern);
+	#endif
 }
 
 [Serializable]
-public class FireTag : Tag<IFireAction>, NamedObject
+public class FireTag : Tag<FireAction, FireAction.Type>, NamedObject
 {
 	private string ftName = "Fire Tag";
 	public float param = 0.0f;
@@ -41,31 +43,28 @@ public class FireTag : Tag<IFireAction>, NamedObject
 		}
 	}
 
-	public override void Run(params object[] param)
+	public override object[] AlternateParameters (params object[] param)
 	{
-		for(int i = 0; i < actions.Length; i++)
-		{
-			ActionExecutor.ExecuteAction(actions[i], this);
-		}
+		return new object[]{ this };
 	}
-
+	
+	#if UNITY_EDITOR
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
-		#if UNITY_EDITOR
 		if (actions == null || actions.Length == 0)
 		{
-			actions = new IFireAction[1];
-			actions [0] = new SharedAction.Wait();
+			actions = new FireAction[1];
+			actions [0] = new FireAction();
 		}
 		
-		EditorUtils.ExpandCollapseButtons("Fire Tag: " + Name, actions);
+		EditorUtils.ExpandCollapseButtons<FireAction, FireAction.Type>("Fire Tag: " + Name, actions);
 		
-		actions = EditorUtils.ActionGUI<IFireAction, SharedAction.Wait> (actions, false, attackPattern);
-		#endif
+		actions = EditorUtils.ActionGUI<FireAction, FireAction.Type> (actions, false, attackPattern);
 	}
+	#endif
 }
 
-public class BulletTag : Tag<IBulletAction>, NamedObject
+public class BulletTag : Tag<BulletAction, BulletAction.Type>, NamedObject
 {
 	private string btName = "Bullet Tag";
 	public AttackPattern.Property speed;
@@ -83,24 +82,20 @@ public class BulletTag : Tag<IBulletAction>, NamedObject
 			btName = value;
 		}
 	}
-
-	public override void Run(params object[] param)
-	{
-
-	}
-
+	
+	#if UNITY_EDITOR
 	public override void ActionGUI (AttackPattern attackPattern)
 	{
-		#if UNITY_EDITOR
 		if (actions == null || actions.Length == 0)
 		{
-			actions = new IBulletAction[0];
+			actions = new BulletAction[0];
 		}
 
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
-		speed.EditorGUI ("Speed", false);
-		EditorUtils.ExpandCollapseButtons("Actions", actions);
-		actions = EditorUtils.ActionGUI<IBulletAction, SharedAction.Wait>(actions, true, attackPattern);
-		#endif
+		prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", prefab, typeof(GameObject), false);
+		speed = AttackPattern.Property.EditorGUI ("Speed", speed, false);
+		EditorUtils.ExpandCollapseButtons<BulletAction, BulletAction.Type>("Actions", actions);
+		actions = EditorUtils.ActionGUI<BulletAction, BulletAction.Type>(actions, true, attackPattern);
 	}
+	#endif
 }
