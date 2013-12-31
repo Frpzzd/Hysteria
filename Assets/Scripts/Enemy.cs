@@ -88,12 +88,14 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 			currentAttackPattern = pattern;
 			pattern.Initialize(this);
 			yield return StartCoroutine(pattern.Run(this));
+			Drop (pattern.drops);
 		}
 		Die ();
 	}
 
-	void Damage(int amount)
+	public void Damage(int amount)
 	{
+		Debug.Log ("Enemy Damage");
 		if(currentAttackPattern != null)
 		{
 			currentAttackPattern.Damage(amount);
@@ -137,15 +139,12 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 
 	void OnTriggerEnter2D(Collider2D col)
 	{
+		Debug.Log ("Enemy Hit");
 		if(col.gameObject.layer == 9) // Player Shots
 		{
 			PlayerShot shot = col.GetComponent<PlayerShot>();
 			Damage (shot.DamageValue);
-			if(!Player.Percieving || shot.mainShot)
-			{
-				GameObjectManager.PlayerShots.Return(shot);
-			}
-			//TO-DO: PLay enemy hit effect herer
+			//TODO: Play enemy hit effect herer
 		}
 	}
 }

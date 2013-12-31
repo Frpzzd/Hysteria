@@ -9,19 +9,19 @@ using UnityEditor;
 public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 {
 	public enum Type { Wait, Repeat, CallFireTag, Fire }
-	public override ActionType ActionType 
-	{
-		get
-		{
-			switch(type)
-			{
-				case Type.CallFireTag:
-					return (waitForFinish) ? ActionType.Normal : ActionType.Coroutine;
-				default:
-					return ActionType.Normal;
-			}
-		}
-	}
+//	public override ActionType ActionType 
+//	{
+//		get
+//		{
+//			switch(type)
+//			{
+//				case Type.CallFireTag:
+//					return (waitForFinish) ? ActionType.Normal : ActionType.Coroutine;
+//				default:
+//					return ActionType.Normal;
+//			}
+//		}
+//	}
 
 	public int fireTagIndex;
 
@@ -64,11 +64,30 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 	public override IEnumerator Execute (params object[] param)
 	{
 		AttackPattern attackPattern = param [1] as AttackPattern;
+		if(attackPattern.currentHealth < 0)
+		{
+			return false;
+		}
 		FireTag fireTag = param [0] as FireTag;
+		Enemy master = parent as Enemy;
 		switch(type)
 		{
 			case Type.Repeat:
-				yield return parent.StartCoroutine(SharedAction.Repeat.Execute<FireAction, FireAction.Type>(nestedActions, repeat, param));
+				int repeatC = Mathf.FloorToInt(repeat.Value);
+				for(int j = 0; j < repeatC; j++)
+				{
+					for(int i = 0; i < nestedActions.Length; i++)
+					{
+						if(attackPattern.currentHealth < 0)
+						{
+							return false;
+						}
+						else
+						{
+							yield return master.StartCoroutine(nestedActions[i].Execute(param[0], param[1]));	
+						}
+					}
+				}
 				break;
 			case Type.CallFireTag:
 				FireTag tag = attackPattern.fireTags[fireTagIndex];
@@ -82,22 +101,28 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				}
 				if(waitForFinish)
 				{
-					yield return parent.StartCoroutine(tag.Run());
+					yield return parent.StartCoroutine(tag.Run(param[1]));
 				}
 				else
 				{
-					parent.StartCoroutine(tag.Run(param));
+					parent.StartCoroutine(tag.Run(param[1]));
 				}
 				break;
 			case Type.Fire:
-				SharedAction.Fire.Execute<FireAction, FireAction.Type>(this, parent as Enemy, attackPattern, 
-			                                                       parent.transform.position, 
-			                                                       parent.transform.rotation, 
-			                                                       fireTag.param, 
-			                                                       fireTag.previousRotation);
+				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTag.param, fireTag.previousRotation);
 				break;
 			case Type.Wait:
-				yield return new WaitForSeconds(wait.Value);
+				float totalTime = 0;
+				float waitTime = wait.Value;
+				while(totalTime < waitTime)
+				{
+					if(attackPattern.currentHealth < 0)
+					{
+						return false;
+					}
+					yield return new WaitForFixedUpdate();
+					totalTime += Time.fixedDeltaTime;
+				}
 				break;
 		}
 	}

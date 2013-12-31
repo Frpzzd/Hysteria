@@ -64,7 +64,10 @@ public class FireTag : IActionGroup, NamedObject
 	{
 		if(actions != null && actions.Length > 0)
 		{
-			yield return actions[0].parent.StartCoroutine (ActionHandler.ExecuteActions(actions, this, param[0] as AttackPattern));
+			for(int i = 0; i < actions.Length; i++)
+			{
+				yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, param[0] as AttackPattern));
+			}
 		}
 	}
 
@@ -107,7 +110,7 @@ public class BulletTag : IActionGroup, NamedObject
 	[SerializeField]
 	public GameObject prefab;
 	[SerializeField]
-	public BulletAction[] actions;
+	public Bullet.Action[] actions;
 	
 	public string Name
 	{
@@ -124,20 +127,23 @@ public class BulletTag : IActionGroup, NamedObject
 
 	public BulletTag()
 	{
-		actions = new BulletAction[0];
+		actions = new Bullet.Action[0];
 	}
 	
 	public IEnumerator Run (params object[] param)
 	{
 		if(actions != null && actions.Length > 0)
 		{
-			yield return actions[0].parent.StartCoroutine (ActionHandler.ExecuteActions(actions, param));
+			for(int i = 0; i < actions.Length; i++)
+			{
+				yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, param[0] as AttackPattern));
+			}
 		}
 	}
 	
 	public void Initialize(MonoBehaviour parent)
 	{
-		foreach(BulletAction action in actions)
+		foreach(Bullet.Action action in actions)
 		{
 			action.Initialize(parent);
 		}
@@ -148,14 +154,14 @@ public class BulletTag : IActionGroup, NamedObject
 	{
 		if (actions == null || actions.Length == 0)
 		{
-			actions = new BulletAction[0];
+			actions = new Bullet.Action[0];
 		}
 		
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
 		prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", prefab, typeof(GameObject), false);
 		speed = AttackPattern.Property.EditorGUI ("Speed", speed, false);
-		EditorUtils.ExpandCollapseButtons<BulletAction, BulletAction.Type>("Actions", actions);
-		actions = EditorUtils.ActionGUI<BulletAction, BulletAction.Type>(actions, true, param[0] as Enemy, param);
+		EditorUtils.ExpandCollapseButtons<Bullet.Action, Bullet.Action.Type>("Actions", actions);
+		actions = EditorUtils.ActionGUI<Bullet.Action, Bullet.Action.Type>(actions, true, param[0] as Enemy, param);
 	}
 
 	public void DrawGizmos(Color gizmoColor)

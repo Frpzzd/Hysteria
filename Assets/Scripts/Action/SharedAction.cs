@@ -57,20 +57,20 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 		}
 		#endif
 
-		public static IEnumerator Execute<T, P>(T[] nestedActions, AttackPattern.Property repeat, params object[] param) where T : NestedAction<T, P> where P : struct, IConvertible
-		{		
-			if(nestedActions != null && nestedActions.Length > 0)
-			{
-				for(int j = 0; j < Mathf.FloorToInt(repeat.Value); j++)
-				{
-					yield return nestedActions[0].parent.StartCoroutine(ActionHandler.ExecuteActions(nestedActions, param));
-				}
-			}
-			else
-			{
-				Debug.Log("Null or Empty Repeat call");
-			}
-		}
+//		public static IEnumerator Execute<T, P>(T[] nestedActions, AttackPattern.Property repeat, params object[] param) where T : NestedAction<T, P> where P : struct, IConvertible
+//		{		
+//			if(nestedActions != null && nestedActions.Length > 0)
+//			{
+//				for(int j = 0; j < Mathf.FloorToInt(repeat.Value); j++)
+//				{
+//					yield return nestedActions[0].parent.StartCoroutine(ActionHandler.ExecuteActions(nestedActions, param));
+//				}
+//			}
+//			else
+//			{
+//				Debug.Log("Null or Empty Repeat call");
+//			}
+//		}
 	}
 
 	public static class Fire
@@ -134,120 +134,5 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 			action.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", master.bulletTags, action.bulletTagIndex, "Bullet Tag");
 		}
 		#endif
-
-		public static void Execute<T, P>(T action, Enemy master, AttackPattern attackPattern, Vector3 position, Quaternion rotation, float param, RotationWrapper previousRotation) 
-			where T : AttackPatternAction<T, P>
-			where P : struct, IConvertible
-		{
-			float angle, direction, angleDifference, speed;
-			BulletTag bt = attackPattern.bulletTags[action.bulletTagIndex];
-			Bullet temp = GameObjectManager.Bullets.Get(bt);
-			if(previousRotation.rotationNull)
-			{
-				previousRotation.rotationNull = false;
-				previousRotation.rotation = temp.Transform.localRotation;
-			}
-			
-			temp.Transform.position = position;
-			temp.Transform.rotation = rotation;
-			
-			if(action.useParam)
-			{
-				angle = param;
-			}
-			else
-			{
-				angle = action.angle.Value;
-			}
-			
-			switch(action.Direction)
-			{
-			case (DirectionType.TargetPlayer):
-				temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
-				break;
-				
-			case (DirectionType.Absolute):
-				temp.Transform.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
-				break;
-				
-			case (DirectionType.Relative):
-				temp.Transform.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
-				break;
-				
-			case (DirectionType.Sequence):
-				temp.Transform.localRotation = previousRotation.rotation * Quaternion.AngleAxis (-angle, Vector3.right); 
-				break;
-			}
-			previousRotation.rotation = temp.Transform.localRotation;
-			if(action.overwriteBulletSpeed)
-			{
-				speed = action.speed.Value;
-				
-				if(action.useSequenceSpeed)
-				{
-					attackPattern.sequenceSpeed += speed;
-					temp.speed = attackPattern.sequenceSpeed;
-				}
-				else
-				{
-					attackPattern.sequenceSpeed = 0.0f;
-					temp.speed = speed;
-				}
-			}
-			else
-			{	
-				temp.speed = bt.speed.Value;
-			}
-			
-			if(action.passParam)
-			{
-				temp.param = UnityEngine.Random.Range(action.paramRange.x, action.paramRange.y);
-			}
-			
-			if(action.passPassedParam)
-			{
-				temp.param = param;
-			}
-			temp.master = attackPattern;
-			temp.GameObject.SetActive(true);
-			SoundManager.PlaySoundEffect (action.audioClip, position);
-		}
-
-		public static Vector3 GetSourcePosition<T, P>(Vector3 currentPosition, T action) 
-			where T : AttackPatternAction<T, P>
-			where P : struct, IConvertible
-		{
-			switch(action.source)
-			{
-				case SourceType.Attacker:
-					return currentPosition;
-				case SourceType.Absolute:
-					return GetRandomPosition(action.location, action.randomArea, currentPosition.z, action.randomStyle);
-				case SourceType.Relative:
-					return GetRandomPosition(new Vector2(currentPosition.x, currentPosition.y) + action.location, action.randomArea, currentPosition.z, action.randomStyle);
-				case SourceType.AnotherObject:
-					return action.alternateSource.position;
-				default:
-					return Vector3.zero;
-			}
-		}
-		
-		private static Vector3 GetRandomPosition(Vector2 start, Vector2 size, float z, RandomStyle randomStyle)
-		{
-			if(randomStyle == RandomStyle.Rectangular)
-			{
-				return new Vector3(start.x - 0.5f * size.x + size.x * UnityEngine.Random.value, start.y - 0.5f * size.y + size.y * UnityEngine.Random.value, z);
-			}
-			else if(randomStyle == RandomStyle.Elliptical)
-			{
-				float theta = 2 * Mathf.PI * UnityEngine.Random.value;
-				float r = UnityEngine.Random.value;
-				return new Vector3(start.x + size.x * r * Mathf.Cos(theta), start.y + size.y * r * Mathf.Sin(theta), z);
-			}
-			else
-			{
-				return new Vector3(start.x, start.y, z);
-			}
-		}
 	}
 }

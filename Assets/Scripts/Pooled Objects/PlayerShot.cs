@@ -55,14 +55,39 @@ public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 	}
 	
 	// Update is called once per frame
-	void Update () 
+	void FixedUpdate () 
 	{
-		Vector3 pos = Transform.position;
-		pos += Transform.up * ((mainShot) ? mainSpeed : optionSpeed)* Time.deltaTime;
-		Transform.position = pos;
-		if(target != null && !target.Dead)
+		//Raycast check for enemies
+		float distance = ((mainShot) ? mainSpeed : optionSpeed) * Time.fixedDeltaTime;
+		Debug.DrawRay (Transform.position, Transform.up * ((mainShot) ? mainSpeed : optionSpeed) * Time.deltaTime);
+		RaycastHit2D raycastHit = Physics2D.Raycast(Transform.position.XY(), Transform.up.XY(), distance, 256); //256 = 2^8, Layer 8 is  Enemies
+		if(raycastHit)
 		{
-
+			Enemy enemy = raycastHit.collider.gameObject.GetComponent<Enemy>();
+			if(enemy != null)
+			{
+				enemy.Damage(DamageValue);
+				Transform.position = raycastHit.point.ToVector3();
+				//TODO: Play Enemy hit effect here;
+				if(!Player.Percieving || mainShot)
+				{
+					GameObjectManager.PlayerShots.Return(this);
+				}
+			}
+			else
+			{
+				Debug.Log("Hit Something that isn't an enemy");
+			}
+		}
+		else
+		{
+			Transform.position  += Transform.up * distance;
+			
+			//TODO: Complete Homing shot code
+			if(target != null && !target.Dead)
+			{
+				
+			}
 		}
 	}
 }

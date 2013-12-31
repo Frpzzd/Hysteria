@@ -11,6 +11,7 @@ public class TestPlayerSpawner : TestScript
 		if(Player.Instance == null)
 		{
 			Instantiate (playerPrefab);
+			Player.respawnLocation = GameObject.Find ("Player Respawn Location").transform;
 		}
 		Destroy (this);
 	}

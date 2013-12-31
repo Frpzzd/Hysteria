@@ -8,7 +8,6 @@ using UnityEditor;
 [Serializable]
 public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 {
-	public override ActionType ActionType { get { return ActionType.Normal; } }
 	public enum Type { Wait, Repeat, Absolute, Relative, Teleport }
 
 	[SerializeField]
@@ -74,7 +73,14 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				//TODO: Play close teleport effect here
 				break;
 			case Type.Repeat:
-				SharedAction.Repeat.Execute<MovementAction, MovementAction.Type>(nestedActions, repeat, param);
+				int repeatC = Mathf.FloorToInt(repeat.Value);
+				for(int j = 0; j < repeatC; j++)
+				{
+					for(int i = 0; i < nestedActions.Length; i++)
+					{
+						nestedActions[i].Execute(param[0], param[1]);
+					}
+				}
 				break;
 			case Type.Wait:
 				yield return new WaitForSeconds(wait.Value);

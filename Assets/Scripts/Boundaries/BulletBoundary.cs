@@ -5,7 +5,6 @@ public class BulletBoundary : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		Debug.Log ("hello");
 		GameObject go = other.gameObject;
 		Bullet b = go.GetComponent<Bullet> ();
 		if(b != null)

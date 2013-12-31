@@ -79,16 +79,33 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	[NonSerialized]
 	public float sequenceSpeed = 0.0f;
+	[NonSerialized]
+	public bool active;
 
 	public IEnumerator Run(params object[] param)
 	{
-		parent.StartCoroutine (ActionHandler.ExecuteActions (actions, parent.transform));
+		active = true;
+//		parent.StartCoroutine (Move ());
 		currentHealth = health;
 		while(currentHealth > 0)
 		{
 			yield return parent.StartCoroutine(fireTags[0].Run(this));
 		}
+		Debug.Log ("Exit Pattern");
+		active = false;
 	}
+
+//	private IEnumerator Move()
+//	{
+//		Debug.Log ("Hello");
+//		while(active)
+//		{
+//			for(int i = 0; i < actions.Length; i++)
+//			{
+//				yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform));
+//			}
+//		}
+//	}
 
 	public void Initialize(MonoBehaviour parent)
 	{
@@ -110,6 +127,123 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	public void Damage(int amount)
 	{
 		currentHealth -= amount;
+		Debug.Log (currentHealth);
+	}
+
+	public void Fire<T, P>(T action, Enemy master, Vector3 position, Quaternion rotation, float param, RotationWrapper previousRotation) 
+		where T : AttackPatternAction<T, P>
+			where P : struct, IConvertible
+	{
+		float angle,  speed;
+		BulletTag bt = bulletTags[action.bulletTagIndex];
+		Bullet temp = GameObjectManager.Bullets.Get(bt);
+		if(previousRotation.rotationNull)
+		{
+			previousRotation.rotationNull = false;
+			previousRotation.rotation = temp.Transform.localRotation;
+		}
+		
+		temp.Transform.position = position;
+		temp.Transform.rotation = rotation;
+		
+		if(action.useParam)
+		{
+			angle = param;
+		}
+		else
+		{
+			angle = action.angle.Value;
+		}
+		
+		switch(action.Direction)
+		{
+		case (DirectionType.TargetPlayer):
+			temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
+			break;
+			
+		case (DirectionType.Absolute):
+			temp.Transform.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
+			break;
+			
+		case (DirectionType.Relative):
+			temp.Transform.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
+			break;
+			
+		case (DirectionType.Sequence):
+			temp.Transform.localRotation = previousRotation.rotation * Quaternion.AngleAxis (-angle, Vector3.right); 
+			break;
+		}
+		previousRotation.rotation = temp.Transform.localRotation;
+		if(action.overwriteBulletSpeed)
+		{
+			speed = action.speed.Value;
+			
+			if(action.useSequenceSpeed)
+			{
+				sequenceSpeed += speed;
+				temp.velocity.x = sequenceSpeed;
+			}
+			else
+			{
+				sequenceSpeed = 0.0f;
+				temp.velocity.x = speed;
+			}
+		}
+		else
+		{	
+			temp.velocity.x = bt.speed.Value;
+		}
+		temp.velocity.y = 0f;
+		
+		if(action.passParam)
+		{
+			temp.param = UnityEngine.Random.Range(action.paramRange.x, action.paramRange.y);
+		}
+		
+		if(action.passPassedParam)
+		{
+			temp.param = param;
+		}
+		temp.master = this;
+		temp.GameObject.SetActive(true);
+		SoundManager.PlaySoundEffect (action.audioClip, position);
+	}
+	
+	public static Vector3 GetSourcePosition<T, P>(Vector3 currentPosition, T action) 
+		where T : AttackPatternAction<T, P>
+		where P : struct, IConvertible
+	{
+		switch(action.source)
+		{
+			case SourceType.Attacker:
+				return currentPosition;
+			case SourceType.Absolute:
+				return GetRandomPosition(action.location, action.randomArea, currentPosition.z, action.randomStyle);
+			case SourceType.Relative:
+				return GetRandomPosition(new Vector2(currentPosition.x, currentPosition.y) + action.location, action.randomArea, currentPosition.z, action.randomStyle);
+			case SourceType.AnotherObject:
+				return action.alternateSource.position;
+			default:
+				return Vector3.zero;
+		}
+	}
+	
+	private static Vector3 GetRandomPosition(Vector2 start, Vector2 size, float z, RandomStyle randomStyle)
+	{
+		if(randomStyle == RandomStyle.Rectangular)
+		{
+			return new Vector3(start.x - 0.5f * size.x + size.x * UnityEngine.Random.value, start.y - 0.5f * size.y + size.y * UnityEngine.Random.value, z);
+		}
+		else if(randomStyle == RandomStyle.Elliptical)
+		{
+			float theta = 2 * Mathf.PI * UnityEngine.Random.value;
+			float r = UnityEngine.Random.value;
+			return new Vector3(start.x + size.x * r * Mathf.Cos(theta), start.y + size.y * r * Mathf.Sin(theta), z);
+		}
+		else
+		{
+			return new Vector3(start.x, start.y, z);
+		}
 	}
 
 	#if UNITY_EDITOR

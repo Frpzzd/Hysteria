@@ -5,47 +5,8 @@ using System.Collections;
 using UnityEditor;
 #endif
 
-[Serializable]
-public enum ActionType { Normal, Coroutine }
-
 public static class ActionHandler
 {
-	public static IEnumerator ExecuteActions(Action[] actions, params object[] param)
-	{
-		if(actions != null)
-		{
-			for(int i = 0; i < actions.Length; i++)
-			{
-				if(actions[i].Initialized)
-				{
-					yield return actions[i].parent.StartCoroutine(ExecuteAction(actions[i], param));
-				}
-				else
-				{
-					Debug.Log("Actions Not Initialzied");
-					Debug.Log(actions[i].GetType());
-				}
-			}
-		}
-		else
-		{
-			Debug.Log("Null Actions");
-		}
-	}
-
-	public static IEnumerator ExecuteAction(Action action, params object[] param)
-	{
-		switch(action.ActionType)
-		{
-			case ActionType.Normal:
-				yield return action.parent.StartCoroutine(action.Execute (param));
-				break;
-			case ActionType.Coroutine:
-				action.parent.StartCoroutine(action.Execute (param));
-				break;
-		}
-	}
-
 	#if UNITY_EDITOR
 	public static void DrawActionGizmo<T, P>(T action, T previous, Color gizmoColor) where T : NestedAction<T, P> where P : struct, IConvertible
 	{
@@ -68,8 +29,6 @@ public static class ActionHandler
 [Serializable]
 public abstract class Action
 {
-	public abstract ActionType ActionType{ get; }
-
 	[NonSerialized]
 	public bool foldout = true;
 

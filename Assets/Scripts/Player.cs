@@ -4,7 +4,7 @@ using System.Collections;
 
 public class Player : StaticGameObject<Player>
 {
-	private static Transform respawnLocation;
+	public static Transform respawnLocation;
 
 	public float optionDistance;
 
@@ -150,10 +150,13 @@ public class Player : StaticGameObject<Player>
 	public AudioClip BombUpClip;
 	public AudioClip fireClip;
 
-	public Timer mainShotDelay;
+	public float mainShotDelay;
+	private float mainShotTime;
 	public const int mainShotDamage = 1;
 
 	public float baseOptionFireDelay;
+	private float optionFireDelay;
+	private float optionShotTime;
 	public const int baseOptionShotDamage = 1;
 
 	//Private Variables
@@ -166,7 +169,6 @@ public class Player : StaticGameObject<Player>
 	public Bomb bomb;
 	[NonSerialized]
 	public bool focused;
-	private Timer OptionShotTimer;
 
 	public override void Awake()
 	{
@@ -182,10 +184,6 @@ public class Player : StaticGameObject<Player>
 			o.GameObject.SetActive(false);
 		}
 		bomb.Active = false;
-		OptionShotTimer = new Timer ();
-		OptionShotTimer.totalTime = ((Introvert) ? 1f : 8f) * baseOptionFireDelay;
-		OptionShotTimer.Start ();
-		mainShotDelay.Start ();
 	}
 
 	private int Sign(float x)
@@ -206,7 +204,7 @@ public class Player : StaticGameObject<Player>
 		deltat = Time.fixedDeltaTime;
 		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;
-		OptionShotTimer.totalTime = ((Introvert) ? 1f : 8f) * ((Intuitive && focused) ? 0.5f : 1f) * baseOptionFireDelay;
+		optionFireDelay = ((Introvert) ? 1f : 8f) * ((Intuitive && focused) ? 0.5f : 1f) * baseOptionFireDelay;
 		//Movement
 		movementVector = Vector3.zero;
 		movementVector.x = Sign(Input.GetAxisRaw("Horizontal")) * speed;
@@ -237,16 +235,18 @@ public class Player : StaticGameObject<Player>
 		//Shooting
 		if(Input.GetButton("Shoot"))
 		{
-			OptionShotTimer.Start();
-			if(mainShotDelay.Done)
+			mainShotTime -= deltat;
+			optionShotTime -= deltat;
+
+			if(mainShotTime < 0)
 			{
-				Vector3 offset = new Vector3(1.5f,0,0);
+				Vector3 offset = new Vector3(0.5f,0,0);
 				GameObjectManager.PlayerShots.Spawn(Transform.position + offset, true);
 				GameObjectManager.PlayerShots.Spawn(Transform.position - offset, true);
 				SoundManager.PlaySoundEffect(fireClip, Transform.position);
-				mainShotDelay.Reset();;
+				mainShotTime = mainShotDelay;
 			}
-			if(OptionShotTimer.Done && power >= 1)
+			if(optionShotTime < 0 && power >= 1)
 			{
 				for(int i = 0; i < options.Length; i++)
 				{
@@ -255,13 +255,12 @@ public class Player : StaticGameObject<Player>
 						options[i].Fire();
 					}
 				}
-				OptionShotTimer.Reset();
+				optionShotTime = optionFireDelay;
 			}
 		}
 		else
 		{
-			mainShotDelay.remainingTime = 0;
-			OptionShotTimer.Pause();
+			mainShotTime = 0;
 		}
 
 		bool optActive;
