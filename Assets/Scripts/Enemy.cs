@@ -1,25 +1,34 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
-[Serializable]
+[System.Serializable]
 public class EnemyDrops
 {
+	[SerializeField]
 	public int point;
+	[SerializeField]
 	public int power;
+	[SerializeField]
 	public bool life;
+	[SerializeField]
 	public bool bomb;
 }
 
-public class Enemy : CachedObject, NamedObject
+[System.Serializable]
+public class Enemy : CachedObject, NamedObject, TitledObject
 {
 	public static List<Enemy> enemiesInPlay;
+	[SerializeField]
 	public bool boss;
+	[SerializeField]
 	public AttackPattern[] attackPatterns;
+	[SerializeField]
 	public string enemyName;
+	[SerializeField]
 	public float dropRadius;
-	public string title;
+	[SerializeField]
+	public string enemyTitle;
 
 	static Enemy()
 	{
@@ -48,62 +57,46 @@ public class Enemy : CachedObject, NamedObject
 		}
 	}
 
-	private int currentAttackPattern;
-
-	public override void Awake()
+	public string Title
 	{
-		foreach(Enemy e in GetComponentsInChildren<Enemy>(true))
+		get 
 		{
-			if(e != this)
+			if(enemyTitle == null)
 			{
-				Destroy(e);
+				enemyTitle = "";
 			}
+			return enemyTitle;
 		}
-		List<AttackPattern> myAttackPatterns = new List<AttackPattern> (attackPatterns);
-		AttackPattern[] allAttackPatterns = GetComponentsInChildren<AttackPattern> (true);
-		for(int i = 0; i < allAttackPatterns.Length; i++)
+
+		set
 		{
-			if(!myAttackPatterns.Contains(allAttackPatterns[i]))
-			{
-				Destroy(allAttackPatterns[i]);
-			}
-			else
-			{
-				allAttackPatterns[i].enabled = false;
-			}
+			enemyTitle = value;
 		}
-		currentAttackPattern = 0;
 	}
 
-	public void Spawn()
-	{
-		enemiesInPlay.Add (this);
-		collider2D.enabled = true;
-		renderer.enabled = true;
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
+	private AttackPattern currentAttackPattern;
 
+	public void Start()
+	{
+		StartCoroutine (RunAttackPatterns ());
+	}
+		
+	public IEnumerator RunAttackPatterns()
+	{
+		foreach(AttackPattern pattern in attackPatterns)
+		{
+			currentAttackPattern = pattern;
+			pattern.Initialize(this);
+			yield return StartCoroutine(pattern.Run(this));
+		}
+		Die ();
 	}
 
 	void Damage(int amount)
 	{
-		attackPatterns[currentAttackPattern].currentHealth -= amount;
-		if(attackPatterns[currentAttackPattern].currentHealth < 0)
+		if(currentAttackPattern != null)
 		{
-			attackPatterns[currentAttackPattern].enabled = false;
-			Drop (attackPatterns[currentAttackPattern].drops);
-			currentAttackPattern++;
-			if(currentAttackPattern >= attackPatterns.Length)
-			{
-				Die ();
-			}
-			else
-			{
-				attackPatterns[currentAttackPattern].enabled = true;
-			}
+			currentAttackPattern.Damage(amount);
 		}
 	}
 
@@ -112,7 +105,8 @@ public class Enemy : CachedObject, NamedObject
 		enemiesInPlay.Remove (this);
 		//TO-DO: Play enemy death visual effect here
 		//TO-DO: Play enemy death sound effect here
-		Destroy (gameObject);
+		collider2D.enabled = false;
+		renderer.enabled = false;
 	}
 
 	void Drop(EnemyDrops drop)

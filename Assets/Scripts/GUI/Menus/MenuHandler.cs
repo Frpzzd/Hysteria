@@ -26,21 +26,21 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 
 	public static void ChangeMenu(Menu menu)
 	{
-		instance.currentMenu.Toggle (false);
-		instance.currentMenu = menu;
-		instance.currentMenu.Toggle (true);
+		Instance.currentMenu.Toggle (false);
+		Instance.currentMenu = menu;
+		Instance.currentMenu.Toggle (true);
 	}
 
 	public static void ChangeBackground(Texture2D texture)
 	{
 		if(texture !=  null)
 		{
-			instance.background.renderer.material.mainTexture = texture;
-			instance.background.SetActive(true);
+			Instance.background.renderer.material.mainTexture = texture;
+			Instance.background.SetActive(true);
 		}
 		else
 		{
-			instance.background.SetActive(false);
+			Instance.background.SetActive(false);
 		}
 	}
 
@@ -50,28 +50,28 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 		{
 			if(currentMenu.MoveDown())
 			{
-				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+				SoundManager.PlaySoundEffect(Instance.menuMoveClip);
 			}
 		}
 		if(CheckUp())
 		{
 			if(currentMenu.MoveUp())
 			{
-				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+				SoundManager.PlaySoundEffect(Instance.menuMoveClip);
 			}
 		}
 		if(CheckLeft())
 		{
 			if(currentMenu.SlideOptionLeft())
 			{
-				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+				SoundManager.PlaySoundEffect(Instance.menuMoveClip);
 			}
 		}
 		if(CheckRight())
 		{
 			if(currentMenu.SlideOptionRight())
 			{
-				SoundManager.PlaySoundEffect(instance.menuMoveClip);
+				SoundManager.PlaySoundEffect(Instance.menuMoveClip);
 			}
 		}
 		if(Global.GameState != GameState.InGame && Global.GameState != GameState.Paused)

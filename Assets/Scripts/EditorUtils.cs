@@ -83,7 +83,7 @@ public class EditorUtils
 		return selectedIndex;
 	}
 
-    public static void MoveRemoveAdd<T>(Vector3 moveRemove, List<T> list) where T : new()
+	public static void MoveRemoveAdd<T>(Vector3 moveRemove, List<T> list) where T : new()
     {
         if (moveRemove.y >= 0)
         {
@@ -105,12 +105,12 @@ public class EditorUtils
         GUILayout.Space(10 * EditorGUI.indentLevel);
         if (GUILayout.Button("Add"))
         {
-            list.Add(new T());
+			list.Add(new T());
 		}
         EditorGUILayout.EndHorizontal();
     }
 
-	public static T[] ActionGUI<T, P> (T[] actions, bool zeroed, MonoBehaviour parent, params object[] param) 
+	public static T[] ActionGUI<T, P> (T[] actions, bool zeroed, params object[] param) 
 		where T : NestedAction<T, P>, new()
 		where P : struct, IConvertible
 	{
@@ -129,7 +129,7 @@ public class EditorUtils
 			if (actionList[i].foldout)
 			{
 				EditorGUI.indentLevel++;
-				actionList[i].ActionGUI(parent, param);
+				actionList[i].ActionGUI(param);
 				EditorGUI.indentLevel--;
 			}
 			EditorGUILayout.EndVertical();

@@ -175,22 +175,22 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 	
 	public static BulletPool Bullets
 	{
-		get { return instance.bullets; }
+		get { return Instance.bullets; }
 	}
 	
 	public static PickupPool Pickups
 	{
-		get { return instance.pickups; }
+		get { return Instance.pickups; }
 	}
 
 	public static PlayerShotPool PlayerShots
 	{
-		get { return instance.playerShots; }
+		get { return Instance.playerShots; }
 	}
 
 	public static ScorePopupPool ScorePopups
 	{
-		get { return instance.scorePopups; }
+		get { return Instance.scorePopups; }
 	}
 
 	public override void Awake()

@@ -36,7 +36,7 @@ public class ScoreManager : StaticGameObject<ScoreManager>
 	{
 		score = 0ul;
 		graze = 0u;
-		pointValue = (uint)instance.defaultPointValue;
+		pointValue = (uint)Instance.defaultPointValue;
 	}
 
 	public override void Awake()
@@ -60,22 +60,22 @@ public class ScoreManager : StaticGameObject<ScoreManager>
 
 	public static bool CheckHighScore()
 	{
-		return score > instance.scores [instance.scores.Length - 1].Score;
+		return score > Instance.scores [Instance.scores.Length - 1].Score;
 	}
 
 	public static void ExtraLife()
 	{
-		score += (ulong)instance.extraLifeBonus;
+		score += (ulong)Instance.extraLifeBonus;
 	}
 
 	public static void ExtraBomb()
 	{
-		score += (ulong)instance.extraBombBonus;
+		score += (ulong)Instance.extraBombBonus;
 	}
 
 	public static void PowerPickup()
 	{
-		score += (ulong)(instance.powerToPointRatio * (float)PointValue);
+		score += (ulong)(Instance.powerToPointRatio * (float)PointValue);
 	}
 
 	public static void PointPickup()
@@ -85,13 +85,13 @@ public class ScoreManager : StaticGameObject<ScoreManager>
 
 	public static void PointValuePickup()
 	{
-		pointValue += (uint)instance.pointValuePerPickup;
+		pointValue += (uint)Instance.pointValuePerPickup;
 	}
 
 	public static void GrazeBullet()
 	{
 		graze++;
-		pointValue += (uint)instance.pointValuePerGraze;
+		pointValue += (uint)Instance.pointValuePerGraze;
 	}
 
 	private class HighScore

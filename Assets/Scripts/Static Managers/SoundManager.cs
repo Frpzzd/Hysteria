@@ -11,12 +11,12 @@ public class SoundManager : StaticGameObject<SoundManager>
 
 	private static Vector3 Offset
 	{
-		get { return instance.offset; }
+		get { return Instance.offset; }
 	}
 
 	private static GameObject prefab
 	{
-		get { return instance.audioSourcePrefab; }
+		get { return Instance.audioSourcePrefab; }
 	}
 
 	private class AudioObject
@@ -40,6 +40,10 @@ public class SoundManager : StaticGameObject<SoundManager>
 	
 	public static void PlayMusic(AudioClip bgm)
 	{
+		if(musicSource == null)
+		{
+			musicSource = Instance.audio;
+		}
 		musicSource.Stop();
 		musicSource.clip = bgm;
 		musicSource.Play();
@@ -64,7 +68,7 @@ public class SoundManager : StaticGameObject<SoundManager>
 		else
 		{
 			GameObject newSource = (GameObject)Instantiate(prefab);
-			newSource.transform.parent = instance.Transform;
+			newSource.transform.parent = Instance.Transform;
 			newSource.transform.localPosition = Vector3.zero;
 			newSource.name = sfx.name + " Source";
 			newSource.audio.clip = sfx;
@@ -76,9 +80,12 @@ public class SoundManager : StaticGameObject<SoundManager>
 	
 	public static void PlaySoundEffect(AudioClip sfx, Vector3 location)
 	{
-		AudioObject source = GetSource (sfx);
-		source.transform.position =  new Vector3 (location.x + Offset.x, instance.Transform.position.y + Offset.y, Offset.z);
-		source.source.PlayOneShot (sfx);
+		if(sfx != null)
+		{
+			AudioObject source = GetSource (sfx);
+			source.transform.position =  new Vector3 (location.x + Offset.x, Instance.Transform.position.y + Offset.y, Offset.z);
+			source.source.PlayOneShot (sfx);
+		}
 	}
 
 	public static void PlaySoundEffect(AudioClip sfx)
@@ -89,7 +96,7 @@ public class SoundManager : StaticGameObject<SoundManager>
 	public static void PlaySoundEffect(AudioClip sfx, float volume, Vector3 location, bool inWorld)
 	{
 		AudioObject source = GetSource (sfx);
-		source.transform.position = new Vector3 ((inWorld) ? location.x : instance.Transform.position.x + Offset.x, instance.Transform.position.y + Offset.y, Offset.z);
+		source.transform.position = new Vector3 ((inWorld) ? location.x : Instance.Transform.position.x + Offset.x, Instance.Transform.position.y + Offset.y, Offset.z);
 		source.source.PlayOneShot (sfx);
 	}
 }

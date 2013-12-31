@@ -5,10 +5,13 @@ using System.Collections;
 using UnityEditor;
 #endif
 
+[Serializable]
 public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 {
 	public override ActionType ActionType { get { return ActionType.Normal; } }
 	public enum Type { Wait, Repeat, Absolute, Relative, Teleport }
+
+	[SerializeField]
 	public Vector3 targetLocation;
 
 	protected static IEnumerator LinearMove(Transform transform, Vector3 start, Vector3 end, float totalTime)
@@ -24,7 +27,7 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 	}
 
 	#if UNITY_EDITOR
-	protected override void ActionGUIImpl (MonoBehaviour parent, params object[] param)
+	public override void ActionGUI(params object[] param)
 	{
 		type = (Type)EditorGUILayout.EnumPopup("Type", type);
 		if(type != Type.Wait  && type != Type.Repeat)

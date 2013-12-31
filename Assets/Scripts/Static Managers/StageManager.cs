@@ -43,20 +43,6 @@ public class StageManager : StaticGameObject<StageManager>
 	public static void LoadStage(int stage)
 	{
 		currentStage = null;
-		Application.LoadLevel (instance.stageSceneNumbers [stage]);
-	}
-
-	void OnLevelWasLoaded(int level)
-	{
-		Stage[] stageScripts = (Stage[])FindObjectsOfType (typeof(Stage));
-		if(stageScripts == null || stageScripts.Length != 1)
-		{
-			currentStage = null;
-		}
-		else
-		{
-			currentStage = stageScripts[0];
-			currentStage.Run();
-		}
+		Application.LoadLevel (Instance.stageSceneNumbers [stage]);
 	}
 }

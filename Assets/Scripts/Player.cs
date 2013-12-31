@@ -28,12 +28,12 @@ public class Player : StaticGameObject<Player>
 
 	public static float Power
 	{
-		get { return instance.power; }
+		get { return Instance.power; }
 	}
 
 	public static bool Focused
 	{
-		get { return instance.focused; }
+		get { return Instance.focused; }
 	}
 
 	public static int MainShotDamage
@@ -48,12 +48,12 @@ public class Player : StaticGameObject<Player>
 
 	public static bool MaxPower
 	{
-		get { return Power / instance.options.Length > 1; }
+		get { return Power / Instance.options.Length > 1; }
 	}
 
 	public static int MaxOptions
 	{
-		get { return instance.options.Length; }
+		get { return Instance.options.Length; }
 	}
 
 	public static string ShotType
@@ -63,7 +63,7 @@ public class Player : StaticGameObject<Player>
 
 	public static Transform PlayerTransform
 	{
-		get { return instance.Transform; }
+		get { return Instance.Transform; }
 	}
 
 	//TO-DO: Implement Bomb Functionality
@@ -71,8 +71,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Shield, Absorbs incoming bullets, high bullet to point ratio, does not damage enemies
 	public static bool Extravert
 	{
-		get { return instance.EI; }
-		set { instance.EI = value; }
+		get { return Instance.EI; }
+		set { Instance.EI = value; }
 	}
 	
 	//TO-DO: Implement Bomb Functionality
@@ -80,8 +80,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Linear laser, Cancels bullets that collide with it, low bullet to point ratio, instantly kills non-boss enemies
 	public static bool Introvert
 	{
-		get { return !instance.EI; }
-		set { instance.EI = !value; }
+		get { return !Instance.EI; }
+		set { Instance.EI = !value; }
 	}
 	
 	//TO-DO: Implement Bomb Functionality
@@ -89,8 +89,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: 2x Area of Effect
 	public static bool Sensing
 	{
-		get { return instance.SN; }
-		set { instance.SN = value; }
+		get { return Instance.SN; }
+		set { Instance.SN = value; }
 	}
 	
 	//TO-DO: Implement Bomb Functionality
@@ -98,8 +98,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: 2x as effective
 	public static bool Intuitive
 	{
-		get { return !instance.SN; }
-		set { instance.SN = !value; }
+		get { return !Instance.SN; }
+		set { Instance.SN = !value; }
 	}
 	
 	//TO-DO: Implement Functionality
@@ -107,8 +107,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Shorter bomb duration, longer death bomb window
 	public static bool Thinking
 	{
-		get { return instance.TF; }
-		set { instance.TF = !value; }
+		get { return Instance.TF; }
+		set { Instance.TF = !value; }
 	}
 	
 	//TO-DO: Implement Functionality
@@ -116,8 +116,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Longer Bomb Duration, shorter death bomb window
 	public static bool Feeling
 	{
-		get { return !instance.TF; }
-		set { instance.TF = value; }
+		get { return !Instance.TF; }
+		set { Instance.TF = value; }
 	}
 	
 	//TO-DO: Implement Functionality
@@ -125,8 +125,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Six starting lives, two bombs each
 	public static bool Judging
 	{
-		get { return instance.JP; }
-		set { instance.JP = value; }
+		get { return Instance.JP; }
+		set { Instance.JP = value; }
 	}
 	
 	//TO-DO: Implement Functionality
@@ -134,8 +134,8 @@ public class Player : StaticGameObject<Player>
 	//Bomb Type: Two starting lives, six bombs each
 	public static bool Percieving
 	{
-		get { return !instance.JP; }
-		set { instance.JP = !value; }
+		get { return !Instance.JP; }
+		set { Instance.JP = !value; }
 	}
 
 	private bool invincible = false;
@@ -332,29 +332,29 @@ public class Player : StaticGameObject<Player>
 				ScoreManager.PointValuePickup();
 				break;
 			case PickupType.Power:
-				instance.ChangePower(0.01f);
+				Instance.ChangePower(0.01f);
 				ScoreManager.PowerPickup();
 				break;
 			case PickupType.Bomb:
-				instance.bombs++;
-				if(instance.bombs > instance.maxBombs)
+				Instance.bombs++;
+				if(Instance.bombs > Instance.maxBombs)
 				{
-					instance.bombs = instance.maxBombs;
+					Instance.bombs = Instance.maxBombs;
 					ScoreManager.ExtraBomb();
 				}
-				SoundManager.PlaySoundEffect(instance.BombUpClip, instance.Transform.position);
+				SoundManager.PlaySoundEffect(Instance.BombUpClip, Instance.Transform.position);
 				break;
 			case PickupType.Life:
-				instance.lives++;
-				if(instance.lives > instance.maxLives)
+				Instance.lives++;
+				if(Instance.lives > Instance.maxLives)
 				{
-					instance.lives = instance.maxLives;
+					Instance.lives = Instance.maxLives;
 					ScoreManager.ExtraLife();
 				}
-				SoundManager.PlaySoundEffect(instance.ExtendClip, instance.Transform.position);
+				SoundManager.PlaySoundEffect(Instance.ExtendClip, Instance.Transform.position);
 				break;
 		}
-		SoundManager.PlaySoundEffect(instance.PickupClip, instance.Transform.position);
+		SoundManager.PlaySoundEffect(Instance.PickupClip, Instance.Transform.position);
 	}
 
 	private void ChangePower(float amount)
@@ -368,7 +368,7 @@ public class Player : StaticGameObject<Player>
 		{
 			lives--;
 			//TODO: Play Player death effect at player's location
-			SoundManager.PlaySoundEffect(instance.DeathClip, instance.Transform.position);
+			SoundManager.PlaySoundEffect(Instance.DeathClip, Instance.Transform.position);
 			Transform.position = respawnLocation.position;
 			if(lives <= 0)
 			{

@@ -11,14 +11,17 @@ public class StageAction : NestedAction<StageAction, StageAction.Type>
 	public override ActionType ActionType { get { return ActionType.Normal; } }
 	public enum Type { Wait, Repeat, SpawnEnemy, PlayMusic }
 
+	[SerializeField]
 	public GameObject prefab;
+	[SerializeField]
 	public Vector2 location;
+	[SerializeField]
 	public bool useSequence;
+	[SerializeField]
 	public AudioClip music;
 
 	#if UNITY_EDITOR
-		
-	protected override void ActionGUIImpl (MonoBehaviour parent, params object[] param)
+	public override void ActionGUI(params object[] param)
 	{		
 		type = (Type)EditorGUILayout.EnumPopup("Type", type);
 		switch(type)

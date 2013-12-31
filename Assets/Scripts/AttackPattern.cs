@@ -7,51 +7,129 @@ using UnityEditor;
 #endif
 
 [Serializable]
-public class AttackPattern : AbstractActionBehavior<MovementAction, MovementAction.Type>, IActionGroup, NamedObject
+public class AttackPattern : IActionGroup, NamedObject, TitledObject
 {
-	public override string ActionGUITitle { get { return "Movement Pattern"; } }
-	public override object[] ActionParameters { get { return new object[] { Transform }; } }
-	public Enemy parent;
-	public string bpName = "Attack Pattern";
-	public int health;
+	[SerializeField]
+	public MonoBehaviour parent;
+	[SerializeField]
+	public string bpName;
+	[SerializeField]
+	public string title;
+	[SerializeField]
+	public int health = 100;
+	[SerializeField]
 	public int timeout;
+	[SerializeField]
 	public int secondsRemaining;
+	[SerializeField]
 	public int bonus;
+	[SerializeField]
 	public bool survival;
 
 	[NonSerialized]
 	public int currentHealth;
 	[NonSerialized]
 	public int remainingBonus;
-
+	
+	[SerializeField]
 	public EnemyDrops drops;
+	[SerializeField]
+	public MovementAction[] actions;
+
+	public AttackPattern()
+	{
+		fireTags = new FireTag[1];
+		fireTags [0] = new FireTag ();
+		bulletTags = new BulletTag[1];
+		bulletTags [0] = new BulletTag ();
+		actions = new MovementAction[1];
+		actions [0] = new MovementAction ();
+	}
 
 	public string Name
 	{
-		get { return bpName; }
+		get 
+		{ 
+			if(bpName == null)
+			{
+				bpName = "Attack Pattern";
+			}
+			return bpName; 
+		}
 		set { bpName = value; }
 	}
 
+	public string Title
+	{
+		get 
+		{ 
+			if(title == null)
+			{
+				title = "";
+			}
+			return title; 
+		}
+		set { title = value; }
+	}
+
+	[SerializeField]
 	public FireTag[] fireTags;
+	[SerializeField]
 	public BulletTag[] bulletTags;
 
+	[NonSerialized]
 	public float sequenceSpeed = 0.0f;
-	
-	bool started = false;
 
-	private IEnumerator InitateFire()
+	public IEnumerator Run(params object[] param)
 	{
-		if(!started)
+		parent.StartCoroutine (ActionHandler.ExecuteActions (actions, parent.transform));
+		currentHealth = health;
+		while(currentHealth > 0)
 		{
-			yield return new WaitForSeconds(1.0f);
-		}
-		started = true;
-
-		while(true)
-		{
-			//yield return RunFire(fireTags[0], fireTags[0].actions, 1);
+			yield return parent.StartCoroutine(fireTags[0].Run(this));
 		}
 	}
+
+	public void Initialize(MonoBehaviour parent)
+	{
+		this.parent = parent;
+		foreach(MovementAction action in actions)
+		{
+			action.Initialize(parent);
+		}
+		foreach(FireTag tag in fireTags)
+		{
+			tag.Initialize(parent);
+		}
+		foreach(BulletTag tag in bulletTags)
+		{
+			tag.Initialize(parent);
+		}
+	}
+
+	public void Damage(int amount)
+	{
+		currentHealth -= amount;
+	}
+
+	#if UNITY_EDITOR
+	public void ActionGUI (params object[] param)
+	{
+		if(actions == null || actions.Length < 1)
+		{
+			actions = new MovementAction[1];
+			actions[0] = new MovementAction();
+		}
+
+		EditorUtils.ExpandCollapseButtons<MovementAction, MovementAction.Type> ("Movement Pattern", actions);
+
+		actions = EditorUtils.ActionGUI<MovementAction, MovementAction.Type> (actions, false, parent, param);
+	}
+
+	public void DrawGizmos(Color gizmoColor)
+	{
+	}
+	#endif
 
 	[Serializable]
 	public class Property
@@ -165,8 +243,6 @@ public abstract class AttackPatternAction<T, P> : NestedAction<T, P> where T : N
 	public Transform alternateSource;
 
 	public int bulletTagIndex;
-	
-	public BulletTag bulletTag;
 	
 	public bool useParam = false;
 	public bool overwriteBulletSpeed = false;

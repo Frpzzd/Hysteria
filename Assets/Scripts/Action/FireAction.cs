@@ -5,6 +5,7 @@ using System.Collections;
 using UnityEditor;
 #endif
 
+[Serializable]
 public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 {
 	public enum Type { Wait, Repeat, CallFireTag, Fire }
@@ -21,24 +22,24 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 			}
 		}
 	}
-	public FireTag tag;
+
 	public int fireTagIndex;
 
 	#if UNITY_EDITOR
-	protected override void ActionGUIImpl (MonoBehaviour parent, params object[] param)
+	public override void ActionGUI(params object[] param)
 	{
 		type = (Type)EditorGUILayout.EnumPopup("Type", type);
+		AttackPattern attackPattern = param [0] as AttackPattern;
 		switch(type)
 		{
 			case Type.Wait:
 				wait = AttackPattern.Property.EditorGUI ("Wait", wait, false);
 				break;
 			case Type.Repeat:
-				SharedAction.Repeat.ActionGUI<FireAction, FireAction.Type>(this, parent, param);
+				SharedAction.Repeat.ActionGUI<FireAction, FireAction.Type>(this, param);
 				break;
 			case Type.CallFireTag:
-				fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", (parent as AttackPattern).fireTags, fireTagIndex, "Fire Tag");
-				tag = (parent as AttackPattern).fireTags [fireTagIndex];
+				fireTagIndex = EditorUtils.NamedObjectPopup("Fire Tag", attackPattern.fireTags, fireTagIndex, "Fire Tag");
 				GUILayout.BeginHorizontal();
 				passParam = EditorGUILayout.Toggle("PassParam", passParam);
 				if(!passParam)
@@ -49,7 +50,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				waitForFinish = EditorGUILayout.Toggle("Wait to Finish", waitForFinish);
 				break;
 			case Type.Fire:
-				SharedAction.Fire.ActionGUI<FireAction, FireAction.Type>(this, parent as AttackPattern);
+				SharedAction.Fire.ActionGUI<FireAction, FireAction.Type>(this, attackPattern);
 				break;
 		}
 	}
@@ -62,13 +63,15 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 
 	public override IEnumerator Execute (params object[] param)
 	{
+		AttackPattern attackPattern = param [1] as AttackPattern;
+		FireTag fireTag = param [0] as FireTag;
 		switch(type)
 		{
 			case Type.Repeat:
 				yield return parent.StartCoroutine(SharedAction.Repeat.Execute<FireAction, FireAction.Type>(nestedActions, repeat, param));
 				break;
 			case Type.CallFireTag:
-				FireTag fireTag = param [0] as FireTag;
+				FireTag tag = attackPattern.fireTags[fireTagIndex];
 				if(passParam)
 				{
 					tag.param = UnityEngine.Random.Range(paramRange.x, paramRange.y);
@@ -79,14 +82,19 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				}
 				if(waitForFinish)
 				{
-					tag.Run(param);
+					yield return parent.StartCoroutine(tag.Run());
 				}
 				else
 				{
+					parent.StartCoroutine(tag.Run(param));
 				}
 				break;
 			case Type.Fire:
-				SharedAction.Fire.Execute<FireAction, FireAction.Type>(this, parent as AttackPattern, param);
+				SharedAction.Fire.Execute<FireAction, FireAction.Type>(this, parent as Enemy, attackPattern, 
+			                                                       parent.transform.position, 
+			                                                       parent.transform.rotation, 
+			                                                       fireTag.param, 
+			                                                       fireTag.previousRotation);
 				break;
 			case Type.Wait:
 				yield return new WaitForSeconds(wait.Value);

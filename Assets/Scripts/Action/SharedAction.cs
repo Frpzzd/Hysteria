@@ -10,7 +10,7 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 	public static class Repeat
 	{
 		#if UNITY_EDITOR
-		public static void ActionGUI<T, P>(T nestedAction, MonoBehaviour parent, params object[] param) 
+		public static void ActionGUI<T, P>(T nestedAction, params object[] param) 
 			where T : NestedAction<T, P>, new() 
 			where P : struct, IConvertible
 		{
@@ -24,7 +24,7 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 
 				nestedAction.repeat = AttackPattern.Property.EditorGUI("Repeat", nestedAction.repeat, true);
 				
-				nestedAction.nestedActions = EditorUtils.ActionGUI<T, P>(nestedAction.nestedActions, false, parent, param);
+				nestedAction.nestedActions = EditorUtils.ActionGUI<T, P>(nestedAction.nestedActions, false, param);
 			}
 		}
 
@@ -132,38 +132,15 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 				action.paramRange = EditorGUILayout.Vector2Field("Param Range", action.paramRange);
 			}
 			action.bulletTagIndex = EditorUtils.NamedObjectPopup("Bullet Tag", master.bulletTags, action.bulletTagIndex, "Bullet Tag");
-			action.bulletTag = master.bulletTags [action.bulletTagIndex];
 		}
 		#endif
 
-		public static void Execute<T, P>(T action, AttackPattern master, params object[] parameters) 
+		public static void Execute<T, P>(T action, Enemy master, AttackPattern attackPattern, Vector3 position, Quaternion rotation, float param, RotationWrapper previousRotation) 
 			where T : AttackPatternAction<T, P>
 			where P : struct, IConvertible
 		{
-			Vector3 position;
-			Quaternion rotation;
-			RotationWrapper previousRotation;
-			float param;
-			if(parameters[0] is FireTag)
-			{
-				FireTag tag = (parameters[0] as FireTag);
-				position = GetSourcePosition<T, P>(master.Transform.position, action);
-				rotation = master.Transform.rotation;
-				param = tag.param;
-				previousRotation = tag.previousRotation;
-			}
-			else
-			{
-				Bullet bullet = (parameters[0] as Bullet);
-				position = GetSourcePosition<T, P>(bullet.Transform.position, action);
-				rotation = bullet.Transform.rotation;
-				param = bullet.param;
-				previousRotation = bullet.prevRotation;
-			}
-			
-			
 			float angle, direction, angleDifference, speed;
-			BulletTag bt = action.bulletTag;
+			BulletTag bt = attackPattern.bulletTags[action.bulletTagIndex];
 			Bullet temp = GameObjectManager.Bullets.Get(bt);
 			if(previousRotation.rotationNull)
 			{
@@ -186,19 +163,7 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 			switch(action.Direction)
 			{
 			case (DirectionType.TargetPlayer):
-				Quaternion originalRot = rotation;
-				float dotHeading = Vector3.Dot( temp.Transform.up, Player.PlayerTransform.position - temp.Transform.position );
-				
-				if(dotHeading > 0)
-				{
-					direction = -1;
-				}
-				else
-				{
-					direction = 1;
-				}
-				angleDifference = Vector3.Angle(temp.Transform.forward, Player.PlayerTransform.position - temp.Transform.position);
-				temp.Transform.rotation = originalRot * Quaternion.AngleAxis((direction * angleDifference) - angle, Vector3.right);
+				temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
 				break;
 				
 			case (DirectionType.Absolute):
@@ -220,12 +185,12 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 				
 				if(action.useSequenceSpeed)
 				{
-					master.sequenceSpeed += speed;
-					temp.speed = master.sequenceSpeed;
+					attackPattern.sequenceSpeed += speed;
+					temp.speed = attackPattern.sequenceSpeed;
 				}
 				else
 				{
-					master.sequenceSpeed = 0.0f;
+					attackPattern.sequenceSpeed = 0.0f;
 					temp.speed = speed;
 				}
 			}
@@ -243,7 +208,7 @@ public static class SharedAction //: AbstractAction, IFireAction, IBulletAction,
 			{
 				temp.param = param;
 			}
-			temp.master = master;
+			temp.master = attackPattern;
 			temp.GameObject.SetActive(true);
 			SoundManager.PlaySoundEffect (action.audioClip, position);
 		}

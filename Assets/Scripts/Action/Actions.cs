@@ -12,9 +12,24 @@ public static class ActionHandler
 {
 	public static IEnumerator ExecuteActions(Action[] actions, params object[] param)
 	{
-		for(int i = 0; i < actions.Length; i++)
+		if(actions != null)
 		{
-			yield return actions[i].parent.StartCoroutine(ExecuteAction(actions[i], param));
+			for(int i = 0; i < actions.Length; i++)
+			{
+				if(actions[i].Initialized)
+				{
+					yield return actions[i].parent.StartCoroutine(ExecuteAction(actions[i], param));
+				}
+				else
+				{
+					Debug.Log("Actions Not Initialzied");
+					Debug.Log(actions[i].GetType());
+				}
+			}
+		}
+		else
+		{
+			Debug.Log("Null Actions");
 		}
 	}
 
@@ -55,24 +70,28 @@ public abstract class Action
 {
 	public abstract ActionType ActionType{ get; }
 
-	public AttackPattern.Property wait;
-	
+	[NonSerialized]
 	public bool foldout = true;
 
-	#if UNITY_EDITOR
-	public void ActionGUI(MonoBehaviour parent, params object[] param)
+	[NonSerialized]
+	public bool Initialized = false;
+
+	[SerializeField]
+	public MonoBehaviour parent;
+
+	[SerializeField]
+	public AttackPattern.Property wait;
+
+	public virtual void Initialize(MonoBehaviour parent)
 	{
-		if(this.parent == null || this.parent != parent)
-		{
-			this.parent = parent;
-			GUI.changed = true;
-		}
-		ActionGUIImpl (parent, param);
+		this.parent = parent;
+		Initialized = true;
 	}
-	protected abstract void ActionGUIImpl(MonoBehaviour parent, params object[] param);
+
+	#if UNITY_EDITOR
+	public abstract void ActionGUI(params object[] param);
 	#endif
 
-	public MonoBehaviour parent;
 
 	public abstract IEnumerator Execute(params object[] param);
 }
@@ -100,6 +119,18 @@ public abstract class NestedAction<T, P> : Action where T : NestedAction<T, P> w
 	public void Expand(bool recursive)
 	{
 		SetAll (true, recursive);
+	}
+
+	public override void Initialize (MonoBehaviour parent)
+	{
+		base.Initialize (parent);
+		if(nestedActions != null)
+		{
+			foreach(T action in nestedActions)
+			{
+				action.Initialize(parent);
+			}
+		}
 	}
 	
 	public void Collapse(bool recursive)
@@ -149,139 +180,5 @@ public interface IActionGroup
 	void DrawGizmos(Color gizmoColor);
 	#endif
 	IEnumerator Run(params object[] param);
-}
-
-[Serializable]
-public abstract class AbstractActionGroup<T, P> : UnityEngine.Object, IActionGroup where T : NestedAction<T, P> where P : struct, IConvertible
-{
-	protected T[] actions;
-
-	public T this[int index]	
-	{
-		get
-		{
-			Debug.Log("Get");
-			return actions[index];
-		}
-
-		set
-		{
-			Debug.Log("Set");
-			actions[index] = value;
-		}
-	}
-
-	public int Size
-	{
-		get { return actions.Length; }
-	}
-
-	public virtual object[] AlternateParameters(params object[] param) { return param; }
-
-	#if UNITY_EDITOR
-	public abstract void ActionGUI(params object[] param);
-
-	public void DrawGizmos(Color gizmoColor)
-	{
-		ActionHandler.DrawActionGizmos<T, P> (actions, gizmoColor);
-	}
-	#endif 
-	public virtual IEnumerator Run(params object[] param)
-	{
-		if(actions != null && actions.Length > 0)
-		{
-			yield return actions[0].parent.StartCoroutine (ActionHandler.ExecuteActions(actions, param));
-		}
-	}
-}
-
-public abstract class AbstractActionBehavior<T, P> : CachedObject, IActionGroup where T : NestedAction<T, P>, new() where P : struct, IConvertible
-{
-	public T[] actions;
-
-	private bool running;
-	
-	public T this[int index]	
-	{
-		get
-		{
-			Debug.Log("Get");
-			return actions[index];
-		}
-		
-		set
-		{
-			Debug.Log("Set");
-			actions[index] = value;
-		}
-	}
-
-	public Color gizmoColor = Color.cyan;
-	
-	public int Size
-	{
-		get { return actions.Length; }
-	}
-
-	public abstract string ActionGUITitle { get; }
-
-	public abstract object[] ActionParameters { get; }
-	
-	public virtual IEnumerator Run(params object[] param)
-	{
-		if(actions != null && actions.Length > 0)
-		{
-			running = true;
-			yield return StartCoroutine(ActionHandler.ExecuteActions(actions, param));
-			running = false;
-		}
-	}
-
-	public override void Awake()
-	{
-		base.Awake();
-		if(!running)
-		{
-			StartActions ();
-		}
-	}
-
-	public void OnEnable()
-	{
-		if(!running)
-		{
-			StartActions ();
-		}
-	}
-
-	public virtual void StartActions()
-	{
-		StartCoroutine(Run(ActionParameters));
-	}
-	
-	#if UNITY_EDITOR
-	void OnDrawGizmos()
-	{
-		Gizmos.color = gizmoColor;
-		DrawGizmos (gizmoColor);
-	}
-
-	public void ActionGUI (params object[] param)
-	{
-		if (actions == null || actions.Length == 0)
-		{
-			actions = new T[1];
-			actions [0] = new T();
-		}
-
-		EditorUtils.ExpandCollapseButtons<T, P>(ActionGUITitle, actions);
-
-		actions = EditorUtils.ActionGUI<T, P>(actions, false, this);
-	}
-	
-	public void DrawGizmos(Color gizmoColor)
-	{
-		ActionHandler.DrawActionGizmos<T, P> (actions, gizmoColor);
-	}
-	#endif
+	void Initialize (MonoBehaviour parent);
 }

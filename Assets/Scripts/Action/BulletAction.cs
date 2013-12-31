@@ -5,9 +5,10 @@ using System.Collections;
 using UnityEditor;
 #endif
 
+[Serializable]
 public class BulletAction : AttackPatternAction<BulletAction, BulletAction.Type>
 {
-	public enum Type { Wait, ChangeDirection, ChangeSpeed, ChangeScale, Repeat, Fire, VerticalChangeSpeed, Deactivate }
+	public enum Type { Wait, ChangeDirection, ChangeSpeed, ChangeScale, Repeat, Fire, Deactivate }
 	public override ActionType ActionType 
 	{
 		get
@@ -23,12 +24,14 @@ public class BulletAction : AttackPatternAction<BulletAction, BulletAction.Type>
 			}
 		}
 	}
+	[SerializeField]
 	public bool isVertical;
 	
 	#if UNITY_EDITOR
-	protected override void ActionGUIImpl (MonoBehaviour parent, params object[] param)
+	public override void ActionGUI(params object[] param)
 	{
 		type = (Type)EditorGUILayout.EnumPopup("Type", type);
+		AttackPattern attackPattern = param [0] as AttackPattern;
 		switch(type)
 		{
 			case Type.ChangeDirection:
@@ -46,7 +49,10 @@ public class BulletAction : AttackPatternAction<BulletAction, BulletAction.Type>
 				wait = AttackPattern.Property.EditorGUI ("Wait", wait, false);
 				break;
 			case Type.Repeat:
-				SharedAction.Repeat.ActionGUI<BulletAction, BulletAction.Type> (this, parent, param);
+				SharedAction.Repeat.ActionGUI<BulletAction, BulletAction.Type> (this, param);
+				break;
+			case Type.Fire:
+				SharedAction.Fire.ActionGUI<BulletAction, BulletAction.Type>(this, attackPattern);
 				break;
 		}
 	}
@@ -60,6 +66,7 @@ public class BulletAction : AttackPatternAction<BulletAction, BulletAction.Type>
 	public override IEnumerator Execute(params object[] param)
 	{
 		Bullet bullet = param [0] as Bullet;
+		AttackPattern attackPattern = param [1] as AttackPattern;
 		float t = 0.0f;
 		float s = 0.0f;
 		float d, newSpeed, ang;
@@ -169,6 +176,13 @@ public class BulletAction : AttackPatternAction<BulletAction, BulletAction.Type>
 				break;
 			case Type.Wait:
 				yield return new WaitForSeconds(wait.Value);
+				break;
+			case Type.Fire:
+				SharedAction.Fire.Execute<BulletAction, BulletAction.Type>(this, parent as Enemy, attackPattern, 
+				                                                       parent.transform.position, 
+				                                                       parent.transform.rotation, 
+				                                                       bullet.param, 
+				                                                       bullet.prevRotation);
 				break;
 		}
 	}

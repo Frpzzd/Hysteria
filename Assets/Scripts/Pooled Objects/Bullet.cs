@@ -36,10 +36,10 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 	// Update is called once per frame
 	void FixedUpdate () 
 	{
-		Vector3 velocity = Transform.forward * speed;
+		Vector3 velocity = Transform.up * speed * Time.fixedDeltaTime;
 		if(useVertical)
 		{
-			velocity += (Vector3.up * verticalSpeed);
+			velocity += (Vector3.up * verticalSpeed * Time.fixedDeltaTime);
 		}
 		Transform.position += velocity;
 	}

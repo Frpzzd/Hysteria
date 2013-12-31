@@ -5,11 +5,18 @@ using System.Collections.Generic;
 [Serializable]
 public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObject<T>
 {
-	protected static T instance;
+	private static T instance;
 
 	public static T Instance
 	{
-		get { return instance; }
+		get 
+		{ 
+			if(instance == null)
+			{
+				instance = FindObjectOfType<T>();
+			}
+			return instance; 
+		}
 	}
 
 	public bool keepBetweenScenes;

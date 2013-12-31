@@ -10,25 +10,36 @@ public interface NamedObject
 	string Name { get; set; }
 }
 
-[Serializable]
-public abstract class Tag<T, P> : AbstractActionGroup<T, P> where T : NestedAction<T, P> where P : struct, IConvertible
+public interface TitledObject
 {
-	#if UNITY_EDITOR
-	public override void ActionGUI(params object[] param)
-	{
-		ActionGUI (param [0] as AttackPattern);
-	}
-
-	public abstract void ActionGUI(AttackPattern attackPattern);
-	#endif
+	string Title { get; set; }
 }
 
-[Serializable]
-public class FireTag : Tag<FireAction, FireAction.Type>, NamedObject
+//[Serializable]
+//public abstract class Tag : IActionGroup, NamedObject
+//{
+//	#if UNITY_EDITOR
+//	public abstract void ActionGUI(params object[] param);
+//
+//	public abstract void DrawGizmos(Color gizmoColor);
+//	#endif
+//
+//	public abstract IEnumerator Run(params object[] param);
+//
+//	public abstract string Name { get; set; }
+//}
+
+[System.Serializable]
+public class FireTag : IActionGroup, NamedObject
 {
-	private string ftName = "Fire Tag";
+	[SerializeField]
+	public string ftName = "Fire Tag";
+	[SerializeField]
 	public float param = 0.0f;
-	public RotationWrapper previousRotation;
+	[SerializeField]
+	public RotationWrapper previousRotation = new RotationWrapper();
+	[SerializeField]
+	public FireAction[] actions;
 	
 	public string Name
 	{
@@ -43,13 +54,30 @@ public class FireTag : Tag<FireAction, FireAction.Type>, NamedObject
 		}
 	}
 
-	public override object[] AlternateParameters (params object[] param)
+	public FireTag()
 	{
-		return new object[]{ this };
+		actions = new FireAction[1];
+		actions [0] = new FireAction ();
+	}
+	
+	public IEnumerator Run (params object[] param)
+	{
+		if(actions != null && actions.Length > 0)
+		{
+			yield return actions[0].parent.StartCoroutine (ActionHandler.ExecuteActions(actions, this, param[0] as AttackPattern));
+		}
+	}
+
+	public void Initialize(MonoBehaviour parent)
+	{
+		foreach(FireAction action in actions)
+		{
+			action.Initialize(parent);
+		}
 	}
 	
 	#if UNITY_EDITOR
-	public override void ActionGUI (AttackPattern attackPattern)
+	public void ActionGUI (params object[] param)
 	{
 		if (actions == null || actions.Length == 0)
 		{
@@ -59,16 +87,27 @@ public class FireTag : Tag<FireAction, FireAction.Type>, NamedObject
 		
 		EditorUtils.ExpandCollapseButtons<FireAction, FireAction.Type>("Fire Tag: " + Name, actions);
 		
-		actions = EditorUtils.ActionGUI<FireAction, FireAction.Type> (actions, false, attackPattern);
+		actions = EditorUtils.ActionGUI<FireAction, FireAction.Type> (actions, false, param);
+	}
+
+	public void DrawGizmos(Color gizmoColor)
+	{
+
 	}
 	#endif
 }
 
-public class BulletTag : Tag<BulletAction, BulletAction.Type>, NamedObject
+[System.Serializable]
+public class BulletTag : IActionGroup, NamedObject
 {
+	[SerializeField]
 	private string btName = "Bullet Tag";
+	[SerializeField]
 	public AttackPattern.Property speed;
+	[SerializeField]
 	public GameObject prefab;
+	[SerializeField]
+	public BulletAction[] actions;
 	
 	public string Name
 	{
@@ -82,20 +121,46 @@ public class BulletTag : Tag<BulletAction, BulletAction.Type>, NamedObject
 			btName = value;
 		}
 	}
+
+	public BulletTag()
+	{
+		actions = new BulletAction[0];
+	}
+	
+	public IEnumerator Run (params object[] param)
+	{
+		if(actions != null && actions.Length > 0)
+		{
+			yield return actions[0].parent.StartCoroutine (ActionHandler.ExecuteActions(actions, param));
+		}
+	}
+	
+	public void Initialize(MonoBehaviour parent)
+	{
+		foreach(BulletAction action in actions)
+		{
+			action.Initialize(parent);
+		}
+	}
 	
 	#if UNITY_EDITOR
-	public override void ActionGUI (AttackPattern attackPattern)
+	public void ActionGUI (params object[] param)
 	{
 		if (actions == null || actions.Length == 0)
 		{
 			actions = new BulletAction[0];
 		}
-
+		
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
 		prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", prefab, typeof(GameObject), false);
 		speed = AttackPattern.Property.EditorGUI ("Speed", speed, false);
 		EditorUtils.ExpandCollapseButtons<BulletAction, BulletAction.Type>("Actions", actions);
-		actions = EditorUtils.ActionGUI<BulletAction, BulletAction.Type>(actions, true, attackPattern);
+		actions = EditorUtils.ActionGUI<BulletAction, BulletAction.Type>(actions, true, param[0] as Enemy, param);
+	}
+
+	public void DrawGizmos(Color gizmoColor)
+	{
+
 	}
 	#endif
 }
