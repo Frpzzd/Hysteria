@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
+[RequireComponent(typeof(Collider2D))]
 public class Player : StaticGameObject<Player>
 {
 	public static Transform respawnLocation;
@@ -67,7 +68,7 @@ public class Player : StaticGameObject<Player>
 	}
 
 	//TO-DO: Implement Bomb Functionality
-	//Shot Type: 8x Shot Damage
+	//Shot Type: 2x Shot Damage
 	//Bomb Type: Shield, Absorbs incoming bullets, high bullet to point ratio, does not damage enemies
 	public static bool Extravert
 	{
@@ -76,7 +77,7 @@ public class Player : StaticGameObject<Player>
 	}
 	
 	//TO-DO: Implement Bomb Functionality
-	//Shot Type: 8x shot speed
+	//Shot Type: 2x shot speed
 	//Bomb Type: Linear laser, Cancels bullets that collide with it, low bullet to point ratio, instantly kills non-boss enemies
 	public static bool Introvert
 	{
@@ -160,6 +161,7 @@ public class Player : StaticGameObject<Player>
 	public const int baseOptionShotDamage = 1;
 
 	//Private Variables
+
 	private SpriteRenderer hitboxRenderer;
 	private SpriteRenderer spriteRenderer;
 	private Option[] options;
@@ -320,21 +322,21 @@ public class Player : StaticGameObject<Player>
 		}
 	}
 
-	public static void Pickup(PickupType type)
+	public static void Pickup(Pickup.Type type)
 	{
 		switch(type)
 		{
-			case PickupType.Point:
+			case global::Pickup.Type.Point:
 				ScoreManager.PointPickup();
 				break;
-			case PickupType.PointValue:
+			case global::Pickup.Type.PointValue:
 				ScoreManager.PointValuePickup();
 				break;
-			case PickupType.Power:
+			case global::Pickup.Type.Power:
 				Instance.ChangePower(0.01f);
 				ScoreManager.PowerPickup();
 				break;
-			case PickupType.Bomb:
+			case global::Pickup.Type.Bomb:
 				Instance.bombs++;
 				if(Instance.bombs > Instance.maxBombs)
 				{
@@ -343,7 +345,7 @@ public class Player : StaticGameObject<Player>
 				}
 				SoundManager.PlaySoundEffect(Instance.BombUpClip, Instance.Transform.position);
 				break;
-			case PickupType.Life:
+			case global::Pickup.Type.Life:
 				Instance.lives++;
 				if(Instance.lives > Instance.maxLives)
 				{
@@ -379,7 +381,7 @@ public class Player : StaticGameObject<Player>
 				GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
 				foreach(GameObject go in pickups)
 				{
-					go.GetComponent<Pickup>().state = global::Pickup.PickupState.Normal;
+					go.GetComponent<Pickup>().state = global::Pickup.State.Normal;
 				}
 				StartCoroutine(Invincibility(true, deathInvincibilityTime, invincibilityFlashInterval));
 			}

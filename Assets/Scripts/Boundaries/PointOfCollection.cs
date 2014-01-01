@@ -8,10 +8,10 @@ public class PointOfCollection : MonoBehaviour
 		Player p = other.gameObject.GetComponent<Player> ();
 		if(p != null)
 		{
-			Global.defaultPickupState = Pickup.PickupState.AutoCollect;
+			Global.defaultPickupState = Pickup.State.AutoCollect;
 			foreach(Pickup pickup in GameObjectManager.Pickups.All)
 			{
-				pickup.state = Pickup.PickupState.AutoCollect;
+				pickup.state = Pickup.State.AutoCollect;
 			}
 		}
 		else
@@ -25,7 +25,7 @@ public class PointOfCollection : MonoBehaviour
 		Player p = other.gameObject.GetComponent<Player> ();
 		if(p != null)
 		{
-			Global.defaultPickupState = Pickup.PickupState.Normal;
+			Global.defaultPickupState = Pickup.State.Normal;
 		}
 	}
 }

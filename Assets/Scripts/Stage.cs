@@ -142,7 +142,12 @@ public class Stage : CachedObject, IActionGroup
 			}
 			if(type == Type.SpawnEnemy)
 			{
-				Gizmos.DrawWireSphere(GetSpawnLocation(), 1);
+				Vector3 spawnLocation = GetSpawnLocation();
+				if(prefab != null)
+				{
+					prefab.GetComponent<Enemy>().DrawGizmos(spawnLocation);
+				}
+				Gizmos.DrawWireSphere(spawnLocation, 1);
 			}
 		}
 		#endif

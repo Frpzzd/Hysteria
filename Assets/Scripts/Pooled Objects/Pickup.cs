@@ -2,16 +2,18 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum PickupType { Power, Point, PointValue, Life, Bomb }
-
-public class Pickup : GameObjectManager.PooledGameObject<Pickup, PickupType>
+[RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(Collider2D))]
+public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 {
-	public enum PickupState { Normal, AutoCollect, ProximityCollect }
-	public PickupState state;
-	public PickupType type;
+	public enum State { Normal, AutoCollect, ProximityCollect }
+	public enum Type { Power, Point, PointValue, Life, Bomb }
+	public State state;
+	[System.NonSerialized]
+	public Type type;
 	private Material mat;
 	public float initialVelocity;
-	[HideInInspector]
+	[System.NonSerialized]
 	public float currentVelocity;
 	public float maximumDownwardVelocity;
 	public float acceleration;
@@ -25,27 +27,31 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, PickupType>
 		mat = renderer.material;
 	}
 
-	public override void Activate (PickupType param)
+	public override void Activate (Type param)
 	{
 		state = Global.defaultPickupState;
 		currentVelocity = initialVelocity;
 		type = param;
 		switch(type)
 		{
-		case PickupType.Point:
+		case Type.Point:
 			mat.color = Color.blue;
 			break;
-		case PickupType.Power:
+		case Type.Power:
 			mat.color = Color.red;
 			break;
-		case PickupType.Bomb:
+		case Type.Bomb:
 			mat.color = Color.green;
 			break;
-		case PickupType.Life:
+		case Type.Life:
 			mat.color = Color.magenta;
 			break;
 		}
-		RotateOnce();
+	}
+
+	public override void LateActivate()
+	{
+		StartCoroutine(RotateOnce());
 	}
 
 	void Update()
@@ -64,14 +70,14 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, PickupType>
 		{
 			switch(state)
 			{
-			case PickupState.AutoCollect:
-				Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, autoCollectSpeed * deltat);
-				break;
-			case PickupState.ProximityCollect:
-				Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, proximityCollectSpeed * deltat);
-				break;
-			default:
-				break;
+				case State.AutoCollect:
+					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, autoCollectSpeed * deltat);
+					break;
+				case State.ProximityCollect:
+					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, proximityCollectSpeed * deltat);
+					break;
+				default:
+					break;
 			}
 		}
 	}
@@ -79,8 +85,9 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, PickupType>
 	public IEnumerator RotateOnce()
 	{
 		float rotationAmount = 0f;
-		while(rotationAmount > 1)
+		while(rotationAmount < 1)
 		{
+			yield return StartCoroutine(Global.WaitForUnpause());
 			rotationAmount += Time.fixedDeltaTime;
 			Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
 			yield return new WaitForFixedUpdate();

@@ -72,64 +72,9 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		}
 	}
 
-//	public IEnumerator RunActions(IBulletAction[] actions, int repeatC)
-//	{
-//		for(int j = 0; j < repeatC; j++)
-//		{
-//			for(int i = 0; i < actions.Length; i++)
-//			{
-//				ActionExecutor.ExecuteAction(actions[i], this);
-//				switch(actions[i].type)
-//				{
-//					case(BulletAction.Type.Wait):
-//						yield return new WaitForSeconds(actions[i].wait.Value * deltat);
-//						break;
-//					case(BulletAction.Type.ChangeDirection):
-//						if(actions[i].waitForChange)
-//						{
-//							yield return ChangeDirection(actions[i]);
-//						}
-//						else
-//						{
-//							ChangeDirection(actions[i]);
-//						}
-//						break;
-//					case(BulletAction.Type.ChangeSpeed):
-//						if(actions[i].waitForChange)
-//						{
-//							yield return ChangeSpeed(actions[i], false);
-//						}
-//						else
-//						{
-//							ChangeSpeed(actions[i], false);
-//						}
-//						break;
-//					case(BulletAction.Type.Repeat):
-//						yield return RunActions(actions[i].nestedActions, Mathf.FloorToInt(actions[i].repeat.Value));
-//						break;
-//					case(BulletAction.Type.Fire):
-//						master.Fire(actions[i].GetSourcePosition(Transform.position), Transform.rotation, actions[i], param, prevRotation);
-//						break;
-//					case(BulletAction.Type.VerticalChangeSpeed):
-//						if(actions[i].waitForChange)
-//						{
-//							yield return ChangeSpeed(actions[i], true);
-//						}
-//						else
-//						{
-//							ChangeSpeed(actions[i], true);
-//						}
-//						break;
-//					case(BulletAction.Type.Deactivate):
-//						Deactivate();
-//						break;
-//				}
-//			}
-//		}
-//	}
-
 	public IEnumerator ChangeDirection(Bullet.Action action)
 	{
+		yield return StartCoroutine(Global.WaitForUnpause());
 		Quaternion newRot = Quaternion.identity;
 		float t = 0.0f;
 		float d = action.wait.Value * Time.deltaTime;
@@ -170,7 +115,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			{
 				Transform.localRotation *= newRot;
 				t += Time.deltaTime;
-				yield return new WaitForFixedUpdate();
+
 			}
 		}
 		//all the others just linearly progress to destination rotation
@@ -178,6 +123,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(t < d)
 			{
+				yield return StartCoroutine(Global.WaitForUnpause());
 				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
@@ -189,6 +135,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 
 	public IEnumerator ChangeSpeed(Bullet.Action action)
 	{
+		yield return StartCoroutine(Global.WaitForUnpause());
 		if(action.isVertical)
 		{
 			useVertical = true;
@@ -208,6 +155,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(currentTime < totalTime)
 			{
+				yield return StartCoroutine(Global.WaitForUnpause());
 				currentSpeed = Mathf.Lerp(originalSpeed, newSpeed, currentTime/totalTime);
 				if(action.isVertical) 
 				{
@@ -234,7 +182,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 
 	public void Cancel()
 	{
-		GameObjectManager.Pickups.Spawn (Transform.position, PickupType.PointValue);
+		GameObjectManager.Pickups.Spawn (Transform.position, Pickup.Type.PointValue);
 		Deactivate();
 	}
 
@@ -252,26 +200,26 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			AttackPattern attackPattern = param [0] as AttackPattern;
 			switch(type)
 			{
-			case Type.ChangeDirection:
-				direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", direction);
-				angle = AttackPattern.Property.EditorGUI("Angle", angle, false);
-				wait = AttackPattern.Property.EditorGUI("Time", wait, false);
-				waitForFinish = EditorGUILayout.Toggle("Wait To Finish", waitForFinish);
-				break;
-			case Type.ChangeSpeed:
-				speed = AttackPattern.Property.EditorGUI("Speed", speed, false);
-				wait = AttackPattern.Property.EditorGUI("Time", wait, false);
-				waitForFinish = EditorGUILayout.Toggle("Wait To Finish", waitForFinish);
-				break;
-			case Type.Wait:
-				wait = AttackPattern.Property.EditorGUI ("Wait", wait, false);
-				break;
-			case Type.Repeat:
-				SharedAction.Repeat.ActionGUI<Bullet.Action, Bullet.Action.Type> (this, param);
-				break;
-			case Type.Fire:
-				SharedAction.Fire.ActionGUI<Bullet.Action, Bullet.Action.Type>(this, attackPattern);
-				break;
+				case Type.ChangeDirection:
+					direction = (DirectionType)EditorGUILayout.EnumPopup("DirectionType", direction);
+					angle = AttackPattern.Property.EditorGUI("Angle", angle, false);
+					wait = AttackPattern.Property.EditorGUI("Time", wait, false);
+					waitForFinish = EditorGUILayout.Toggle("Wait To Finish", waitForFinish);
+					break;
+				case Type.ChangeSpeed:
+					speed = AttackPattern.Property.EditorGUI("Speed", speed, false);
+					wait = AttackPattern.Property.EditorGUI("Time", wait, false);
+					waitForFinish = EditorGUILayout.Toggle("Wait To Finish", waitForFinish);
+					break;
+				case Type.Wait:
+					wait = AttackPattern.Property.EditorGUI ("Wait", wait, false);
+					break;
+				case Type.Repeat:
+					SharedAction.Repeat.ActionGUI<Bullet.Action, Bullet.Action.Type> (this, param);
+					break;
+				case Type.Fire:
+					SharedAction.Fire.ActionGUI<Bullet.Action, Bullet.Action.Type>(this, attackPattern);
+					break;
 			}
 		}
 		
@@ -314,6 +262,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 				{
 					for(int i = 0; i < nestedActions.Length; i++)
 					{
+						yield return bullet.StartCoroutine(Global.WaitForUnpause());
 						nestedActions[i].Execute(param[0], param[1]);
 					}
 				}

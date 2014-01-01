@@ -16,6 +16,7 @@ public class EnemyDrops
 }
 
 [System.Serializable]
+[RequireComponent(typeof(Collider2D))]
 public class Enemy : CachedObject, NamedObject, TitledObject
 {
 	public static List<Enemy> enemiesInPlay;
@@ -95,7 +96,6 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 
 	public void Damage(int amount)
 	{
-		Debug.Log ("Enemy Damage");
 		if(currentAttackPattern != null)
 		{
 			currentAttackPattern.Damage(amount);
@@ -119,24 +119,45 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		{
 			angle = 2 * Mathf.PI * UnityEngine.Random.value;
 			distance = dropRadius * UnityEngine.Random.value;
-			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Point);
+			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), Pickup.Type.Point);
 		}
 		for(int i = 0; i < drop.power; i++)
 		{
 			angle = 2 * Mathf.PI * UnityEngine.Random.value;
 			distance = dropRadius * UnityEngine.Random.value;
-			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), PickupType.Power);
+			GameObjectManager.Pickups.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), Pickup.Type.Power);
 		}
 		if(drop.life)
 		{
-			GameObjectManager.Pickups.Spawn(Transform.position, PickupType.Life);
+			GameObjectManager.Pickups.Spawn(Transform.position, Pickup.Type.Life);
 		}
 		if(drop.bomb)
 		{
-			GameObjectManager.Pickups.Spawn(Transform.position, PickupType.Bomb);
+			GameObjectManager.Pickups.Spawn(Transform.position, Pickup.Type.Bomb);
 		}
 	}
 
+	#if UNITY_EDITOR
+	void OnDrawGizmos()
+	{
+		DrawGizmos (Transform.position);
+	}
+
+	public void DrawGizmos(Vector3 spawnPosition)
+	{
+		Color oldColor = Gizmos.color;
+		Gizmos.color = Color.yellow;
+		Vector3 endLocation = spawnPosition;
+		if(attackPatterns != null)
+		{
+			foreach(AttackPattern pattern in attackPatterns)
+			{
+				endLocation = pattern.DrawGizmos (endLocation, Color.yellow);
+			}
+		}
+		Gizmos.color = oldColor;
+	}
+	#endif
 	void OnTriggerEnter2D(Collider2D col)
 	{
 		Debug.Log ("Enemy Hit");

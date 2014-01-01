@@ -8,22 +8,13 @@ using UnityEditor;
 [Serializable]
 public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 {
-	public enum Type { Wait, Repeat, Absolute, Relative, Teleport }
-
+	public enum Type { Wait, Repeat, Linear, Teleport }
+	public enum LocationType { Absolute, Relative }
+	
 	[SerializeField]
 	public Vector3 targetLocation;
-
-	protected static IEnumerator LinearMove(Transform transform, Vector3 start, Vector3 end, float totalTime)
-	{
-		float lerpValue = 0f;
-		while(lerpValue <= 1f)
-		{
-			transform.position = Vector3.Lerp(start, end, lerpValue);
-			lerpValue += Time.fixedDeltaTime / totalTime;
-			yield return new WaitForFixedUpdate();
-			//Figure out 
-		}
-	}
+	[SerializeField]
+	public LocationType locationType;
 
 	#if UNITY_EDITOR
 	public override void ActionGUI(params object[] param)
@@ -31,6 +22,7 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 		type = (Type)EditorGUILayout.EnumPopup("Type", type);
 		if(type != Type.Wait  && type != Type.Repeat)
 		{
+			locationType = (LocationType)EditorGUILayout.EnumPopup("Loaction Type", locationType);
 			targetLocation = EditorGUILayout.Vector2Field("Target", targetLocation);
 		}
 		switch(type)
@@ -41,8 +33,7 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 			case Type.Repeat:
 				SharedAction.Repeat.ActionGUI<MovementAction, MovementAction.Type>(this, parent);
 				break;
-			case Type.Absolute:
-			case Type.Relative:
+			case Type.Linear:
 				wait = AttackPattern.Property.EditorGUI ("Total Time", wait, false);
 				break;
 		}
@@ -50,26 +41,85 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 
 	public override void DrawGizmosImpl (MovementAction previous)
 	{
-		
+
+	}
+
+	public Vector3 DrawGizmos(Vector3 previousPosition, Color gizmoColor)
+	{
+		Vector3 actualLocation = previousPosition;
+		if(type != Type.Wait)
+		{
+			if(type == Type.Repeat)
+			{
+				for(int j = 0; j < Mathf.FloorToInt(repeat.Value); j++)
+				{
+					Vector3 temp = actualLocation;
+
+					for(int i = 0; i < nestedActions.Length; i++)
+					{
+						actualLocation = nestedActions[i].DrawGizmos(actualLocation, gizmoColor);
+					}
+
+					if(temp == actualLocation)
+					{
+						break; //Loop doesn't change, just draw once
+					}
+				}
+			}
+			else 
+			{
+				if(locationType == LocationType.Relative)
+				{
+					actualLocation = previousPosition + targetLocation;
+				}
+				else
+				{
+					actualLocation = targetLocation;
+				}
+				Gizmos.DrawLine(previousPosition, actualLocation);
+				Gizmos.DrawWireSphere(actualLocation, 1);
+			}
+		}
+		return actualLocation;
 	}
 	#endif
 
 	public override IEnumerator Execute (params object[] param)
 	{
 		Transform transform = param [0] as Transform;
+		AttackPattern attackPattern = param [1] as AttackPattern;
+		if(attackPattern.currentHealth < 0)
+		{
+			return false;
+		}
+		Vector3 start = Vector3.zero, end = Vector3.zero;
+		float totalTime = wait.Value;
+		float deltat = Time.fixedDeltaTime;
 		switch(type)
 		{
-			case Type.Absolute:
-				//TODO: Spline interpolation
-				LinearMove (transform, transform.position, targetLocation, wait.Value);
+			case Type.Linear:
+			case Type.Teleport:
+				start = transform.position;
+				end = targetLocation + ((locationType == LocationType.Relative) ? start : Vector3.zero);
 				break;
-			case Type.Relative:
-				//TODO: Spline interpolation
-				LinearMove (transform, transform.position, transform.position + targetLocation, wait.Value);
+		}
+		switch(type)
+		{
+			case Type.Linear:
+				float lerpValue = 0f;
+				while(lerpValue <= 1f)
+				{
+					yield return parent.StartCoroutine(Global.WaitForUnpause());
+					transform.position = Vector3.Lerp(start, end, lerpValue);
+					lerpValue +=  deltat / totalTime;
+					yield return new WaitForFixedUpdate();
+					//Figure out spline movement
+				}
+				transform.position = end;
 				break;
 			case Type.Teleport:
 				//TODO: Play open teleport effect here
-				(param[0] as Transform).position = targetLocation;
+				(param[0] as Transform).position = end;
 				//TODO: Play close teleport effect here
 				break;
 			case Type.Repeat:
@@ -78,12 +128,26 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				{
 					for(int i = 0; i < nestedActions.Length; i++)
 					{
-						nestedActions[i].Execute(param[0], param[1]);
+						if(attackPattern.currentHealth < 0)
+						{
+							return false;
+						}
+						yield return parent.StartCoroutine(nestedActions[i].Execute(param[0], param[1]));
 					}
 				}
 				break;
 			case Type.Wait:
-				yield return new WaitForSeconds(wait.Value);
+				float currentTime = 0f;
+				while(currentTime < totalTime)
+				{
+					yield return parent.StartCoroutine(Global.WaitForUnpause());
+					if(attackPattern.currentHealth <= 0)
+					{
+						return false;
+					}
+					yield return new WaitForFixedUpdate();
+					totalTime += Time.fixedDeltaTime;
+				}
 				break;
 		}
 	}

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+[RequireComponent(typeof(AudioSource))]
 public class SoundManager : StaticGameObject<SoundManager>
 {
 	private static AudioSource musicSource;

@@ -116,6 +116,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				float waitTime = wait.Value;
 				while(totalTime < waitTime)
 				{
+					yield return parent.StartCoroutine(Global.WaitForUnpause());
 					if(attackPattern.currentHealth < 0)
 					{
 						return false;

@@ -27,7 +27,6 @@ public abstract class StaticGameObject<T> : CachedObject where T : StaticGameObj
 		base.Awake ();
 		if(instance != null)
 		{
-			Debug.Log(typeof(T));
 			if(instance.destroyNewInstances)
 			{
 				Destroy (gameObject);

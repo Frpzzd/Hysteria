@@ -79,33 +79,31 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	[NonSerialized]
 	public float sequenceSpeed = 0.0f;
-	[NonSerialized]
-	public bool active;
 
 	public IEnumerator Run(params object[] param)
 	{
-		active = true;
-//		parent.StartCoroutine (Move ());
 		currentHealth = health;
+		parent.StartCoroutine (Move ());
 		while(currentHealth > 0)
 		{
 			yield return parent.StartCoroutine(fireTags[0].Run(this));
 		}
-		Debug.Log ("Exit Pattern");
-		active = false;
 	}
 
-//	private IEnumerator Move()
-//	{
-//		Debug.Log ("Hello");
-//		while(active)
-//		{
-//			for(int i = 0; i < actions.Length; i++)
-//			{
-//				yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform));
-//			}
-//		}
-//	}
+	private IEnumerator Move()
+	{
+		while(currentHealth > 0)
+		{
+			for(int i = 0; i < actions.Length; i++)
+			{
+				if(currentHealth <= 0)
+				{
+					break;
+				}
+				yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform, this));
+			}
+		}
+	}
 
 	public void Initialize(MonoBehaviour parent)
 	{
@@ -127,12 +125,11 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	public void Damage(int amount)
 	{
 		currentHealth -= amount;
-		Debug.Log (currentHealth);
 	}
 
 	public void Fire<T, P>(T action, Enemy master, Vector3 position, Quaternion rotation, float param, RotationWrapper previousRotation) 
 		where T : AttackPatternAction<T, P>
-			where P : struct, IConvertible
+		where P : struct, IConvertible
 	{
 		float angle,  speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex];
@@ -262,6 +259,16 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	public void DrawGizmos(Color gizmoColor)
 	{
+	}
+
+	public Vector3 DrawGizmos(Vector3 startPosition, Color gizmoColor)
+	{
+		Vector3 endLocation = startPosition;
+		for(int i = 0; i < actions.Length; i++)
+		{
+			endLocation = actions[i].DrawGizmos(endLocation, gizmoColor);
+		}
+		return endLocation;
 	}
 	#endif
 

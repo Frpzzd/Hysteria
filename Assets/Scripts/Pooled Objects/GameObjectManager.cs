@@ -162,7 +162,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 
 	}
 	[Serializable]
-	public class PickupPool : GameObjectPool<Pickup, PickupType> { }
+	public class PickupPool : GameObjectPool<Pickup, Pickup.Type> { }
 	[Serializable]
 	public class PlayerShotPool : GameObjectPool<PlayerShot, bool> { }
 	[Serializable]

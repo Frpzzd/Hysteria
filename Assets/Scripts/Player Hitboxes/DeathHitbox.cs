@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(SpriteRenderer))]
 public class DeathHitbox : PlayerHitbox
 {
 	public float rotationSpeed = 5.0f;

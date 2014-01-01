@@ -21,7 +21,7 @@ public class Global
 
 	public static GameType GameType = GameType.Normal;
 
-	public static Pickup.PickupState defaultPickupState = Pickup.PickupState.Normal;
+	public static Pickup.State defaultPickupState = Pickup.State.Normal;
 
 	public static void GameStateChange(GameState newState)
 	{
@@ -30,7 +30,7 @@ public class Global
 		{
 			case GameState.GameInitialize:
 				credits = 3;
-				defaultPickupState = Pickup.PickupState.Normal;
+				defaultPickupState = Pickup.State.Normal;
 				GameStateChange(GameState.InGame);
 				return;
 			case GameState.CreditEnd:
@@ -40,6 +40,14 @@ public class Global
 					return;
 				}
 				return;
+		}
+	}
+
+	public static IEnumerator WaitForUnpause()
+	{
+		while(Global.GameState == GameState.Paused)
+		{
+			yield return new WaitForFixedUpdate();
 		}
 	}
 }

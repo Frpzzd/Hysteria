@@ -1,32 +1,35 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections;
 
-[Serializable]
-public abstract class Menu : MonoBehaviour
+[System.Serializable]
+public abstract class Menu : CachedObject
 {
+	public enum Orientation { Vertical, Horizontal }
+	public Orientation orientation;
 	public Texture2D backgroundImage;
-	public GUIStyle menuStyle;
-	public ChildMenu title;
-	public ChildMenu[] children;
-	public GameObject[] relatedObjects;
-	public GameObject[] unrelatedObjects;
-	[HideInInspector]
+	public MenuOption[] children;
+	[System.NonSerialized]
 	public Menu previousMenu;
 	protected int selectedIndex = 0;
 
 	protected virtual void OnChildSwitchImpl(int i) { }
 	protected virtual void OnReturnToPreviousImpl() { }
 
-	private int originalStyleFontSize;
-
 	public void OnChildSwitch(int i)
 	{
 		OnChildSwitchImpl (i);
-		if(children[i].menu != null)
+		if(children[i].targetMenu != null)
 		{
-			children[i].menu.previousMenu = this;
-			MenuHandler.ChangeMenu(children[i].menu);
+			children[i].targetMenu.previousMenu = this;
+			MenuHandler.ChangeMenu(children[i].targetMenu);
+		}
+	}
+
+	public virtual void Update()
+	{
+		for(int i = 0; i < children.Length; i++)
+		{
+			children[i].isSelected = i == selectedIndex;
 		}
 	}
 
@@ -43,14 +46,6 @@ public abstract class Menu : MonoBehaviour
 
 	public virtual void Toggle(bool value)
 	{
-		for(int i = 0; i < unrelatedObjects.Length; i++)
-		{
-			unrelatedObjects[i].SetActive(!value);
-		}
-		for(int i = 0; i < relatedObjects.Length; i++)
-		{
-			relatedObjects[i].SetActive(value);
-		}
 		if(value)
 		{
 			MenuHandler.ChangeBackground(backgroundImage);
@@ -63,7 +58,7 @@ public abstract class Menu : MonoBehaviour
 		{
 			OnMenuExit();
 		}
-		enabled = value;
+		GameObject.SetActive (value);
 	}
 
 	public virtual void OnMenuEnter()
@@ -74,6 +69,54 @@ public abstract class Menu : MonoBehaviour
 	{
 	}
 
+	public bool OnUp()
+	{
+		if(orientation == Orientation.Vertical)
+		{
+			return PreviousOption();
+		}
+		else
+		{
+			return SlideOptionDecrease();
+		}
+	}
+
+	public bool OnDown()
+	{
+		if(orientation == Orientation.Vertical)
+		{
+			return NextOption();
+		}
+		else
+		{
+			return SlideOptionIncrease();
+		}
+	}
+
+	public bool OnLeft()
+	{
+		if(orientation == Orientation.Horizontal)
+		{
+			return PreviousOption();
+		}
+		else
+		{
+			return SlideOptionDecrease();
+		}
+	}
+
+	public bool OnRight()
+	{
+		if(orientation == Orientation.Horizontal)
+		{
+			return NextOption();
+		}
+		else
+		{
+			return SlideOptionIncrease();
+		}
+	}
+
 	public virtual bool ReturnToPrevious()
 	{
 		return OnReturnToPrevious ();
@@ -82,51 +125,36 @@ public abstract class Menu : MonoBehaviour
 	public bool Select()
 	{
 		OnChildSwitch (selectedIndex);
-		return !children [selectedIndex].selection;
+		return !children [selectedIndex].HasOptions;
 	}
 
-	public virtual void Awake()
-	{
-		originalStyleFontSize = menuStyle.fontSize;
-	}
-
-	public bool MoveUp()
+	private bool PreviousOption()
 	{
 		bool success = (selectedIndex - 1 >= 0);
 		selectedIndex = (success) ? selectedIndex - 1 : 0;
 		return success;
 	}
 
-	public bool MoveDown()
+	private bool NextOption()
 	{
 		bool success = (selectedIndex + 1 < children.Length);
 		selectedIndex = (success) ? selectedIndex + 1 : children.Length - 1;
 		return success;
 	}
 
-	public virtual void OnGUI()
-	{
-		MenuHandler.ScaleTextSize (menuStyle, originalStyleFontSize);
-		for(int i = 0; i < children.Length; i++)
-		{
-			children[i].Draw(menuStyle);
-		}
-		children[selectedIndex].Focus();
-	}
-
-	public bool SlideOptionLeft()
+	private bool SlideOptionIncrease()
 	{
 		children[selectedIndex].ShiftLeft();
-		return children[selectedIndex].selection;
+		return children[selectedIndex].HasOptions;
 	}
 
-	public bool SlideOptionRight()
+	private bool SlideOptionDecrease()
 	{
 		children[selectedIndex].ShiftRight();
-		return children[selectedIndex].selection;
+		return children[selectedIndex].HasOptions;
 	}
 
-	[Serializable]
+	[System.Serializable]
 	public class ChildMenu
 	{
 		public Menu menu;

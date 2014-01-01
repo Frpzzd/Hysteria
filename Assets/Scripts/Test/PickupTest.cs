@@ -24,14 +24,14 @@ public class PickupTest : TestScript
 		{
 			for(int i = 0; i < number; i++)
 			{
-				PickupType pt;
+				Pickup.Type pt;
 				if(Random.value > 0.5)
 				{
-					pt = PickupType.Power;
+					pt = Pickup.Type.Power;
 				}
 				else
 				{
-					pt = PickupType.Point;
+					pt = Pickup.Type.Point;
 				}
 				GameObjectManager.Pickups.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt);
 			}
