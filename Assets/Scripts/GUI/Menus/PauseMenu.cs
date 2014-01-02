@@ -2,8 +2,7 @@
 using System;
 using System.Collections;
 
-[RequireComponent(typeof(Plane))]
-[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(GUITexture))]
 public class PauseMenu : CachedObject
 {
 	[SerializeField]
@@ -15,12 +14,12 @@ public class PauseMenu : CachedObject
 	[NonSerialized]
 	private float cachedTimeScale;
 	[NonSerialized]
-	private MeshRenderer render;
+	private GUITexture guiTex;
 
 	public override void Awake()
 	{
 		base.Awake ();
-		render = GameObject.GetComponent<MeshRenderer> ();
+		guiTex = GetComponent<GUITexture> ();
 	}
 
 	void Update()
@@ -28,7 +27,7 @@ public class PauseMenu : CachedObject
 		if(Input.GetButtonDown("Pause"))
 		{
 			bool paused = Global.GameState == GameState.Paused;
-			render.enabled = !	paused;
+			guiTex.enabled = !paused;
 			if(!paused)
 			{
 				cachedTimeScale = Time.timeScale;

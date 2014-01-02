@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 {
@@ -10,6 +10,7 @@ public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 	public Enemy target;
 	public Color mainColor;
 	public Color optionColor;
+	public List<Enemy> enemiesHit;
 
 	public int DamageValue
 	{
@@ -26,9 +27,16 @@ public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 		}
 	}
 
+	public override void Awake()
+	{
+		base.Awake ();
+		enemiesHit = new List<Enemy> ();
+	}
+
 	public override void Activate (bool param)
 	{
 		mainShot = param;
+		enemiesHit.Clear ();
 		if(!mainShot)
 		{
 			if(Player.Judging)
@@ -66,12 +74,23 @@ public class PlayerShot : GameObjectManager.PooledGameObject<PlayerShot, bool>
 			Enemy enemy = raycastHit.collider.gameObject.GetComponent<Enemy>();
 			if(enemy != null)
 			{
-				enemy.Damage(DamageValue);
-				Transform.position = raycastHit.point.ToVector3();
-				//TODO: Play Enemy hit effect here;
-				if(!Player.Percieving || mainShot)
+				if(enemiesHit.Contains(enemy))
 				{
-					GameObjectManager.PlayerShots.Return(this);
+					Transform.position  += Transform.up * distance;
+				}
+				else
+				{
+					enemy.Damage(DamageValue);
+					Transform.position = raycastHit.point.ToVector3();
+					//TODO: Play Enemy hit effect here;
+					if(!Player.Percieving || mainShot)
+					{
+						GameObjectManager.PlayerShots.Return(this);
+					}
+					else
+					{
+						enemiesHit.Add(enemy);
+					}
 				}
 			}
 			else

@@ -30,6 +30,8 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	public int currentHealth;
 	[NonSerialized]
 	public int remainingBonus;
+	[NonSerialized]
+	public bool running;
 	
 	[SerializeField]
 	public EnemyDrops drops;
@@ -82,12 +84,21 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	public IEnumerator Run(params object[] param)
 	{
+		Debug.Log (Name + " Running");
 		currentHealth = health;
+		running = true;
 		parent.StartCoroutine (Move ());
 		while(currentHealth > 0)
 		{
 			yield return parent.StartCoroutine(fireTags[0].Run(this));
 		}
+		running = false;
+		Debug.Log (Name + " Done");
+	}
+
+	public void Stop()
+	{
+		currentHealth = -100;
 	}
 
 	private IEnumerator Move()
@@ -154,21 +165,21 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		
 		switch(action.Direction)
 		{
-		case (DirectionType.TargetPlayer):
-			temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
-			break;
-			
-		case (DirectionType.Absolute):
-			temp.Transform.localRotation = Quaternion.Euler(-(angle - 270), 270, 0);
-			break;
-			
-		case (DirectionType.Relative):
-			temp.Transform.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
-			break;
-			
-		case (DirectionType.Sequence):
-			temp.Transform.localRotation = previousRotation.rotation * Quaternion.AngleAxis (-angle, Vector3.right); 
-			break;
+			case (DirectionType.TargetPlayer):
+				temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
+				break;
+				
+			case (DirectionType.Absolute):
+				temp.Transform.localRotation = Quaternion.Euler(0, 0, angle);
+				break;
+				
+			case (DirectionType.Relative):
+				temp.Transform.localRotation = rotation * Quaternion.AngleAxis (-angle, Vector3.right);
+				break;
+				
+			case (DirectionType.Sequence):
+				temp.Transform.localRotation = Quaternion.Euler(previousRotation.rotation.eulerAngles + new Vector3(0, 0, angle)); 
+				break;
 		}
 		previousRotation.rotation = temp.Transform.localRotation;
 		if(action.overwriteBulletSpeed)

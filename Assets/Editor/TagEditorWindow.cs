@@ -48,7 +48,6 @@ public class TagEditorWindow : EditorWindow
 				EditorGUILayout.EndScrollView();
 				if(GUI.changed)
 				{
-					Debug.Log("hello");
 					EditorUtility.SetDirty(container);
 				}
 			}

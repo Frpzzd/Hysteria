@@ -48,6 +48,7 @@ public class EnemyEditor : Editor
 			else
 			{
 				enemy.Title = "";
+				enemy.attackPatterns[0].health = EditorGUILayout.IntField("Health", enemy.attackPatterns[0].health);
 			}
 			enemy.dropRadius = EditorGUILayout.FloatField("Drop Radius", enemy.dropRadius);
 			AttackPatternGUI();
@@ -129,6 +130,7 @@ public class EnemyEditor : Editor
 			if (GUILayout.Button("Add"))
 			{
 				apList.Add(new AttackPattern());
+				pfList.Add(new PatternFoldouts());
 			}
 		}
 		EditorGUILayout.EndHorizontal();
@@ -146,6 +148,7 @@ public class EnemyEditor : Editor
 		public FoldoutWrapper bulletTagFoldout = new FoldoutWrapper();
 		public SelectionType selectType = SelectionType.None;
 		public int tagSelect;
+		public Rank testRank;
 	}
 	
 	public class FoldoutWrapper
@@ -173,17 +176,21 @@ public class EnemyEditor : Editor
 			}
 			if(pf.main || !enemy.boss)
 			{
-				pf.propertiesFoldout.Foldout = EditorGUILayout.Foldout(pf.propertiesFoldout.Foldout, "Properties");
-				if(pf.propertiesFoldout.Foldout)
+				EditorGUI.indentLevel++;
+				if(enemy.boss)
 				{
-					EditorGUI.indentLevel++;
-					pattern.Name = EditorGUILayout.TextField("Name", pattern.Name);
-					pattern.Title = EditorGUILayout.TextField("Title", pattern.Title);
-					pattern.health = EditorGUILayout.IntField("Health", pattern.health);
-					pattern.survival = EditorGUILayout.Toggle("Survival", pattern.survival);
-					pattern.bonus = EditorGUILayout.IntField("Bonus", pattern.bonus);
-					pattern.timeout = EditorGUILayout.IntField("Timeout", pattern.timeout);
-					EditorGUI.indentLevel--;
+					pf.propertiesFoldout.Foldout = EditorGUILayout.Foldout(pf.propertiesFoldout.Foldout, "Properties");
+					if(pf.propertiesFoldout.Foldout)
+					{
+						EditorGUI.indentLevel++;
+						pattern.Name = EditorGUILayout.TextField("Name", pattern.Name);
+						pattern.Title = EditorGUILayout.TextField("Title", pattern.Title);
+						pattern.health = EditorGUILayout.IntField("Health", pattern.health);
+						pattern.survival = EditorGUILayout.Toggle("Survival", pattern.survival);
+						pattern.bonus = EditorGUILayout.IntField("Bonus", pattern.bonus);
+						pattern.timeout = EditorGUILayout.IntField("Timeout", pattern.timeout);
+						EditorGUI.indentLevel--;
+					}
 				}
 				pf.dropsFoldout.Foldout = EditorGUILayout.Foldout(pf.dropsFoldout.Foldout, "Drops");
 				if(pattern.drops == null)
@@ -200,7 +207,8 @@ public class EnemyEditor : Editor
 					EditorGUI.indentLevel--;
 				}
 				TagGUI(pattern, pf);
-				BottomControls();
+				BottomControls(pattern, pf);
+				EditorGUI.indentLevel--;
 			}
 		}
 	}
@@ -226,13 +234,19 @@ public class EnemyEditor : Editor
 		pattern.bulletTags = TagGUI<BulletTag>(pattern, "Bullet Tags", SelectionType.Bullet, pattern.bulletTags, pf, pf.bulletTagFoldout);
 	}
 	
-	private void BottomControls()
+	private void BottomControls(AttackPattern pattern, PatternFoldouts pf)
 	{
 		EditorGUILayout.BeginHorizontal();
-		Rank testRank = (Rank)EditorGUILayout.EnumPopup(Global.Rank);
-		if(GUILayout.Button("Test"))
+		pf.testRank = (Rank)EditorGUILayout.EnumPopup(pf.testRank);
+		if(GUILayout.Button("Test") && !EditorApplication.isPlaying) 
 		{
-			
+			GameObject temp = new GameObject();
+			TestAttackPattern test = temp.AddComponent<TestAttackPattern>();
+			test.enemyToAttachTo = enemy;
+			test.patternToTest = pattern;
+			test.testRank = pf.testRank;
+			temp.hideFlags = HideFlags.HideInHierarchy;
+			EditorApplication.isPlaying = true;
 		}
 		EditorGUILayout.EndHorizontal();
 	}
@@ -279,7 +293,6 @@ public class EnemyEditor : Editor
 				}
 				if(moveRemove.y > 0)
 				{
-					Debug.Log("hello boo");
 					if (pf.tagSelect == i)
 					{
 						pf.tagSelect--;

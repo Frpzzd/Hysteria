@@ -76,33 +76,14 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 			t.GameObject.SetActive (false);
 			Push(t);
 		}
-
-		public void Return(object obj)
-		{
-			Return ((T)obj);
-		}
 	}
 
 	public abstract class PooledGameObject<T, P> : CachedObject where T : PooledGameObject<T, P>
 	{
-		[NonSerialized]
-		private GameObjectManager.GameObjectPool<T, P> pool;
-		
-		public void Initialize(GameObjectManager.GameObjectPool<T, P> pool)
-		{
-			this.pool = pool;
-		}
-		
 		public abstract void Activate(P param);
 		
 		public virtual void LateActivate()
 		{
-		}
-		
-		//Indiscriminately return all pooled objects back to the pool each time a level is loaded
-		public void OnLevelWasLoaded(int level)
-		{
-			pool.Return (this);
 		}
 	}
 

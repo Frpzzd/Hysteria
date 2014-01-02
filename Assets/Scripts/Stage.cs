@@ -7,10 +7,13 @@ using UnityEditor;
 #endif
 
 [Serializable]
+[RequireComponent(typeof(Enemy))]
 public class Stage : CachedObject, IActionGroup
 {
 	public int nextStageSceneNumber;
 	public Action[] actions;
+	[HideInInspector]
+	public Enemy boss;
 
 	[NonSerialized]
 	public Vector3 sequenceLocation = Vector3.zero;
@@ -49,6 +52,8 @@ public class Stage : CachedObject, IActionGroup
 	public override void Awake()
 	{
 		base.Awake();
+		boss = GetComponent<Enemy> ();
+
 		if(!running)
 		{
 			StartActions ();
@@ -175,6 +180,7 @@ public class Stage : CachedObject, IActionGroup
 					Vector3 spawnLocation = GetSpawnLocation();
 					Enemy instance = ((GameObject)UnityEngine.Object.Instantiate (prefab)).GetComponent<Enemy> ();
 					instance.Transform.position = new Vector3 (spawnLocation.x, spawnLocation.y);
+					instance.Spawn();
 					break;
 				case Type.PlayMusic:
 					SoundManager.PlayMusic(music);

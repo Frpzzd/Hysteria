@@ -17,6 +17,7 @@ public class EnemyDrops
 
 [System.Serializable]
 [RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(SpriteRenderer))]
 public class Enemy : CachedObject, NamedObject, TitledObject
 {
 	public static List<Enemy> enemiesInPlay;
@@ -30,6 +31,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	public float dropRadius;
 	[SerializeField]
 	public string enemyTitle;
+	public float remainingTime;
 
 	static Enemy()
 	{
@@ -75,23 +77,52 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		}
 	}
 
-	private AttackPattern currentAttackPattern;
+	[HideInInspector]
+	public AttackPattern currentAttackPattern
+	{
+		get 
+		{ 
+			return (apSelect >= 0 && apSelect < attackPatterns.Length) ? attackPatterns [apSelect] : null;
+		}
+	}
 
-	public void Start()
+	public int RemainingAttackPatterns
+	{
+		get { return attackPatterns.Length - apSelect; }
+	}
+
+	public int apSelect;
+
+	public void Spawn()
 	{
 		StartCoroutine (RunAttackPatterns ());
 	}
 		
 	public IEnumerator RunAttackPatterns()
 	{
-		foreach(AttackPattern pattern in attackPatterns)
+		for(apSelect = 0; apSelect < attackPatterns.Length; apSelect++)
 		{
-			currentAttackPattern = pattern;
-			pattern.Initialize(this);
-			yield return StartCoroutine(pattern.Run(this));
-			Drop (pattern.drops);
+			currentAttackPattern.Initialize(this);
+			if(boss)
+			{
+				StartCoroutine(AttackPatternCountdown(currentAttackPattern));
+			}
+			yield return StartCoroutine(currentAttackPattern.Run(this));
+			Drop (currentAttackPattern.drops);
 		}
 		Die ();
+	}
+
+	public IEnumerator AttackPatternCountdown(AttackPattern ap)
+	{
+		float deltat = Time.fixedDeltaTime;
+		remainingTime = ap.timeout;
+		while(remainingTime > 0)
+		{
+			yield return new WaitForFixedUpdate();
+			remainingTime -= deltat;
+		}
+		currentAttackPattern.currentHealth = -100;
 	}
 
 	public void Damage(int amount)
@@ -138,11 +169,6 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	}
 
 	#if UNITY_EDITOR
-	void OnDrawGizmos()
-	{
-		DrawGizmos (Transform.position);
-	}
-
 	public void DrawGizmos(Vector3 spawnPosition)
 	{
 		Color oldColor = Gizmos.color;

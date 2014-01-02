@@ -53,6 +53,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			prefab = param.prefab;
 			SpriteRenderer sp = prefab.renderer as SpriteRenderer;
+			while(rend == null) { }
 			rend.color = sp.color;
 			rend.sprite = sp.sprite;
 		}

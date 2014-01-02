@@ -387,4 +387,9 @@ public class Player : StaticGameObject<Player>
 			}
 		}
 	}
+
+	public void DebugInvincibility(bool value)
+	{
+		invincible = value;
+	}
 }
