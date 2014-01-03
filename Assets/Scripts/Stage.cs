@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +14,7 @@ public class Stage : CachedObject, IActionGroup
 	public Action[] actions;
 	[HideInInspector]
 	public Enemy boss;
+	public AudioClip stageTheme;
 
 	[NonSerialized]
 	public Vector3 sequenceLocation = Vector3.zero;
@@ -23,19 +24,37 @@ public class Stage : CachedObject, IActionGroup
 		if(actions != null && actions.Length > 0)
 		{
 			running = true;
+			SoundManager.PlayMusic(stageTheme);
 			for(int i = 0; i < actions.Length; i++)
 			{
 				yield return StartCoroutine(actions[i].Execute(this));
 			}
+			yield return StartCoroutine(BossBattle ());
 			running = false;
 		}
+		Debug.Log ("End Stage");
 		StageManager.EndStage ();
+	}
+
+	public IEnumerator BossBattle()
+	{
+		StartCoroutine(BossGUI.Instance.BossBattle (boss));
+		foreach(Enemy enemy in Enemy.enemiesInPlay)
+		{
+			enemy.Die();
+		}
+		SoundManager.PlayMusic (boss.bossTheme);
+		boss.Spawn ();
+		while (!boss.Dead)
+		{
+			yield return new WaitForFixedUpdate();
+		}
 	}
 	
 	private bool running;
 	
 	public Color gizmoColor = Color.cyan;
-	
+
 	public int Size
 	{
 		get { return actions.Length; }
@@ -53,21 +72,16 @@ public class Stage : CachedObject, IActionGroup
 	{
 		base.Awake();
 		boss = GetComponent<Enemy> ();
-
-		if(!running)
-		{
-			StartActions ();
-		}
 	}
-	
+
 	public void OnEnable()
 	{
 		if(!running)
 		{
-			StartActions ();
+			StartActions();
 		}
 	}
-	
+
 	public virtual void StartActions()
 	{
 		Initialize (this);
@@ -88,8 +102,10 @@ public class Stage : CachedObject, IActionGroup
 			actions = new Action[1];
 			actions [0] = new Action();
 		}
-		
-		EditorUtils.ExpandCollapseButtons<Action, Action.Type>("Stage", actions);
+
+		stageTheme = (AudioClip)EditorGUILayout.ObjectField ("Theme", stageTheme, typeof(AudioClip), false);
+
+		EditorUtils.ExpandCollapseButtons<Action, Action.Type>("Actions:", actions);
 		
 		actions = EditorUtils.ActionGUI<Action, Action.Type>(actions, false, this);
 	}
@@ -104,7 +120,7 @@ public class Stage : CachedObject, IActionGroup
 	[Serializable]
 	public class Action : NestedAction<Stage.Action, Stage.Action.Type>
 	{
-		public enum Type { Wait, Repeat, SpawnEnemy, PlayMusic }
+		public enum Type { Wait, Repeat, SpawnEnemy }
 		
 		[SerializeField]
 		public GameObject prefab;
@@ -112,8 +128,6 @@ public class Stage : CachedObject, IActionGroup
 		public Vector2 location;
 		[SerializeField]
 		public bool useSequence;
-		[SerializeField]
-		public AudioClip music;
 		
 		#if UNITY_EDITOR
 		public override void ActionGUI(params object[] param)
@@ -132,9 +146,6 @@ public class Stage : CachedObject, IActionGroup
 					prefab = (GameObject)EditorGUILayout.ObjectField ("Enemy", prefab, typeof(GameObject), false);
 					location = EditorGUILayout.Vector2Field ("Spawn Location", location);
 					useSequence = EditorGUILayout.Toggle("Use Sequence", useSequence);
-					break;
-				case Type.PlayMusic:
-					music = (AudioClip)EditorGUILayout.ObjectField("Music Clip", music, typeof(AudioClip), false);
 					break;
 			}
 		}
@@ -181,9 +192,6 @@ public class Stage : CachedObject, IActionGroup
 					Enemy instance = ((GameObject)UnityEngine.Object.Instantiate (prefab)).GetComponent<Enemy> ();
 					instance.Transform.position = new Vector3 (spawnLocation.x, spawnLocation.y);
 					instance.Spawn();
-					break;
-				case Type.PlayMusic:
-					SoundManager.PlayMusic(music);
 					break;
 				case Type.Repeat:
 					int repeatC = Mathf.FloorToInt(repeat.Value);

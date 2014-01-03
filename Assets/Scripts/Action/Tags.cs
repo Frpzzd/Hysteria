@@ -15,20 +15,6 @@ public interface TitledObject
 	string Title { get; set; }
 }
 
-//[Serializable]
-//public abstract class Tag : IActionGroup, NamedObject
-//{
-//	#if UNITY_EDITOR
-//	public abstract void ActionGUI(params object[] param);
-//
-//	public abstract void DrawGizmos(Color gizmoColor);
-//	#endif
-//
-//	public abstract IEnumerator Run(params object[] param);
-//
-//	public abstract string Name { get; set; }
-//}
-
 [System.Serializable]
 public class FireTag : IActionGroup, NamedObject
 {
@@ -40,7 +26,13 @@ public class FireTag : IActionGroup, NamedObject
 	public RotationWrapper previousRotation = new RotationWrapper();
 	[SerializeField]
 	public FireAction[] actions;
-	
+	[SerializeField]
+	public bool runAtStart = true;
+	[SerializeField]
+	public bool loopUntilEnd = true;
+	[SerializeField]
+	public bool hasWait;
+
 	public string Name
 	{
 		get
@@ -62,11 +54,36 @@ public class FireTag : IActionGroup, NamedObject
 	
 	public IEnumerator Run (params object[] param)
 	{
+		Enemy enemy = param [0] as Enemy;
+		AttackPattern pattern = param [1] as AttackPattern;
 		if(actions != null && actions.Length > 0)
 		{
-			for(int i = 0; i < actions.Length; i++)
+			if(loopUntilEnd)
 			{
-				yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, param[0] as AttackPattern));
+				while(pattern.currentHealth > 0)
+				{
+					for(int i = 0; i < actions.Length; i++)
+					{
+						yield return actions[i].parent.StartCoroutine(Global.WaitForUnpause());
+						if(pattern.currentHealth < 0)
+						{
+							return false;
+						}
+						yield return actions[i].parent.StartCoroutine(actions[i].Execute(enemy, pattern, this));
+					}
+				}
+			}
+			else
+			{
+				for(int i = 0; i < actions.Length; i++)
+				{
+					yield return actions[i].parent.StartCoroutine(Global.WaitForUnpause());
+					if(pattern.currentHealth < 0)
+					{
+						return false;
+					}
+					yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, pattern));
+				}
 			}
 		}
 	}
@@ -78,6 +95,16 @@ public class FireTag : IActionGroup, NamedObject
 			action.Initialize(parent);
 		}
 	}
+
+	public bool CheckForWait(AttackPattern pattern)
+	{
+		hasWait = false;
+		for(int i = 0; i < actions.Length; i++)
+		{
+			hasWait |= actions[i].CheckForWait(pattern);
+		}
+		return hasWait;
+	}
 	
 	#if UNITY_EDITOR
 	public void ActionGUI (params object[] param)
@@ -87,8 +114,16 @@ public class FireTag : IActionGroup, NamedObject
 			actions = new FireAction[1];
 			actions [0] = new FireAction();
 		}
+
+		EditorGUILayout.LabelField ("Fire Tag: " + Name);
+
+		EditorGUILayout.BeginHorizontal ();
+		runAtStart = EditorGUILayout.Toggle ("Run At Start", runAtStart);
+		loopUntilEnd = EditorGUILayout.Toggle ("Loop until End", loopUntilEnd);
+		EditorGUILayout.EndHorizontal ();
+
 		
-		EditorUtils.ExpandCollapseButtons<FireAction, FireAction.Type>("Fire Tag: " + Name, actions);
+		EditorUtils.ExpandCollapseButtons<FireAction, FireAction.Type>("Actions:", actions);
 		
 		actions = EditorUtils.ActionGUI<FireAction, FireAction.Type> (actions, false, param);
 	}

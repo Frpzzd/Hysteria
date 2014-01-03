@@ -10,7 +10,7 @@ using UnityEditor;
 public class AttackPattern : IActionGroup, NamedObject, TitledObject
 {
 	[SerializeField]
-	public MonoBehaviour parent;
+	public Enemy parent;
 	[SerializeField]
 	public string bpName;
 	[SerializeField]
@@ -25,13 +25,16 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	public int bonus;
 	[SerializeField]
 	public bool survival;
+	public List<Bullet> bulletsInPlay;
 
 	[NonSerialized]
 	public int currentHealth;
 	[NonSerialized]
 	public int remainingBonus;
 	[NonSerialized]
-	public bool running;
+	public float remainingTime;
+	[NonSerialized]
+	public bool success;
 	
 	[SerializeField]
 	public EnemyDrops drops;
@@ -84,16 +87,28 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	public IEnumerator Run(params object[] param)
 	{
-		Debug.Log (Name + " Running");
+		bulletsInPlay = new List<Bullet> ();
 		currentHealth = health;
-		running = true;
 		parent.StartCoroutine (Move ());
+		if(parent.boss)
+		{
+			parent.StartCoroutine (Timer ());
+		}
+		for(int i = 0; i < fireTags.Length; i++)
+		{
+			if(fireTags[i].runAtStart)
+			{
+				parent.StartCoroutine(fireTags[i].Run(param[0], this));
+			}
+		}
 		while(currentHealth > 0)
 		{
-			yield return parent.StartCoroutine(fireTags[0].Run(this));
+			yield return new WaitForFixedUpdate();
 		}
-		running = false;
-		Debug.Log (Name + " Done");
+		if(parent.boss)
+		{
+
+		}
 	}
 
 	public void Stop()
@@ -103,22 +118,40 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	private IEnumerator Move()
 	{
-		while(currentHealth > 0)
+		for(int i = 0; i < actions.Length; i++)
 		{
-			for(int i = 0; i < actions.Length; i++)
+			yield return parent.StartCoroutine(Global.WaitForUnpause());
+			if(currentHealth <= 0)
 			{
-				if(currentHealth <= 0)
-				{
-					break;
-				}
-				yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform, this));
+				break;
 			}
+			yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform, this));
 		}
+	}
+
+	private IEnumerator Timer()
+	{
+		float deltat = Time.fixedDeltaTime;
+		remainingTime = timeout;
+		remainingBonus = bonus;
+		success = true;
+		while(remainingTime > 0)
+		{
+			yield return parent.StartCoroutine(Global.WaitForUnpause());
+			if(currentHealth <= 0)
+			{
+				return false;
+			}
+			yield return new WaitForFixedUpdate();
+			remainingTime -= deltat;
+			remainingBonus = (success) ? (int)Mathf.Lerp((float)bonus, 0f, 1f - (remainingTime/timeout)) : 0;
+		}
+		Stop ();
 	}
 
 	public void Initialize(MonoBehaviour parent)
 	{
-		this.parent = parent;
+		this.parent = (Enemy)parent;
 		foreach(MovementAction action in actions)
 		{
 			action.Initialize(parent);
@@ -166,7 +199,8 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		switch(action.Direction)
 		{
 			case (DirectionType.TargetPlayer):
-				temp.Transform.LookAt(temp.Transform.position + Vector3.forward, Player.PlayerTransform.position - temp.Transform.position);
+				Vector3 r = Player.PlayerTransform.position - temp.Transform.position;
+				temp.Transform.localRotation = Quaternion.Euler(0, 0, angle + Mathf.Atan2(r.y, r.x) * (180f/Mathf.PI) - 90);
 				break;
 				
 			case (DirectionType.Absolute):
@@ -294,6 +328,11 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		{
 			get { return UnrankedValue + RankValue; }
 		}
+
+		public Vector2 EffectiveRange
+		{
+			get { return ((random) ? RandomRange : new Vector2 (FixedValue, FixedValue)) + new Vector2 (RankValue, RankValue); }
+		}
 		
 		public float UnrankedValue
 		{
@@ -407,6 +446,8 @@ public abstract class AttackPatternAction<T, P> : NestedAction<T, P> where T : N
 	public DirectionType Direction;
 	
 	public AudioClip audioClip = null;
+
+	public abstract bool CheckForWait(AttackPattern pattern);
 }
 
 public class RotationWrapper

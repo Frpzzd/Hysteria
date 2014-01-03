@@ -53,7 +53,6 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			prefab = param.prefab;
 			SpriteRenderer sp = prefab.renderer as SpriteRenderer;
-			while(rend == null) { }
 			rend.color = sp.color;
 			rend.sprite = sp.sprite;
 		}
@@ -124,7 +123,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(t < d)
 			{
-				yield return StartCoroutine(Global.WaitForUnpause());
+				yield return StartCoroutine(Global.WaitForUnpause());;
 				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
@@ -136,7 +135,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 
 	public IEnumerator ChangeSpeed(Bullet.Action action)
 	{
-		yield return StartCoroutine(Global.WaitForUnpause());
+		yield return StartCoroutine(Global.WaitForUnpause());;
 		if(action.isVertical)
 		{
 			useVertical = true;
@@ -156,7 +155,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(currentTime < totalTime)
 			{
-				yield return StartCoroutine(Global.WaitForUnpause());
+				yield return StartCoroutine(Global.WaitForUnpause());;
 				currentSpeed = Mathf.Lerp(originalSpeed, newSpeed, currentTime/totalTime);
 				if(action.isVertical) 
 				{
@@ -229,6 +228,31 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			
 		}
 		#endif
+
+		public override bool CheckForWait (AttackPattern pattern)
+		{
+			hasWait = false;
+			Vector2 effectiveRange = wait.EffectiveRange;
+			switch(type)
+			{
+				case Type.Wait:
+					hasWait = effectiveRange.x <= 0 && effectiveRange.y <= 0;
+					break;
+				case Type.ChangeScale:
+				case Type.ChangeSpeed:
+				case Type.ChangeDirection:
+					hasWait = waitForFinish && effectiveRange.x <= 0 && effectiveRange.y <= 0;
+					break;
+				case Type.Repeat:
+					hasWait = false;
+					for(int i = 0; i < nestedActions.Length; i++)
+					{
+						hasWait |= nestedActions[i].CheckForWait(pattern);
+					}
+					break;
+			}
+			return hasWait;
+		}
 		
 		public override IEnumerator Execute(params object[] param)
 		{
@@ -263,7 +287,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 				{
 					for(int i = 0; i < nestedActions.Length; i++)
 					{
-						yield return bullet.StartCoroutine(Global.WaitForUnpause());
+						yield return bullet.StartCoroutine(Global.WaitForUnpause());;
 						nestedActions[i].Execute(param[0], param[1]);
 					}
 				}

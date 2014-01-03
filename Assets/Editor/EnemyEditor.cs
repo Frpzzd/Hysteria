@@ -23,7 +23,7 @@ public class EnemyEditor : Editor
 		else if(scripts.Length > 1)
 		{
 			EditorGUILayout.LabelField("Object has too many Enemy scripts", centeredStyle);
-			if(GUILayout.Button("Keep Me"))
+			if(GUILayout.Button("Keep Me (" + enemy.Name + ")"))
 			{
 				foreach(Enemy otherScript in gameObject.GetComponents<Enemy>())
 				{
@@ -43,6 +43,7 @@ public class EnemyEditor : Editor
 			{
 				EditorGUI.indentLevel++;
 				enemy.Title = EditorGUILayout.TextField("Title", enemy.Title);
+				enemy.bossTheme = (AudioClip)EditorGUILayout.ObjectField("Theme", enemy.bossTheme, typeof(AudioClip), false);
 				EditorGUI.indentLevel--;
 			}
 			else
@@ -135,6 +136,7 @@ public class EnemyEditor : Editor
 		}
 		EditorGUILayout.EndHorizontal();
 		enemy.attackPatterns = apList.ToArray();
+		patternFoldouts = pfList.ToArray ();
 	}
 	public enum SelectionType { None, Movement, Fire, Bullet }
 
@@ -207,7 +209,7 @@ public class EnemyEditor : Editor
 					EditorGUI.indentLevel--;
 				}
 				TagGUI(pattern, pf);
-				BottomControls(pattern, pf);
+				BottomControls(i, pf);
 				EditorGUI.indentLevel--;
 			}
 		}
@@ -234,7 +236,7 @@ public class EnemyEditor : Editor
 		pattern.bulletTags = TagGUI<BulletTag>(pattern, "Bullet Tags", SelectionType.Bullet, pattern.bulletTags, pf, pf.bulletTagFoldout);
 	}
 	
-	private void BottomControls(AttackPattern pattern, PatternFoldouts pf)
+	private void BottomControls(int pattern, PatternFoldouts pf)
 	{
 		EditorGUILayout.BeginHorizontal();
 		pf.testRank = (Rank)EditorGUILayout.EnumPopup(pf.testRank);

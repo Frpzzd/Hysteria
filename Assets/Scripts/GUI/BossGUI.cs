@@ -4,8 +4,6 @@ using System.Collections.Generic;
 
 public class BossGUI : StaticGameObject<BossGUI>
 {
-	public Enemy boss;
-
 	public GameObject container;
 	public Transform currentHPBar;
 	public GUIText timeout;
@@ -29,30 +27,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 		splashTitle.enabled = false;
 	}
 
-	void Update()
-	{
-		if(boss == null)
-		{
-			container.SetActive(false);
-		}
-		else
-		{
-			if(boss.currentAttackPattern != null)
-			{
-				Vector3 hpScale = currentHPBar.localScale;
-				hpScale.x = boss.currentAttackPattern.currentHealth / boss.currentAttackPattern.health;
-				currentHPBar.localScale = hpScale;
-
-				timeout.text = boss.remainingTime.ToString("00.00");
-			}
-			else
-			{
-				currentHPBar.gameObject.SetActive(false);
-			}
-		}
-	}
-
-	public IEnumerator StartBossBattle(Enemy boss)
+	public IEnumerator BossBattle(Enemy boss)
 	{
 		if(!boss.boss)
 		{
@@ -60,7 +35,6 @@ public class BossGUI : StaticGameObject<BossGUI>
 		}
 		else
 		{
-			this.boss = boss;
 			float deltat = Time.fixedDeltaTime;
 			float lerpValue = 0f;
 			Color finalColor = splashColor, intermediate;
@@ -73,9 +47,12 @@ public class BossGUI : StaticGameObject<BossGUI>
 			splashLine.enabled = true;
 			splashName.enabled = true;
 			splashTitle.enabled = true;
+			splashLine.color = splashColor;
+			splashName.color = splashColor;
+			splashTitle.color = splashColor;
 			while(lerpValue <= 1f)
 			{
-				yield return StartCoroutine (Global.WaitForUnpause());
+				yield return StartCoroutine(Global.WaitForUnpause());
 				intermediate = Color.Lerp(splashColor, finalColor, lerpValue);
 				container.transform.localPosition = Vector3.Lerp(startVector, Vector3.zero, lerpValue);
 				splashLine.color = intermediate;
@@ -83,6 +60,18 @@ public class BossGUI : StaticGameObject<BossGUI>
 				splashTitle.color = intermediate;
 				yield return new WaitForFixedUpdate();
 				lerpValue += deltat / splashTime;
+			}
+			while(!boss.Dead)
+			{
+				if(boss.currentAttackPattern != null)
+				{
+					Vector3 hpScale = currentHPBar.localScale;
+					hpScale.x = (float)boss.currentAttackPattern.currentHealth / (float)boss.currentAttackPattern.health * 0.99f;
+					currentHPBar.localScale = hpScale;
+					
+					timeout.text = boss.currentAttackPattern.remainingTime.ToString("0.00");
+				}
+				yield return new WaitForEndOfFrame();
 			}
 			splashLine.enabled = false;
 			splashName.enabled = false;

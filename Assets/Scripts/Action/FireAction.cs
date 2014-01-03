@@ -9,20 +9,6 @@ using UnityEditor;
 public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 {
 	public enum Type { Wait, Repeat, CallFireTag, Fire }
-//	public override ActionType ActionType 
-//	{
-//		get
-//		{
-//			switch(type)
-//			{
-//				case Type.CallFireTag:
-//					return (waitForFinish) ? ActionType.Normal : ActionType.Coroutine;
-//				default:
-//					return ActionType.Normal;
-//			}
-//		}
-//	}
-
 	public int fireTagIndex;
 
 	#if UNITY_EDITOR
@@ -61,15 +47,40 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 	}
 	#endif
 
+	public override bool CheckForWait (AttackPattern pattern)
+	{
+		switch(type)
+		{
+			case Type.Wait:
+				Vector2 effectiveRange = wait.EffectiveRange;
+				hasWait = effectiveRange.x <= 0 && effectiveRange.y <= 0;
+				break;
+			case Type.Fire:
+				hasWait = false;
+				break;
+			case Type.CallFireTag:
+				hasWait = pattern.fireTags[fireTagIndex].CheckForWait(pattern);
+				break;
+			case Type.Repeat:
+				hasWait = false;
+				for(int i = 0; i < nestedActions.Length; i++)
+				{
+					hasWait |= nestedActions[i].CheckForWait (pattern);
+				}
+				break;
+		}
+		return hasWait;
+	}
+
 	public override IEnumerator Execute (params object[] param)
 	{
+		Enemy master = param[0] as Enemy;
 		AttackPattern attackPattern = param [1] as AttackPattern;
 		if(attackPattern.currentHealth < 0)
 		{
 			return false;
 		}
-		FireTag fireTag = param [0] as FireTag;
-		Enemy master = parent as Enemy;
+		FireTag fireTag = param [2] as FireTag;
 		switch(type)
 		{
 			case Type.Repeat:
@@ -84,7 +95,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 						}
 						else
 						{
-							yield return master.StartCoroutine(nestedActions[i].Execute(param[0], param[1]));	
+							yield return master.StartCoroutine(nestedActions[i].Execute(param[0], param[1], param[2]));	
 						}
 					}
 				}
@@ -112,6 +123,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTag.param, fireTag.previousRotation);
 				break;
 			case Type.Wait:
+				Debug.Log(wait);
 				float totalTime = 0;
 				float waitTime = wait.Value;
 				while(totalTime < waitTime)

@@ -61,6 +61,7 @@ public abstract class NestedAction<T, P> : Action where T : NestedAction<T, P> w
 	public T[] nestedActions;
 	public P type;
 	public AttackPattern.Property repeat;
+	public bool hasWait = true;
 	
 	public bool drawGizmos = true;
 	

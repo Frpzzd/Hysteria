@@ -1,27 +1,37 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System.Collections;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteInEditMode]
 public class TestAttackPattern : MonoBehaviour 
 {
-	public AttackPattern patternToTest;
+	public int patternToTest;
 	public Enemy enemyToAttachTo;
 	public Rank testRank;
 
 	void Start()
 	{
+		#if UNITY_EDITOR
 		if(EditorApplication.isPlayingOrWillChangePlaymode)
 		{
-			Debug.Log("Start");
 			Global.Rank = testRank;
-			patternToTest.Initialize(enemyToAttachTo);
-			enemyToAttachTo.StartCoroutine(patternToTest.Run());
+			enemyToAttachTo.TestAttackPattern(patternToTest);
 		}
 		else
 		{
-			Debug.Log("Destroy");
 			DestroyImmediate(gameObject);
 		}
+		#else
+		Destroy(gameObject);
+		#endif
+	}
+
+	void OnDestroy()
+	{
+		#if UNITY_EDITOR
+		Debug.Log("Destroy");
+		#endif
 	}
 }

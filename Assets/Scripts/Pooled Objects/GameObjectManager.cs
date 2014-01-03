@@ -8,7 +8,6 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 	public class GameObjectPool<T, P> : Stack<T> where T : PooledGameObject<T, P>
 	{
 		public GameObject blankPrefab;
-		public GameObject container;
 		[NonSerialized]
 		public List<T> All = new List<T>();
 		public int Preallocation = 5;
@@ -30,9 +29,9 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		private T CreateNew()
 		{
 			GameObject go = (GameObject)Instantiate (blankPrefab);
+			go.hideFlags = HideFlags.HideInHierarchy;
 			T newT = go.GetComponent<T>();
 			go.SetActive (false);
-			go.transform.parent = container.transform;
 			All.Add (newT);
 			return newT;
 		}
@@ -140,7 +139,6 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 			}
 			return null;
 		}
-
 	}
 	[Serializable]
 	public class PickupPool : GameObjectPool<Pickup, Pickup.Type> { }

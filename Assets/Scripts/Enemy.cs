@@ -31,7 +31,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	public float dropRadius;
 	[SerializeField]
 	public string enemyTitle;
-	public float remainingTime;
+	public AudioClip bossTheme;
 
 	static Enemy()
 	{
@@ -103,26 +103,14 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		for(apSelect = 0; apSelect < attackPatterns.Length; apSelect++)
 		{
 			currentAttackPattern.Initialize(this);
-			if(boss)
-			{
-				StartCoroutine(AttackPatternCountdown(currentAttackPattern));
-			}
 			yield return StartCoroutine(currentAttackPattern.Run(this));
-			Drop (currentAttackPattern.drops);
+			if(!boss || currentAttackPattern.success)
+			{
+				Drop (currentAttackPattern.drops);
+			}
 		}
+		Debug.Log ("enemy dead");
 		Die ();
-	}
-
-	public IEnumerator AttackPatternCountdown(AttackPattern ap)
-	{
-		float deltat = Time.fixedDeltaTime;
-		remainingTime = ap.timeout;
-		while(remainingTime > 0)
-		{
-			yield return new WaitForFixedUpdate();
-			remainingTime -= deltat;
-		}
-		currentAttackPattern.currentHealth = -100;
 	}
 
 	public void Damage(int amount)
@@ -135,11 +123,28 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 
 	public void Die()
 	{
+		StopAllCoroutines ();
 		enemiesInPlay.Remove (this);
 		//TO-DO: Play enemy death visual effect here
 		//TO-DO: Play enemy death sound effect here
 		collider2D.enabled = false;
 		renderer.enabled = false;
+	}
+
+	public void TestAttackPattern(int ap)
+	{
+		apSelect = ap;
+		StartCoroutine (TestRunAttackPattern ());
+	}
+
+	public IEnumerator TestRunAttackPattern()
+	{
+		float start = Time.time;
+		currentAttackPattern.Initialize(this);
+		yield return StartCoroutine(currentAttackPattern.Run(this));
+		Drop (currentAttackPattern.drops);
+		Die ();
+		Debug.Log (Time.time - start + " total seconds.");
 	}
 
 	void Drop(EnemyDrops drop)
