@@ -14,6 +14,11 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		public int UponEmptySpawn = 1;
 		private bool started = false;
 
+		public int TotalActive
+		{
+			get { return All.Count - Count; }
+		}
+
 		public void Start ()
 		{
 			if(!started)
@@ -30,6 +35,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		{
 			GameObject go = (GameObject)Instantiate (blankPrefab);
 			go.hideFlags = HideFlags.HideInHierarchy;
+			DontDestroyOnLoad (go);
 			T newT = go.GetComponent<T>();
 			go.SetActive (false);
 			All.Add (newT);
@@ -48,7 +54,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 			return Pop();
 		}
 
-		public T Get(P param)
+		public virtual T Get(P param)
 		{
 			T newT = CustomDequeue();
 			newT.Activate(param);
@@ -141,16 +147,64 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		}
 	}
 	[Serializable]
-	public class PickupPool : GameObjectPool<Pickup, Pickup.Type> { }
+	public class PickupPool : GameObjectPool<Pickup, Pickup.Type> 
+	{
+		public Sprite pointSprite;
+		public Sprite powerSprite;
+		public Sprite bombSprite;
+		public Sprite lifeSprite;
+		public Sprite pointValueSprite;
+	
+		public Color pointColor;
+		public Color powerColor;
+		public Color bombColor;
+		public Color lifeColor;
+		public Color pointValueColor;
+
+		public override Pickup Get (Pickup.Type param)
+		{
+			Pickup p = base.Get (param);
+			switch(param)
+			{
+				case Pickup.Type.Point:
+					p.render.sprite = pointSprite;
+					p.render.color = pointColor;
+					break;
+				case Pickup.Type.Power:
+					p.render.sprite = powerSprite;
+					p.render.color = powerColor;
+					break;
+				case Pickup.Type.Bomb:
+					p.render.sprite = bombSprite;
+					p.render.color = bombColor;
+					break;
+				case Pickup.Type.Life:
+					p.render.sprite = lifeSprite;
+					p.render.color = lifeColor;
+					break;
+				case Pickup.Type.PointValue:
+					p.render.sprite = pointValueSprite;
+					p.render.color = pointValueColor;
+					break;
+			}
+			return p;
+		}
+
+		public void AutoCollectAll()
+		{
+			foreach(Pickup pickup in All)
+			{
+				pickup.state = Pickup.State.AutoCollect;
+				pickup.currentVelocity = -1f;
+			}
+		}
+	}
 	[Serializable]
 	public class PlayerShotPool : GameObjectPool<PlayerShot, bool> { }
-	[Serializable]
-	public class ScorePopupPool : GameObjectPool<ScorePopup, ScorePopup.Params> { }
 
 	public BulletPool bullets;
 	public PickupPool pickups;
 	public PlayerShotPool playerShots;
-	public ScorePopupPool scorePopups;
 	
 	public static BulletPool Bullets
 	{
@@ -164,12 +218,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 
 	public static PlayerShotPool PlayerShots
 	{
-		get { return Instance.playerShots; }
-	}
-
-	public static ScorePopupPool ScorePopups
-	{
-		get { return Instance.scorePopups; }
+			get { return Instance.playerShots; }
 	}
 
 	public override void Awake()
@@ -178,6 +227,5 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		bullets.Start ();
 		pickups.Start ();
 		playerShots.Start ();
-		scorePopups.Start ();
 	}
 }

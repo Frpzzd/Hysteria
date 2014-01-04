@@ -27,7 +27,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 		splashTitle.enabled = false;
 	}
 
-	public IEnumerator BossBattle(Enemy boss)
+	public IEnumerator BossBattle(Enemy boss, Stage stage)
 	{
 		if(!boss.boss)
 		{
@@ -40,6 +40,8 @@ public class BossGUI : StaticGameObject<BossGUI>
 			Color finalColor = splashColor, intermediate;
 			finalColor.a = 0f;
 			Vector3 startVector = slideDownStart * Vector3.up;
+			Vector3 bossStart = boss.Transform.position;
+			Vector3 bossEnd = new Vector3(0f, boss.startYPosition);
 			container.transform.localPosition = startVector;
 			container.SetActive(true);
 			bossName.text = splashName.text = boss.Name;
@@ -50,17 +52,24 @@ public class BossGUI : StaticGameObject<BossGUI>
 			splashLine.color = splashColor;
 			splashName.color = splashColor;
 			splashTitle.color = splashColor;
+			foreach(Enemy enemy in Enemy.enemiesInPlay.ToArray())
+			{
+				enemy.Die();
+			}
+			SoundManager.PlayMusic (boss.bossTheme);
 			while(lerpValue <= 1f)
 			{
 				yield return StartCoroutine(Global.WaitForUnpause());
 				intermediate = Color.Lerp(splashColor, finalColor, lerpValue);
 				container.transform.localPosition = Vector3.Lerp(startVector, Vector3.zero, lerpValue);
+				boss.Transform.position = Vector3.Lerp(bossStart, bossEnd, lerpValue);
 				splashLine.color = intermediate;
 				splashName.color = intermediate;
 				splashTitle.color = intermediate;
 				yield return new WaitForFixedUpdate();
 				lerpValue += deltat / splashTime;
 			}
+			boss.Spawn ();
 			while(!boss.Dead)
 			{
 				if(boss.currentAttackPattern != null)

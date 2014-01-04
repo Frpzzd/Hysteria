@@ -3,30 +3,14 @@ using System.Collections;
 
 public class Option : CachedObject
 {
-	public float angle;
-	private Quaternion rotation;
-	private Quaternion focusedRotation;
-
-	// Use this for initialization
-	public override void Awake() 
-	{
-		base.Awake ();
-		rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90));
-		focusedRotation = Quaternion.Euler(new Vector3(0, 0, (angle - 90) / 2));
-	}
+	private const float minAngle = -45;
+	private const float maxAngle = 45;
 	
 	public void Fire()
 	{
 		if(Player.Sensing)
 		{
-			if(Player.Focused)
-			{
-				GameObjectManager.PlayerShots.Spawn (Transform.position, focusedRotation, false);
-			}
-			else
-			{
-				GameObjectManager.PlayerShots.Spawn (Transform.position, rotation, false);
-			}
+			GameObjectManager.PlayerShots.Spawn (Transform.position, Quaternion.Euler(0,0, Random.Range(minAngle, maxAngle) / ((Player.Focused) ? 2 : 1)) , false);
 		}
 		else
 		{

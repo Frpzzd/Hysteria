@@ -44,6 +44,7 @@ public class EnemyEditor : Editor
 				EditorGUI.indentLevel++;
 				enemy.Title = EditorGUILayout.TextField("Title", enemy.Title);
 				enemy.bossTheme = (AudioClip)EditorGUILayout.ObjectField("Theme", enemy.bossTheme, typeof(AudioClip), false);
+				enemy.startYPosition = EditorGUILayout.FloatField("Start Y Position", enemy.startYPosition);
 				EditorGUI.indentLevel--;
 			}
 			else

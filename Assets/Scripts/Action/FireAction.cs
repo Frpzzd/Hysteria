@@ -123,7 +123,6 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTag.param, fireTag.previousRotation);
 				break;
 			case Type.Wait:
-				Debug.Log(wait);
 				float totalTime = 0;
 				float waitTime = wait.Value;
 				while(totalTime < waitTime)

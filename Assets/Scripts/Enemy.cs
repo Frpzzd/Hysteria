@@ -32,6 +32,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	[SerializeField]
 	public string enemyTitle;
 	public AudioClip bossTheme;
+	public float startYPosition;
 
 	static Enemy()
 	{
@@ -40,7 +41,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 
 	public bool Dead
 	{
-		get { return enemiesInPlay.Contains(this); }
+		get { return !enemiesInPlay.Contains(this); }
 	}
 
 	public string Name
@@ -95,6 +96,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 
 	public void Spawn()
 	{
+		enemiesInPlay.Add (this);
 		StartCoroutine (RunAttackPatterns ());
 	}
 		

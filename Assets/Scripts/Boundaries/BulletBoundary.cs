@@ -9,7 +9,7 @@ public class BulletBoundary : MonoBehaviour {
 		Bullet b = go.GetComponent<Bullet> ();
 		if(b != null)
 		{
-			GameObjectManager.Bullets.Return(b);
+			b.Deactivate();
 		}
 	}
 }

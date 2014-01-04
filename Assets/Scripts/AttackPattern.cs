@@ -107,7 +107,21 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		}
 		if(parent.boss)
 		{
-
+			foreach(Bullet bullet in bulletsInPlay.ToArray())
+			{
+				if(bullet.rend.isVisible)
+				{
+					bullet.Cancel();
+				}
+				else
+				{
+					bulletsInPlay.Remove(bullet);
+				}
+			}
+		}
+		else
+		{
+			bulletsInPlay.Clear();
 		}
 	}
 
@@ -181,7 +195,7 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		if(previousRotation.rotationNull)
 		{
 			previousRotation.rotationNull = false;
-			previousRotation.rotation = temp.Transform.localRotation;
+			previousRotation.rotation = Quaternion.identity;
 		}
 		
 		temp.Transform.position = position;
@@ -247,6 +261,7 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 			temp.param = param;
 		}
 		temp.master = this;
+		bulletsInPlay.Add (temp);
 		temp.GameObject.SetActive(true);
 		SoundManager.PlaySoundEffect (action.audioClip, position);
 	}

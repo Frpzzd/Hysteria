@@ -15,6 +15,7 @@ public class Stage : CachedObject, IActionGroup
 	[HideInInspector]
 	public Enemy boss;
 	public AudioClip stageTheme;
+	public int clearBonus;
 
 	[NonSerialized]
 	public Vector3 sequenceLocation = Vector3.zero;
@@ -29,26 +30,12 @@ public class Stage : CachedObject, IActionGroup
 			{
 				yield return StartCoroutine(actions[i].Execute(this));
 			}
-			yield return StartCoroutine(BossBattle ());
+			yield return StartCoroutine(BossGUI.Instance.BossBattle(boss, this));
 			running = false;
 		}
 		Debug.Log ("End Stage");
-		StageManager.EndStage ();
-	}
-
-	public IEnumerator BossBattle()
-	{
-		StartCoroutine(BossGUI.Instance.BossBattle (boss));
-		foreach(Enemy enemy in Enemy.enemiesInPlay)
-		{
-			enemy.Die();
-		}
-		SoundManager.PlayMusic (boss.bossTheme);
-		boss.Spawn ();
-		while (!boss.Dead)
-		{
-			yield return new WaitForFixedUpdate();
-		}
+		yield return StartCoroutine(StageManager.EndStage (clearBonus));
+		Destroy (GameObject); //Clean up and destroy all stage related GameObjects, which should be child GameObjects to this one
 	}
 	
 	private bool running;
@@ -104,6 +91,7 @@ public class Stage : CachedObject, IActionGroup
 		}
 
 		stageTheme = (AudioClip)EditorGUILayout.ObjectField ("Theme", stageTheme, typeof(AudioClip), false);
+		clearBonus = EditorGUILayout.IntField ("Clear Bonus", clearBonus);
 
 		EditorUtils.ExpandCollapseButtons<Action, Action.Type>("Actions:", actions);
 		

@@ -11,7 +11,7 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	public State state;
 	[System.NonSerialized]
 	public Type type;
-	private Material mat;
+	public SpriteRenderer render;
 	public float initialVelocity;
 	[System.NonSerialized]
 	public float currentVelocity;
@@ -24,29 +24,14 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	public override void Awake()
 	{
 		base.Awake();
-		mat = renderer.material;
+		render = renderer as SpriteRenderer;
 	}
 
 	public override void Activate (Type param)
 	{
-		state = Global.defaultPickupState;
+		state = (param == Type.PointValue) ? State.AutoCollect : Global.defaultPickupState;
 		currentVelocity = initialVelocity;
 		type = param;
-		switch(type)
-		{
-		case Type.Point:
-			mat.color = Color.blue;
-			break;
-		case Type.Power:
-			mat.color = Color.red;
-			break;
-		case Type.Bomb:
-			mat.color = Color.green;
-			break;
-		case Type.Life:
-			mat.color = Color.magenta;
-			break;
-		}
 	}
 
 	public override void LateActivate()
@@ -66,7 +51,7 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 				currentVelocity = maximumDownwardVelocity;
 			}
 		}
-		if(currentVelocity < 0)
+		if(currentVelocity < 0 || type == Type.PointValue)
 		{
 			switch(state)
 			{

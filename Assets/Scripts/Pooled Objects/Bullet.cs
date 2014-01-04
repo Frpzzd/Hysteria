@@ -25,7 +25,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 	public float param = 0.0f;
 	[HideInInspector]
 	public Collider2D col;
-	private SpriteRenderer rend;
+	public SpriteRenderer rend;
 
 	public override void Awake ()
 	{
@@ -69,6 +69,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		if(GameObject.activeSelf)
 		{
 			GameObjectManager.Bullets.Return(this);
+			master.bulletsInPlay.Remove(this);
 		}
 	}
 

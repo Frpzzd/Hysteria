@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class MenuHandler : StaticGameObject<MenuHandler>
 {
 	public Menu currentMenu;
+	public AudioClip menuTheme = null;
 	public AudioClip menuMoveClip = null;
 	public AudioClip menuInvalidClip = null;
 	public AudioClip menuSelectClip = null;
@@ -19,6 +20,7 @@ public class MenuHandler : StaticGameObject<MenuHandler>
 	public override void Awake ()
 	{
 		base.Awake ();
+		SoundManager.PlayMusic (menuTheme);
 		ChangeMenu (currentMenu);
 	}
 

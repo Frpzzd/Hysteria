@@ -16,7 +16,7 @@ public class MainMenu : Menu
 		{
 			case 0:			//Start Normal Game
 				Global.GameType = GameType.Normal;
-				StageManager.SetStartLevel(1);
+				StageManager.StartingStage = 1;
 				break;
 			case 5:
 				Application.Quit();

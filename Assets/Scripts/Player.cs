@@ -44,7 +44,7 @@ public class Player : StaticGameObject<Player>
 
 	public static int OptionShotDamage
 	{
-		get { return (int)(((Extravert) ? 8f : 1f) * ((Intuitive) ? 2f : 1f) * baseOptionShotDamage); }
+		get { return (int)(((Extravert) ? 2f : 1f) * baseOptionShotDamage); }
 	}
 
 	public static bool MaxPower
@@ -206,7 +206,7 @@ public class Player : StaticGameObject<Player>
 		deltat = Time.fixedDeltaTime;
 		focused = hitboxRenderer.enabled = Input.GetButton("Focus");
 		speed = (focused) ? focusedSpeed : unfocusedSpeed;
-		optionFireDelay = ((Introvert) ? 1f : 8f) * ((Intuitive && focused) ? 0.5f : 1f) * baseOptionFireDelay;
+		optionFireDelay = ((Extravert) ? 2f : 1f) * ((Intuitive && focused) ? 0.5f : 1f) * baseOptionFireDelay;
 		//Movement
 		movementVector = Vector3.zero;
 		movementVector.x = Sign(Input.GetAxisRaw("Horizontal")) * speed;
@@ -365,8 +365,10 @@ public class Player : StaticGameObject<Player>
 
 	public void Die()
 	{
+		Debug.Log (invincible);
 		if(!invincible)
 		{
+			Debug.Log ("Hello");
 			lives--;
 			//TODO: Play Player death effect at player's location
 			SoundManager.PlaySoundEffect(Instance.DeathClip, Instance.Transform.position);
