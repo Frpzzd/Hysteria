@@ -26,12 +26,21 @@ public class Stage : CachedObject, IActionGroup
 		{
 			running = true;
 			SoundManager.PlayMusic(stageTheme);
+			IEnumerator pause, actionEnumerator;
 			foreach(Action action in actions)
 			{
-				yield return Global.WaitForUnpause();
-				yield return StartCoroutine(action.Execute(this));
+				pause = Global.WaitForUnpause();
+				while(pause.MoveNext())
+				{
+					yield return pause.Current;
+				}
+				actionEnumerator = action.Execute(this);
+				while(actionEnumerator.MoveNext())
+				{
+					yield return actionEnumerator.Current;
+				}
 			}
-			yield return BossGUI.Instance.BossBattle(boss, this);
+			yield return StartCoroutine(BossGUI.Instance.BossBattle(boss, this));
 			running = false;
 		}
 		Debug.Log ("End Stage");
@@ -174,6 +183,7 @@ public class Stage : CachedObject, IActionGroup
 		
 		public override IEnumerator Execute (params object[] param)
 		{
+			IEnumerator pause, actionEnumerator;
 			switch(type)
 			{
 				case Type.SpawnEnemy:
@@ -188,8 +198,16 @@ public class Stage : CachedObject, IActionGroup
 					{
 						foreach(Action action in nestedActions)
 						{
-							yield return Global.WaitForUnpause();
-							yield return action.Execute();
+							pause = Global.WaitForUnpause();
+							while(pause.MoveNext())
+							{
+								yield return pause.Current;
+							}
+							actionEnumerator = action.Execute();
+							while(actionEnumerator.MoveNext())
+							{
+								yield return actionEnumerator.Current;
+							}
 						}
 					}
 					break;

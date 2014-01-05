@@ -88,13 +88,14 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 	{
 		Transform transform = param [0] as Transform;
 		AttackPattern attackPattern = param [1] as AttackPattern;
+		Vector3 start = Vector3.zero, end = Vector3.zero;
+		float totalTime = wait.Value;
+		float deltat = Time.fixedDeltaTime;
+		IEnumerator pause, actionEnumerator;
 		if(attackPattern.currentHealth < 0)
 		{
 			return false;
 		}
-		Vector3 start = Vector3.zero, end = Vector3.zero;
-		float totalTime = wait.Value;
-		float deltat = Time.fixedDeltaTime;
 		switch(type)
 		{
 			case Type.Linear:
@@ -109,7 +110,11 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				float lerpValue = 0f;
 				while(lerpValue <= 1f)
 				{
-					yield return Global.WaitForUnpause();
+					pause = Global.WaitForUnpause();
+					while(pause.MoveNext())
+					{
+						yield return pause.Current;
+					}
 					transform.position = Vector3.Lerp(start, end, lerpValue);
 					lerpValue +=  deltat / totalTime;
 					yield return new WaitForFixedUpdate();
@@ -128,11 +133,20 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				{
 					foreach(Action action in nestedActions)
 					{
+						pause = Global.WaitForUnpause();
+						while(pause.MoveNext())
+						{
+							yield return pause.Current;
+						}
 						if(attackPattern.currentHealth < 0)
 						{
 							return false;
 						}
-						yield return action.Execute(param[0], param[1]);
+						actionEnumerator = action.Execute(param[0], param[1]);
+						while(actionEnumerator.MoveNext())
+						{
+							yield return actionEnumerator.Current;
+						}
 					}
 				}
 				break;

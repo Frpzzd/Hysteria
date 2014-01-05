@@ -22,9 +22,14 @@ public class StageManager : StaticGameObject<StageManager>
 		GameObjectManager.Pickups.AutoCollectAll ();
 		float cachedTimeScale = Time.timeScale;
 		Time.timeScale = Time.timeScale / Instance.postBossSlowdown;
+		IEnumerator pause;
 		while(GameObjectManager.Pickups.TotalActive > 0)
 		{
-			yield return Instance.StartCoroutine(Global.WaitForUnpause());
+			pause = Global.WaitForUnpause();
+			while(pause.MoveNext())
+			{
+				yield return pause.Current;
+			}
 			Debug.Log(GameObjectManager.Pickups.TotalActive);
 			yield return new WaitForFixedUpdate();
 		}
@@ -73,7 +78,7 @@ public class StageManager : StaticGameObject<StageManager>
 
 	public static void LoadStage(int stage)
 	{
-		Debug.Log ("Loading Stage: " + stage);
+		Debug.Log ("Loading Stage: " + (stage - 1));
 		currentStage = stage;
 		Application.LoadLevelAdditive (stage);
 	}

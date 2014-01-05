@@ -45,7 +45,7 @@ public class Global
 
 	public static IEnumerator WaitForUnpause()
 	{
-		while(Global.GameState == GameState.Paused)
+		while(GameState == GameState.Paused)
 		{
 			yield return new WaitForFixedUpdate();
 		}
@@ -54,4 +54,4 @@ public class Global
 
 public enum GameState { MainMenu, GameInitialize, InGame, Paused, CreditEnd, HighScoreEntry, GameOver }
 public enum GameType {Normal, StagePractice, AttackPractice}
-public enum Rank : int { Easy = 0, Normal = 2, Hard = 4, Insane = 8 }
+public enum Rank : int { Easy = 0, Normal = 1, Hard = 2, Insane = 4 }

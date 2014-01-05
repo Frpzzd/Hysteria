@@ -51,7 +51,6 @@ public abstract class Action
 	public abstract void ActionGUI(params object[] param);
 	#endif
 
-
 	public abstract IEnumerator Execute(params object[] param);
 }
 

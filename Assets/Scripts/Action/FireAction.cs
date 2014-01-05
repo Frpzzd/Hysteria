@@ -76,11 +76,12 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 	{
 		Enemy master = param[0] as Enemy;
 		AttackPattern attackPattern = param [1] as AttackPattern;
+		FireTag fireTag = param [2] as FireTag;
+		IEnumerator pause, actionEnumerator;
 		if(attackPattern.currentHealth < 0)
 		{
 			return false;
 		}
-		FireTag fireTag = param [2] as FireTag;
 		switch(type)
 		{
 			case Type.Repeat:
@@ -89,14 +90,22 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				{
 					foreach(Action action in nestedActions)
 					{
-						yield return action.parent.StartCoroutine(Global.WaitForUnpause());
+						pause = Global.WaitForUnpause();
+						while(pause.MoveNext())
+						{
+							yield return pause.Current;
+						}
 						if(attackPattern.currentHealth < 0)
 						{
 							return false;
 						}
 						else
 						{
-							yield return action.Execute(param[0], param[1], param[2]);	
+							actionEnumerator = action.Execute(param[0], param[1], param[2]);
+							while(actionEnumerator.MoveNext())
+							{
+								yield return actionEnumerator.Current;
+							}
 						}
 					}
 				}
@@ -111,14 +120,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				{
 					tag.param = fireTag.param;
 				}
-				if(waitForFinish)
-				{
-					yield return parent.StartCoroutine(tag.Run(param[1]));
-				}
-				else
-				{
-					parent.StartCoroutine(tag.Run(param[1]));
-				}
+				parent.StartCoroutine(tag.Run(param[1]));
 				break;
 			case Type.Fire:
 				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTag.param, fireTag.previousRotation);
@@ -128,7 +130,11 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				float waitTime = wait.Value;
 				while(totalTime < waitTime)
 				{
-					yield return parent.StartCoroutine(Global.WaitForUnpause());
+					pause = Global.WaitForUnpause();
+					while(pause.MoveNext())
+					{
+						yield return pause.Current;
+					}
 					if(attackPattern.currentHealth < 0)
 					{
 						return false;

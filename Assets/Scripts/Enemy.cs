@@ -105,13 +105,12 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		for(apSelect = 0; apSelect < attackPatterns.Length; apSelect++)
 		{
 			currentAttackPattern.Initialize(this);
-			yield return currentAttackPattern.Run(this);
+			yield return StartCoroutine(currentAttackPattern.Run(this));
 			if(!boss || currentAttackPattern.success)
 			{
 				Drop (currentAttackPattern.drops);
 			}
 		}
-		Debug.Log ("enemy dead");
 		Die ();
 	}
 

@@ -80,6 +80,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		float d = action.wait.Value * Time.deltaTime;
 		
 		Quaternion originalRot = Transform.localRotation;
+		IEnumerator pause;
 		
 		// determine offset
 		float ang = action.angle.Value;
@@ -123,7 +124,11 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(t < d)
 			{
-				yield return Global.WaitForUnpause();
+				pause = Global.WaitForUnpause();
+				while(pause.MoveNext())
+				{
+					yield return pause.Current;
+				}
 				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
@@ -143,6 +148,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		float totalTime = action.wait.Value * Time.deltaTime;
 		float originalSpeed = velocity.x;
 		float currentSpeed = originalSpeed;
+		IEnumerator pause;
 		
 		float newSpeed = action.speed.UnrankedValue;
 		if(action.speed.rank)
@@ -154,7 +160,11 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(currentTime < totalTime)
 			{
-				yield return Global.WaitForUnpause();
+				pause = Global.WaitForUnpause();
+				while(pause.MoveNext())
+				{
+					yield return pause.Current;
+				}
 				currentSpeed = Mathf.Lerp(originalSpeed, newSpeed, currentTime/totalTime);
 				if(action.isVertical) 
 				{
@@ -258,45 +268,54 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			Bullet bullet = param [0] as Bullet;
 			AttackPattern attackPattern = param [1] as AttackPattern;
 			Enemy master = parent as Enemy;
+			IEnumerator pause, actionEnumerator;
 			switch(type)
 			{
-			case Type.ChangeDirection:
-				if(waitForFinish)
-				{
-					yield return bullet.StartCoroutine(bullet.ChangeDirection(this));
-				}
-				else
-				{
-					bullet.StartCoroutine(bullet.ChangeDirection(this));
-				}
-				break;
-			case Type.ChangeSpeed:
-				if(waitForFinish)
-				{
-					yield return bullet.StartCoroutine(bullet.ChangeSpeed(this));
-				}
-				else
-				{
-					bullet.StartCoroutine(bullet.ChangeSpeed(this));
-				}
-				break;
-			case Type.Repeat:
-				int repeatC = Mathf.FloorToInt(repeat.Value);
-				for(int j = 0; j < repeatC; j++)
-				{
-					foreach(Action action in nestedActions)
+				case Type.ChangeDirection:
+					if(waitForFinish)
 					{
-						yield return Global.WaitForUnpause();
-						yield return action.Execute(param[0], param[1]);
+						yield return bullet.StartCoroutine(bullet.ChangeDirection(this));
 					}
-				}
-				break;
-			case Type.Wait:
-				yield return new WaitForSeconds(wait.Value);
-				break;
-			case Type.Fire:
-				attackPattern.Fire<Bullet.Action, Bullet.Action.Type>(this, master, bullet.Transform.position, bullet.Transform.rotation, bullet.param, bullet.prevRotation);
-				break;
+					else
+					{
+						bullet.StartCoroutine(bullet.ChangeDirection(this));
+					}
+					break;
+				case Type.ChangeSpeed:
+					if(waitForFinish)
+					{
+						yield return bullet.StartCoroutine(bullet.ChangeSpeed(this));
+					}
+					else
+					{
+						bullet.StartCoroutine(bullet.ChangeSpeed(this));
+					}
+					break;
+				case Type.Repeat:
+					int repeatC = Mathf.FloorToInt(repeat.Value);
+					for(int j = 0; j < repeatC; j++)
+					{
+						foreach(Action action in nestedActions)
+						{
+							pause = Global.WaitForUnpause();
+							while(pause.MoveNext())
+							{
+								yield return pause.Current;
+							}
+							actionEnumerator = action.Execute(param[0], param[1]);
+							while(actionEnumerator.MoveNext())
+							{
+								yield return actionEnumerator.Current;
+							}
+						}
+					}
+					break;
+				case Type.Wait:
+					yield return new WaitForSeconds(wait.Value);
+					break;
+				case Type.Fire:
+					attackPattern.Fire<Bullet.Action, Bullet.Action.Type>(this, master, bullet.Transform.position, bullet.Transform.rotation, bullet.param, bullet.prevRotation);
+					break;
 			}
 		}
 	}

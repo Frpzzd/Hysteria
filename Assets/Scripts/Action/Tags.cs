@@ -31,6 +31,8 @@ public class FireTag : IActionGroup, NamedObject
 	[SerializeField]
 	public bool loopUntilEnd = true;
 	[SerializeField]
+	public AttackPattern.Property wait;
+	[SerializeField]
 	public bool hasWait;
 
 	public string Name
@@ -56,6 +58,7 @@ public class FireTag : IActionGroup, NamedObject
 	{
 		Enemy enemy = param [0] as Enemy;
 		AttackPattern pattern = param [1] as AttackPattern;
+		IEnumerator pause, actionEnumerator;
 		if(actions != null && actions.Length > 0)
 		{
 			if(loopUntilEnd)
@@ -64,12 +67,25 @@ public class FireTag : IActionGroup, NamedObject
 				{
 					foreach(Action action in actions)
 					{
-						float time = Time.time;
-						yield return Global.WaitForUnpause();
-						Debug.Log(Time.time - time);
-						time = Time.time;
-						yield return action.Execute(enemy, pattern, this);
-						Debug.Log(Time.time - time);
+						pause = Global.WaitForUnpause();
+						while(pause.MoveNext())
+						{
+							yield return pause.Current;
+						}
+						actionEnumerator = action.Execute(enemy, pattern, this);
+						while(actionEnumerator.MoveNext())
+						{
+							yield return actionEnumerator.Current;
+						}
+					}
+					float waitC = wait.Value;
+					if(waitC <= Time.fixedDeltaTime)
+					{
+						yield return new WaitForFixedUpdate();
+					}
+					else
+					{
+						yield return new WaitForSeconds(waitC);
 					}
 				}
 			}
@@ -77,8 +93,16 @@ public class FireTag : IActionGroup, NamedObject
 			{
 				foreach(Action action in actions)
 				{
-					yield return Global.WaitForUnpause();
-					yield return action.Execute(enemy, pattern, this);
+					pause = Global.WaitForUnpause();
+					while(pause.MoveNext())
+					{
+						yield return pause.Current;
+					}
+					actionEnumerator = action.Execute(enemy, pattern, this);
+					while(actionEnumerator.MoveNext())
+					{
+						yield return actionEnumerator.Current;
+					}
 				}
 			}
 		}
@@ -117,6 +141,10 @@ public class FireTag : IActionGroup, NamedObject
 		runAtStart = EditorGUILayout.Toggle ("Run At Start", runAtStart);
 		loopUntilEnd = EditorGUILayout.Toggle ("Loop until End", loopUntilEnd);
 		EditorGUILayout.EndHorizontal ();
+		if(loopUntilEnd)
+		{
+			wait = AttackPattern.Property.EditorGUI("Loop Wait", wait, false);
+		}
 
 		
 		EditorUtils.ExpandCollapseButtons<FireAction, FireAction.Type>("Actions:", actions);
@@ -165,10 +193,19 @@ public class BulletTag : IActionGroup, NamedObject
 	{
 		if(actions != null && actions.Length > 0)
 		{
+			IEnumerator pause, actionEnumerator;
 			foreach(Action action in actions)
 			{
-				yield return Global.WaitForUnpause();
-				yield return action.Execute(this, param[0] as AttackPattern);
+				pause = Global.WaitForUnpause();
+				while(pause.MoveNext())
+				{
+					yield return pause.Current;
+				}
+				actionEnumerator = action.Execute(this, param[0] as AttackPattern);
+				while(actionEnumerator.MoveNext())
+				{
+					yield return actionEnumerator.Current;
+				}
 			}
 		}
 	}

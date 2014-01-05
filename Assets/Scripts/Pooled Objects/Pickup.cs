@@ -70,9 +70,14 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	public IEnumerator RotateOnce()
 	{
 		float rotationAmount = 0f;
+		IEnumerator pause;
 		while(rotationAmount < 1)
 		{
-			yield return StartCoroutine(Global.WaitForUnpause());
+			pause = Global.WaitForUnpause();
+			while(pause.MoveNext())
+			{
+				yield return pause.Current;
+			}
 			rotationAmount += Time.fixedDeltaTime;
 			Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
 			yield return new WaitForFixedUpdate();

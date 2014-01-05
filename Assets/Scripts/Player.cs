@@ -365,10 +365,8 @@ public class Player : StaticGameObject<Player>
 
 	public void Die()
 	{
-		Debug.Log (invincible);
 		if(!invincible)
 		{
-			Debug.Log ("Hello");
 			lives--;
 			//TODO: Play Player death effect at player's location
 			SoundManager.PlaySoundEffect(Instance.DeathClip, Instance.Transform.position);

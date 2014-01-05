@@ -132,10 +132,19 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	private IEnumerator Move()
 	{
+		IEnumerator pause, actionEnumerator;
 		foreach(Action action in actions)
 		{
-			yield return Global.WaitForUnpause();
-			yield return action.Execute(parent.transform, this);
+			pause = Global.WaitForUnpause();
+			while(pause.MoveNext())
+			{
+				yield return pause.Current;
+			}
+			actionEnumerator = action.Execute(parent.transform, this);
+			while(actionEnumerator.MoveNext())
+			{
+				yield return actionEnumerator.Current;
+			}
 		}
 	}
 
@@ -145,9 +154,14 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		remainingTime = timeout;
 		remainingBonus = bonus;
 		success = true;
+		IEnumerator pause;
 		while(remainingTime > 0)
 		{
-			yield return Global.WaitForUnpause();
+			pause = Global.WaitForUnpause();
+			while(pause.MoveNext())
+			{
+				yield return pause.Current;
+			}
 			if(currentHealth <= 0)
 			{
 				return false;
