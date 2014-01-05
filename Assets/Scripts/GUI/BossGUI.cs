@@ -59,7 +59,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 			SoundManager.PlayMusic (boss.bossTheme);
 			while(lerpValue <= 1f)
 			{
-				yield return StartCoroutine(Global.WaitForUnpause());
+				yield return Global.WaitForUnpause();
 				intermediate = Color.Lerp(splashColor, finalColor, lerpValue);
 				container.transform.localPosition = Vector3.Lerp(startVector, Vector3.zero, lerpValue);
 				boss.Transform.position = Vector3.Lerp(bossStart, bossEnd, lerpValue);

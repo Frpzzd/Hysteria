@@ -132,14 +132,10 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	private IEnumerator Move()
 	{
-		for(int i = 0; i < actions.Length; i++)
+		foreach(Action action in actions)
 		{
-			yield return parent.StartCoroutine(Global.WaitForUnpause());
-			if(currentHealth <= 0)
-			{
-				break;
-			}
-			yield return actions[i].parent.StartCoroutine(actions[i].Execute(parent.transform, this));
+			yield return Global.WaitForUnpause();
+			yield return action.Execute(parent.transform, this);
 		}
 	}
 
@@ -151,7 +147,7 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		success = true;
 		while(remainingTime > 0)
 		{
-			yield return parent.StartCoroutine(Global.WaitForUnpause());
+			yield return Global.WaitForUnpause();
 			if(currentHealth <= 0)
 			{
 				return false;

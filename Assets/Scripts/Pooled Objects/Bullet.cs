@@ -75,7 +75,6 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 
 	public IEnumerator ChangeDirection(Bullet.Action action)
 	{
-		yield return StartCoroutine(Global.WaitForUnpause());
 		Quaternion newRot = Quaternion.identity;
 		float t = 0.0f;
 		float d = action.wait.Value * Time.deltaTime;
@@ -124,7 +123,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(t < d)
 			{
-				yield return StartCoroutine(Global.WaitForUnpause());;
+				yield return Global.WaitForUnpause();
 				Transform.localRotation = Quaternion.Slerp(originalRot, newRot, t/d);
 				t += Time.deltaTime;
 				yield return new WaitForFixedUpdate();
@@ -136,7 +135,6 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 
 	public IEnumerator ChangeSpeed(Bullet.Action action)
 	{
-		yield return StartCoroutine(Global.WaitForUnpause());;
 		if(action.isVertical)
 		{
 			useVertical = true;
@@ -156,7 +154,7 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 		{
 			while(currentTime < totalTime)
 			{
-				yield return StartCoroutine(Global.WaitForUnpause());;
+				yield return Global.WaitForUnpause();
 				currentSpeed = Mathf.Lerp(originalSpeed, newSpeed, currentTime/totalTime);
 				if(action.isVertical) 
 				{
@@ -286,10 +284,10 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 				int repeatC = Mathf.FloorToInt(repeat.Value);
 				for(int j = 0; j < repeatC; j++)
 				{
-					for(int i = 0; i < nestedActions.Length; i++)
+					foreach(Action action in nestedActions)
 					{
-						yield return bullet.StartCoroutine(Global.WaitForUnpause());;
-						nestedActions[i].Execute(param[0], param[1]);
+						yield return Global.WaitForUnpause();
+						yield return action.Execute(param[0], param[1]);
 					}
 				}
 				break;

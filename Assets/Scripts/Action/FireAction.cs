@@ -87,15 +87,16 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				int repeatC = Mathf.FloorToInt(repeat.Value);
 				for(int j = 0; j < repeatC; j++)
 				{
-					for(int i = 0; i < nestedActions.Length; i++)
+					foreach(Action action in nestedActions)
 					{
+						yield return action.parent.StartCoroutine(Global.WaitForUnpause());
 						if(attackPattern.currentHealth < 0)
 						{
 							return false;
 						}
 						else
 						{
-							yield return master.StartCoroutine(nestedActions[i].Execute(param[0], param[1], param[2]));	
+							yield return action.Execute(param[0], param[1], param[2]);	
 						}
 					}
 				}

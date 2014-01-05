@@ -105,7 +105,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		for(apSelect = 0; apSelect < attackPatterns.Length; apSelect++)
 		{
 			currentAttackPattern.Initialize(this);
-			yield return StartCoroutine(currentAttackPattern.Run(this));
+			yield return currentAttackPattern.Run(this);
 			if(!boss || currentAttackPattern.success)
 			{
 				Drop (currentAttackPattern.drops);
@@ -143,7 +143,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	{
 		float start = Time.time;
 		currentAttackPattern.Initialize(this);
-		yield return StartCoroutine(currentAttackPattern.Run(this));
+		yield return currentAttackPattern.Run(this);
 		Drop (currentAttackPattern.drops);
 		Die ();
 		Debug.Log (Time.time - start + " total seconds.");

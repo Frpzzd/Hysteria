@@ -109,7 +109,7 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				float lerpValue = 0f;
 				while(lerpValue <= 1f)
 				{
-					yield return parent.StartCoroutine(Global.WaitForUnpause());
+					yield return Global.WaitForUnpause();
 					transform.position = Vector3.Lerp(start, end, lerpValue);
 					lerpValue +=  deltat / totalTime;
 					yield return new WaitForFixedUpdate();
@@ -126,13 +126,13 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				int repeatC = Mathf.FloorToInt(repeat.Value);
 				for(int j = 0; j < repeatC; j++)
 				{
-					for(int i = 0; i < nestedActions.Length; i++)
+					foreach(Action action in nestedActions)
 					{
 						if(attackPattern.currentHealth < 0)
 						{
 							return false;
 						}
-						yield return parent.StartCoroutine(nestedActions[i].Execute(param[0], param[1]));
+						yield return action.Execute(param[0], param[1]);
 					}
 				}
 				break;
@@ -140,7 +140,7 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				float currentTime = 0f;
 				while(currentTime < totalTime)
 				{
-					yield return parent.StartCoroutine(Global.WaitForUnpause());
+					yield return Global.WaitForUnpause();
 					if(attackPattern.currentHealth <= 0)
 					{
 						return false;

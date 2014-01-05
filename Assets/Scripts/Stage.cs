@@ -26,15 +26,16 @@ public class Stage : CachedObject, IActionGroup
 		{
 			running = true;
 			SoundManager.PlayMusic(stageTheme);
-			for(int i = 0; i < actions.Length; i++)
+			foreach(Action action in actions)
 			{
-				yield return StartCoroutine(actions[i].Execute(this));
+				yield return Global.WaitForUnpause();
+				yield return StartCoroutine(action.Execute(this));
 			}
-			yield return StartCoroutine(BossGUI.Instance.BossBattle(boss, this));
+			yield return BossGUI.Instance.BossBattle(boss, this);
 			running = false;
 		}
 		Debug.Log ("End Stage");
-		yield return StartCoroutine(StageManager.EndStage (clearBonus));
+		yield return StageManager.EndStage (clearBonus);
 		Destroy (GameObject); //Clean up and destroy all stage related GameObjects, which should be child GameObjects to this one
 	}
 	
@@ -185,9 +186,10 @@ public class Stage : CachedObject, IActionGroup
 					int repeatC = Mathf.FloorToInt(repeat.Value);
 					for(int j = 0; j < repeatC; j++)
 					{
-						for(int i = 0; i < nestedActions.Length; i++)
+						foreach(Action action in nestedActions)
 						{
-							yield return parent.StartCoroutine(nestedActions[i].Execute());
+							yield return Global.WaitForUnpause();
+							yield return action.Execute();
 						}
 					}
 					break;

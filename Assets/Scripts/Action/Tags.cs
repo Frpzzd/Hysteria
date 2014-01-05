@@ -62,27 +62,23 @@ public class FireTag : IActionGroup, NamedObject
 			{
 				while(pattern.currentHealth > 0)
 				{
-					for(int i = 0; i < actions.Length; i++)
+					foreach(Action action in actions)
 					{
-						yield return actions[i].parent.StartCoroutine(Global.WaitForUnpause());
-						if(pattern.currentHealth < 0)
-						{
-							return false;
-						}
-						yield return actions[i].parent.StartCoroutine(actions[i].Execute(enemy, pattern, this));
+						float time = Time.time;
+						yield return Global.WaitForUnpause();
+						Debug.Log(Time.time - time);
+						time = Time.time;
+						yield return action.Execute(enemy, pattern, this);
+						Debug.Log(Time.time - time);
 					}
 				}
 			}
 			else
 			{
-				for(int i = 0; i < actions.Length; i++)
+				foreach(Action action in actions)
 				{
-					yield return actions[i].parent.StartCoroutine(Global.WaitForUnpause());
-					if(pattern.currentHealth < 0)
-					{
-						return false;
-					}
-					yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, pattern));
+					yield return Global.WaitForUnpause();
+					yield return action.Execute(enemy, pattern, this);
 				}
 			}
 		}
@@ -169,9 +165,10 @@ public class BulletTag : IActionGroup, NamedObject
 	{
 		if(actions != null && actions.Length > 0)
 		{
-			for(int i = 0; i < actions.Length; i++)
+			foreach(Action action in actions)
 			{
-				yield return actions[i].parent.StartCoroutine(actions[i].Execute(this, param[0] as AttackPattern));
+				yield return Global.WaitForUnpause();
+				yield return action.Execute(this, param[0] as AttackPattern);
 			}
 		}
 	}
