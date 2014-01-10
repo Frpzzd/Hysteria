@@ -170,6 +170,10 @@ public class BulletTag : IActionGroup, NamedObject
 	public GameObject prefab;
 	[SerializeField]
 	public Bullet.Action[] actions;
+	[SerializeField]
+	public bool overwriteColor = false;
+	[SerializeField]
+	public Color newColor = Color.white;
 	
 	public string Name
 	{
@@ -229,6 +233,11 @@ public class BulletTag : IActionGroup, NamedObject
 		EditorGUILayout.LabelField("Bullet Tag: " + Name);
 		prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", prefab, typeof(GameObject), false);
 		speed = AttackPattern.Property.EditorGUI ("Speed", speed, false);
+		overwriteColor = EditorGUILayout.Toggle ("Overwrite Prefab Color:", overwriteColor);
+		if(overwriteColor)
+		{
+			newColor = EditorGUILayout.ColorField ("New Color", newColor);
+		}
 		EditorUtils.ExpandCollapseButtons<Bullet.Action, Bullet.Action.Type>("Actions", actions);
 		actions = EditorUtils.ActionGUI<Bullet.Action, Bullet.Action.Type>(actions, true, param[0] as Enemy, param);
 	}

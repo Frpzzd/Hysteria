@@ -7,7 +7,6 @@ public class EnemyEditor : Editor
 {
 	private Enemy enemy;
 	private GameObject gameObject;
-	private PatternFoldouts[] patternFoldouts;
 
 	public override void OnInspectorGUI() 
 	{
@@ -72,24 +71,14 @@ public class EnemyEditor : Editor
 		{
 			enemy.attackPatterns = new AttackPattern[1];
 		}
-		if(patternFoldouts == null)
-		{
-			patternFoldouts = new PatternFoldouts[enemy.attackPatterns.Length];
-			for(int i = 0; i < patternFoldouts.Length; i++)
-			{
-				patternFoldouts[i] = new PatternFoldouts();
-			}
-		}
 
 		List<AttackPattern> apList = new List<AttackPattern>(enemy.attackPatterns);
-		List<PatternFoldouts> pfList = new List<PatternFoldouts> (patternFoldouts);
 		
 		if(!enemy.boss && enemy.attackPatterns.Length > 1)
 		{
 			for(int i = 1; i < enemy.attackPatterns.Length; i++)
 			{
 				apList.RemoveAt(1);
-				pfList.RemoveAt(1);
 			}
 			Repaint();
 		}
@@ -116,12 +105,10 @@ public class EnemyEditor : Editor
 			if (moveRemove.z > 0)
 			{
 				EditorUtils.Swap<AttackPattern>(apList, moveIndex, moveIndex + 1);
-				EditorUtils.Swap<PatternFoldouts>(pfList, moveIndex, moveIndex + 1);
 			}
 			if (moveRemove.z < 0)
 			{
 				EditorUtils.Swap<AttackPattern>(apList, moveIndex, moveIndex - 1);
-				EditorUtils.Swap<PatternFoldouts>(pfList, moveIndex, moveIndex - 1);
 			}
 		}
 		
@@ -132,31 +119,10 @@ public class EnemyEditor : Editor
 			if (GUILayout.Button("Add"))
 			{
 				apList.Add(new AttackPattern());
-				pfList.Add(new PatternFoldouts());
 			}
 		}
 		EditorGUILayout.EndHorizontal();
 		enemy.attackPatterns = apList.ToArray();
-		patternFoldouts = pfList.ToArray ();
-	}
-	public enum SelectionType { None, Movement, Fire, Bullet }
-
-	public class PatternFoldouts
-	{
-		public bool main;
-		public FoldoutWrapper propertiesFoldout = new FoldoutWrapper();
-		public FoldoutWrapper dropsFoldout = new FoldoutWrapper();
-		public FoldoutWrapper movementFoldout = new FoldoutWrapper();
-		public FoldoutWrapper fireTagFoldout = new FoldoutWrapper();
-		public FoldoutWrapper bulletTagFoldout = new FoldoutWrapper();
-		public SelectionType selectType = SelectionType.None;
-		public int tagSelect;
-		public Rank testRank;
-	}
-	
-	public class FoldoutWrapper
-	{
-		public bool Foldout;
 	}
 
 	public void AttackPatternDetailGUI()
@@ -167,23 +133,18 @@ public class EnemyEditor : Editor
 			{
 				enemy.attackPatterns[i] = new AttackPattern();
 			}
-			if(patternFoldouts[i] == null)
-			{
-				patternFoldouts[i] = new PatternFoldouts();
-			}
 			AttackPattern pattern = enemy.attackPatterns[i];
-			PatternFoldouts pf = patternFoldouts[i];
 			if(enemy.boss)
 			{
-				pf.main = EditorGUILayout.Foldout(pf.main, GetAttackPatternName(pattern));
+				pattern.main = EditorGUILayout.Foldout(pattern.main, GetAttackPatternName(pattern));
 			}
-			if(pf.main || !enemy.boss)
+			if(pattern.main || !enemy.boss)
 			{
 				EditorGUI.indentLevel++;
 				if(enemy.boss)
 				{
-					pf.propertiesFoldout.Foldout = EditorGUILayout.Foldout(pf.propertiesFoldout.Foldout, "Properties");
-					if(pf.propertiesFoldout.Foldout)
+					pattern.propertiesFoldout.Foldout = EditorGUILayout.Foldout(pattern.propertiesFoldout.Foldout, "Properties");
+					if(pattern.propertiesFoldout.Foldout)
 					{
 						EditorGUI.indentLevel++;
 						pattern.Name = EditorGUILayout.TextField("Name", pattern.Name);
@@ -195,12 +156,12 @@ public class EnemyEditor : Editor
 						EditorGUI.indentLevel--;
 					}
 				}
-				pf.dropsFoldout.Foldout = EditorGUILayout.Foldout(pf.dropsFoldout.Foldout, "Drops");
+				pattern.dropsFoldout.Foldout = EditorGUILayout.Foldout(pattern.dropsFoldout.Foldout, "Drops");
 				if(pattern.drops == null)
 				{
 					pattern.drops = new EnemyDrops();
 				}
-				if(pf.dropsFoldout.Foldout)
+				if(pattern.dropsFoldout.Foldout)
 				{
 					EditorGUI.indentLevel++;
 					pattern.drops.power = EditorGUILayout.IntField("Power", pattern.drops.power);
@@ -209,23 +170,23 @@ public class EnemyEditor : Editor
 					pattern.drops.bomb = EditorGUILayout.Toggle("Bomb", pattern.drops.bomb);
 					EditorGUI.indentLevel--;
 				}
-				TagGUI(pattern, pf);
-				BottomControls(i, pf);
+				TagGUI(pattern);
+				BottomControls(i, pattern);
 				EditorGUI.indentLevel--;
 			}
 		}
 	}
 	
-	private void TagGUI(AttackPattern pattern, PatternFoldouts pf)
+	private void TagGUI(AttackPattern pattern)
 	{
-		pf.movementFoldout.Foldout = EditorGUILayout.Foldout (pf.movementFoldout.Foldout, "Movement Pattern");
-		if(pf.movementFoldout.Foldout)
+		pattern.movementFoldout.Foldout = EditorGUILayout.Foldout (pattern.movementFoldout.Foldout, "Movement Pattern");
+		if(pattern.movementFoldout.Foldout)
 		{
 			EditorGUILayout.BeginHorizontal();
-			if (GUILayout.Button((pf.selectType == SelectionType.Movement) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
+			if (GUILayout.Button((pattern.selectType == SelectionType.Movement) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
 			{
-				pf.selectType = SelectionType.Movement;
-				pf.tagSelect = -1;
+				pattern.selectType = SelectionType.Movement;
+				pattern.tagSelect = -1;
 				Debug.Log(pattern);
 				TagEditorWindow.SetActionGroup<AttackPattern>(pattern, enemy, pattern);
 				RepaintImpl();
@@ -233,28 +194,28 @@ public class EnemyEditor : Editor
 			EditorGUILayout.LabelField("Movement Pattern");
 			EditorGUILayout.EndHorizontal();
 		}
-		pattern.fireTags = TagGUI<FireTag>(pattern, "Fire Tags", SelectionType.Fire, pattern.fireTags, pf, pf.fireTagFoldout);
-		pattern.bulletTags = TagGUI<BulletTag>(pattern, "Bullet Tags", SelectionType.Bullet, pattern.bulletTags, pf, pf.bulletTagFoldout);
+		pattern.fireTags = TagGUI<FireTag>(pattern, "Fire Tags", SelectionType.Fire, pattern.fireTags, pattern.fireTagFoldout);
+		pattern.bulletTags = TagGUI<BulletTag>(pattern, "Bullet Tags", SelectionType.Bullet, pattern.bulletTags, pattern.bulletTagFoldout);
 	}
 	
-	private void BottomControls(int pattern, PatternFoldouts pf)
+	private void BottomControls(int index, AttackPattern pattern)
 	{
 		EditorGUILayout.BeginHorizontal();
-		pf.testRank = (Rank)EditorGUILayout.EnumPopup(pf.testRank);
+		pattern.testRank = (Rank)EditorGUILayout.EnumPopup(pattern.testRank);
 		if(GUILayout.Button("Test") && !EditorApplication.isPlaying) 
 		{
 			GameObject temp = new GameObject();
 			TestAttackPattern test = temp.AddComponent<TestAttackPattern>();
 			test.enemyToAttachTo = enemy;
-			test.patternToTest = pattern;
-			test.testRank = pf.testRank;
+			test.patternToTest = index;
+			test.testRank = pattern.testRank;
 			temp.hideFlags = HideFlags.HideInHierarchy;
 			EditorApplication.isPlaying = true;
 		}
 		EditorGUILayout.EndHorizontal();
 	}
 	
-	private T[] TagGUI<T>(AttackPattern pattern, string label, SelectionType buttonEnable, T[] tags, PatternFoldouts pf, FoldoutWrapper fw) where T : IActionGroup, NamedObject, new()
+	private T[] TagGUI<T>(AttackPattern pattern, string label, SelectionType buttonEnable, T[] tags, FoldoutWrapper fw) where T : IActionGroup, NamedObject, new()
 	{
 		fw.Foldout = EditorGUILayout.Foldout(fw.Foldout, label);
 		if (tags == null || tags.Length < 1)
@@ -267,7 +228,7 @@ public class EnemyEditor : Editor
 		
 		if(fw.Foldout)
 		{
-			bool buttonCheck = (pf.selectType == buttonEnable);
+			bool buttonCheck = (pattern.selectType == buttonEnable);
 			
 			Vector3 moveRemove = new Vector3(-1f, -1f, 0f);
 			for (int i = 0; i < tagList.Count; i++)
@@ -277,28 +238,28 @@ public class EnemyEditor : Editor
 					tagList[i] = new T();
 				}
 				EditorGUILayout.BeginHorizontal();
-				if (GUILayout.Button((buttonCheck && (i == pf.tagSelect)) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
+				if (GUILayout.Button((buttonCheck && (i == pattern.tagSelect)) ? '\u2022'.ToString() : " ", GUILayout.Width(20)))
 				{
-					pf.selectType = buttonEnable;
-					pf.tagSelect = i;
-					TagEditorWindow.SetActionGroup<T>(tagList[pf.tagSelect], enemy, pattern);
+					pattern.selectType = buttonEnable;
+					pattern.tagSelect = i;
+					TagEditorWindow.SetActionGroup<T>(tagList[pattern.tagSelect], enemy, pattern);
 					RepaintImpl();
 				}
 				tagList [i].Name = EditorGUILayout.TextField(tagList [i].Name);
 				moveRemove = EditorUtils.UpDownRemoveButtons(moveRemove, tagList.Count, i, buttonCheck);
 				if(moveRemove.x > 0)
 				{
-					if (buttonCheck && pf.tagSelect == i)
+					if (buttonCheck && pattern.tagSelect == i)
 					{
-						pf.tagSelect += (int)moveRemove.z;
+						pattern.tagSelect += (int)moveRemove.z;
 					}
 					RepaintImpl();
 				}
 				if(moveRemove.y > 0)
 				{
-					if (pf.tagSelect == i)
+					if (pattern.tagSelect == i)
 					{
-						pf.tagSelect--;
+						pattern.tagSelect--;
 					}
 					RepaintImpl();
 				}

@@ -143,6 +143,10 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 				bulletCol.size = circleCol.size;
 				return bullet;
 			}
+			if(tag.overwriteColor)
+			{
+				bullet.rend.color = tag.newColor;
+			}
 			return null;
 		}
 	}

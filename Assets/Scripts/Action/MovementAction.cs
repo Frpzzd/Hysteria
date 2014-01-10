@@ -152,15 +152,20 @@ public class MovementAction : NestedAction<MovementAction, MovementAction.Type>
 				break;
 			case Type.Wait:
 				float currentTime = 0f;
+				totalTime = wait.Value;
 				while(currentTime < totalTime)
 				{
-					yield return Global.WaitForUnpause();
+					pause = Global.WaitForUnpause();
+					while(pause.MoveNext())
+					{
+						yield return pause.Current;
+					}
 					if(attackPattern.currentHealth <= 0)
 					{
 						return false;
 					}
 					yield return new WaitForFixedUpdate();
-					totalTime += Time.fixedDeltaTime;
+					currentTime += deltat;
 				}
 				break;
 		}

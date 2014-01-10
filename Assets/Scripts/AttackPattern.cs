@@ -41,6 +41,17 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	[SerializeField]
 	public MovementAction[] actions;
 
+	//Editor stuff, remove on build
+	public bool main;
+	public FoldoutWrapper propertiesFoldout = new FoldoutWrapper();
+	public FoldoutWrapper dropsFoldout = new FoldoutWrapper();
+	public FoldoutWrapper movementFoldout = new FoldoutWrapper();
+	public FoldoutWrapper fireTagFoldout = new FoldoutWrapper();
+	public FoldoutWrapper bulletTagFoldout = new FoldoutWrapper();
+	public SelectionType selectType = SelectionType.None;
+	public int tagSelect;
+	public Rank testRank;
+
 	public AttackPattern()
 	{
 		fireTags = new FireTag[1];
@@ -127,6 +138,7 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 
 	public void Stop()
 	{
+		Debug.Log ("Stop Pattern");
 		currentHealth = -100;
 	}
 
@@ -199,6 +211,10 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		where T : AttackPatternAction<T, P>
 		where P : struct, IConvertible
 	{
+		if(!parent.renderer.isVisible)
+		{
+			return;
+		}
 		float angle,  speed;
 		BulletTag bt = bulletTags[action.bulletTagIndex];
 		Bullet temp = GameObjectManager.Bullets.Get(bt);
@@ -443,6 +459,12 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 public enum DirectionType { TargetPlayer, Absolute, Relative, Sequence }
 public enum SourceType { Attacker, Absolute, Relative, AnotherObject }
 public enum RandomStyle { None, Rectangular, Elliptical }
+public enum SelectionType { None, Movement, Fire, Bullet }
+
+public class FoldoutWrapper
+{
+	public bool Foldout;
+}
 
 [Serializable]
 public abstract class AttackPatternAction<T, P> : NestedAction<T, P> where T : NestedAction<T, P> where P : struct, IConvertible

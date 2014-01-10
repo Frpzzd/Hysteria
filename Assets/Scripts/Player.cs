@@ -39,7 +39,7 @@ public class Player : StaticGameObject<Player>
 
 	public static int MainShotDamage
 	{
-		get { return mainShotDamage; }
+		get { return Instance.mainShotDamage; }
 	}
 
 	public static int OptionShotDamage
@@ -153,7 +153,7 @@ public class Player : StaticGameObject<Player>
 
 	public float mainShotDelay;
 	private float mainShotTime;
-	public const int mainShotDamage = 1;
+	public int mainShotDamage;
 
 	public float baseOptionFireDelay;
 	private float optionFireDelay;
@@ -242,7 +242,7 @@ public class Player : StaticGameObject<Player>
 
 			if(mainShotTime < 0)
 			{
-				Vector3 offset = new Vector3(0.5f,0,0);
+				Vector3 offset = new Vector3(0.75f,0,0);
 				GameObjectManager.PlayerShots.Spawn(Transform.position + offset, true);
 				GameObjectManager.PlayerShots.Spawn(Transform.position - offset, true);
 				SoundManager.PlaySoundEffect(fireClip, Transform.position);
