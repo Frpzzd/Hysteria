@@ -237,31 +237,6 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			
 		}
 		#endif
-
-		public override bool CheckForWait (AttackPattern pattern)
-		{
-			hasWait = false;
-			Vector2 effectiveRange = wait.EffectiveRange;
-			switch(type)
-			{
-				case Type.Wait:
-					hasWait = effectiveRange.x <= 0 && effectiveRange.y <= 0;
-					break;
-				case Type.ChangeScale:
-				case Type.ChangeSpeed:
-				case Type.ChangeDirection:
-					hasWait = waitForFinish && effectiveRange.x <= 0 && effectiveRange.y <= 0;
-					break;
-				case Type.Repeat:
-					hasWait = false;
-					for(int i = 0; i < nestedActions.Length; i++)
-					{
-						hasWait |= nestedActions[i].CheckForWait(pattern);
-					}
-					break;
-			}
-			return hasWait;
-		}
 		
 		public override IEnumerator Execute(params object[] param)
 		{

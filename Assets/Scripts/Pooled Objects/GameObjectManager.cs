@@ -165,6 +165,9 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		public Color lifeColor;
 		public Color pointValueColor;
 
+		public float AutoCollectSpeed;
+		public float ProximityCollectSpeed;
+
 		public override Pickup Get (Pickup.Type param)
 		{
 			Pickup p = base.Get (param);
@@ -222,7 +225,7 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 
 	public static PlayerShotPool PlayerShots
 	{
-			get { return Instance.playerShots; }
+		get { return Instance.playerShots; }
 	}
 
 	public override void Awake()

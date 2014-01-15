@@ -43,8 +43,7 @@ public class Stage : CachedObject, IActionGroup
 			yield return StartCoroutine(BossGUI.Instance.BossBattle(boss, this));
 			running = false;
 		}
-		Debug.Log ("End Stage");
-		yield return StageManager.EndStage (clearBonus);
+		yield return StartCoroutine(StageManager.EndStage (clearBonus));
 		Destroy (GameObject); //Clean up and destroy all stage related GameObjects, which should be child GameObjects to this one
 	}
 	

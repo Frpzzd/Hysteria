@@ -493,8 +493,6 @@ public abstract class AttackPatternAction<T, P> : NestedAction<T, P> where T : N
 	public DirectionType Direction;
 	
 	public AudioClip audioClip = null;
-
-	public abstract bool CheckForWait(AttackPattern pattern);
 }
 
 public class RotationWrapper

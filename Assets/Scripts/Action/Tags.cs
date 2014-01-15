@@ -15,26 +15,48 @@ public interface TitledObject
 	string Title { get; set; }
 }
 
+/// <summary>
+/// Fire Tag
+/// A group of actions that describe a firing pattern used in a AttackPattern
+/// </summary>
 [System.Serializable]
 public class FireTag : IActionGroup, NamedObject
 {
 	[SerializeField]
-	public string ftName = "Fire Tag";
-	[SerializeField]
-	public float param = 0.0f;
-	[SerializeField]
-	public RotationWrapper previousRotation = new RotationWrapper();
+	private string ftName = "Fire Tag";
+
+	/// <summary>
+	/// The actions executed by this FireTag
+	/// </summary>
 	[SerializeField]
 	public FireAction[] actions;
+
+	/// <summary>
+	/// Whether this FireTag is start when the AttackPattern starts
+	/// </summary>
 	[SerializeField]
 	public bool runAtStart = true;
+
+	/// <summary>
+	/// If this value is true, this FireTag will loop until the AttackPattern this FireTag belongs
+	/// to ends.
+	/// </summary>
 	[SerializeField]
 	public bool loopUntilEnd = true;
+
+	/// <summary>
+	/// If this tag loops until the end of the AttackPattern, this AttackPattern Property determines
+	/// how long it waits between each loop
+	/// </summary>
 	[SerializeField]
 	public AttackPattern.Property wait;
-	[SerializeField]
-	public bool hasWait;
 
+	/// <summary>
+	/// Gets or sets the name of the FireTag
+	/// This is mainly used by the Editor to differentiate between different FireTags
+	/// and has no actual impact on the execution of game.
+	/// </summary>
+	/// <value>The name.</value>
 	public string Name
 	{
 		get
@@ -48,16 +70,25 @@ public class FireTag : IActionGroup, NamedObject
 		}
 	}
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="FireTag"/> class.
+	/// </summary>
 	public FireTag()
 	{
 		actions = new FireAction[1];
 		actions [0] = new FireAction ();
 	}
-	
+
+	/// <summary>
+	/// Executes the FireTag as specified 
+	/// </summary>
+	/// <param name="param">Parameter.</param>
 	public IEnumerator Run (params object[] param)
 	{
 		Enemy enemy = param [0] as Enemy;
 		AttackPattern pattern = param [1] as AttackPattern;
+		float floatParam = (param.Length > 2) ? (float)param [2] : 0.0f;
+		RotationWrapper prevRotation = new RotationWrapper ();
 		IEnumerator pause, actionEnumerator;
 		if(actions != null && actions.Length > 0)
 		{
@@ -72,7 +103,7 @@ public class FireTag : IActionGroup, NamedObject
 						{
 							yield return pause.Current;
 						}
-						actionEnumerator = action.Execute(enemy, pattern, this);
+						actionEnumerator = action.Execute(enemy, pattern, floatParam, prevRotation);
 						while(actionEnumerator.MoveNext())
 						{
 							yield return actionEnumerator.Current;
@@ -85,7 +116,17 @@ public class FireTag : IActionGroup, NamedObject
 					}
 					else
 					{
-						yield return new WaitForSeconds(waitC);
+						float currentTime = 0f;
+						while(currentTime < waitC)
+						{
+							pause = Global.WaitForUnpause();
+							while(pause.MoveNext())
+							{
+								yield return pause.Current;
+							}
+							yield return new WaitForFixedUpdate();
+							currentTime += Time.fixedDeltaTime;
+						}
 					}
 				}
 			}
@@ -98,7 +139,7 @@ public class FireTag : IActionGroup, NamedObject
 					{
 						yield return pause.Current;
 					}
-					actionEnumerator = action.Execute(enemy, pattern, this);
+					actionEnumerator = action.Execute(enemy, pattern, floatParam, prevRotation);
 					while(actionEnumerator.MoveNext())
 					{
 						yield return actionEnumerator.Current;
@@ -114,16 +155,6 @@ public class FireTag : IActionGroup, NamedObject
 		{
 			action.Initialize(parent);
 		}
-	}
-
-	public bool CheckForWait(AttackPattern pattern)
-	{
-		hasWait = false;
-		for(int i = 0; i < actions.Length; i++)
-		{
-			hasWait |= actions[i].CheckForWait(pattern);
-		}
-		return hasWait;
 	}
 	
 	#if UNITY_EDITOR

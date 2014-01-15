@@ -47,36 +47,13 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 	}
 	#endif
 
-	public override bool CheckForWait (AttackPattern pattern)
-	{
-		switch(type)
-		{
-			case Type.Wait:
-				Vector2 effectiveRange = wait.EffectiveRange;
-				hasWait = effectiveRange.x <= 0 && effectiveRange.y <= 0;
-				break;
-			case Type.Fire:
-				hasWait = false;
-				break;
-			case Type.CallFireTag:
-				hasWait = pattern.fireTags[fireTagIndex].CheckForWait(pattern);
-				break;
-			case Type.Repeat:
-				hasWait = false;
-				for(int i = 0; i < nestedActions.Length; i++)
-				{
-					hasWait |= nestedActions[i].CheckForWait (pattern);
-				}
-				break;
-		}
-		return hasWait;
-	}
-
 	public override IEnumerator Execute (params object[] param)
 	{
 		Enemy master = param[0] as Enemy;
 		AttackPattern attackPattern = param [1] as AttackPattern;
-		FireTag fireTag = param [2] as FireTag;
+		float fireTagParam = (float)param [2];
+		Debug.Log (param.Length);
+		RotationWrapper previousRotation = param [3] as RotationWrapper;
 		IEnumerator pause, actionEnumerator;
 		if(attackPattern.currentHealth < 0)
 		{
@@ -101,7 +78,7 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 						}
 						else
 						{
-							actionEnumerator = action.Execute(param[0], param[1], param[2]);
+							actionEnumerator = action.Execute(master, attackPattern, fireTagParam, previousRotation);
 							while(actionEnumerator.MoveNext())
 							{
 								yield return actionEnumerator.Current;
@@ -112,18 +89,19 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 				break;
 			case Type.CallFireTag:
 				FireTag tag = attackPattern.fireTags[fireTagIndex];
+				float floatParam = 0.0f;
 				if(passParam)
 				{
-					tag.param = UnityEngine.Random.Range(paramRange.x, paramRange.y);
+					floatParam = UnityEngine.Random.Range(paramRange.x, paramRange.y);
 				}
 				else if(passPassedParam)
 				{
-					tag.param = fireTag.param;
+					floatParam = fireTagParam;
 				}
-				parent.StartCoroutine(tag.Run(param[1]));
+				parent.StartCoroutine(tag.Run(param[1], floatParam));
 				break;
 			case Type.Fire:
-				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTag.param, fireTag.previousRotation);
+				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTagParam, previousRotation);
 				break;
 			case Type.Wait:
 				float totalTime = 0;

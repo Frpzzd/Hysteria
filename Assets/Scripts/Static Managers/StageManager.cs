@@ -19,6 +19,7 @@ public class StageManager : StaticGameObject<StageManager>
 
 	public static IEnumerator EndStage(int bonus)
 	{
+		Debug.Log ("End Stage");
 		GameObjectManager.Pickups.AutoCollectAll ();
 		float cachedTimeScale = Time.timeScale;
 		Time.timeScale = Time.timeScale / Instance.postBossSlowdown;
@@ -30,7 +31,6 @@ public class StageManager : StaticGameObject<StageManager>
 			{
 				yield return pause.Current;
 			}
-			Debug.Log(GameObjectManager.Pickups.TotalActive);
 			yield return new WaitForFixedUpdate();
 		}
 		Time.timeScale = cachedTimeScale;

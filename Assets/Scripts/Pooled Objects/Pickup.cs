@@ -17,8 +17,6 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	public float currentVelocity;
 	public float maximumDownwardVelocity;
 	public float acceleration;
-	public float autoCollectSpeed;
-	public float proximityCollectSpeed;
 	public float rotationSpeed;
 
 	public override void Awake()
@@ -56,10 +54,10 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 			switch(state)
 			{
 				case State.AutoCollect:
-					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, autoCollectSpeed * deltat);
+					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, GameObjectManager.Pickups.AutoCollectSpeed * deltat);
 					break;
 				case State.ProximityCollect:
-					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, proximityCollectSpeed * deltat);
+					Transform.position = Vector3.MoveTowards(Transform.position, Player.PlayerTransform.position, GameObjectManager.Pickups.ProximityCollectSpeed * deltat);
 					break;
 				default:
 					break;
