@@ -361,18 +361,16 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 	[Serializable]
 	public class Property
 	{
-		public Vector3 values = Vector3.zero;
+		public float Lower = 0f;
+		public float Upper = 0f;
+		public float Rank = 0f;
+
 		public bool rank = false;
 		public bool random = false;
 		
 		public float Value
 		{
 			get { return UnrankedValue + RankValue; }
-		}
-
-		public Vector2 EffectiveRange
-		{
-			get { return ((random) ? RandomRange : new Vector2 (FixedValue, FixedValue)) + new Vector2 (RankValue, RankValue); }
 		}
 		
 		public float UnrankedValue
@@ -382,30 +380,24 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 		
 		public float FixedValue
 		{
-			get { return values.x; }
-			set { values.x = value; }
+			get { return Lower; }
+			set { Lower = value; }
 		}
 		
 		public float RandomValue
 		{
-			get { return UnityEngine.Random.Range (values.x, values.y); }
+			get { return UnityEngine.Random.Range (Lower, Upper); }
 		}
 		
 		public float RankValue
 		{
-			get { return (rank) ? (int)Global.Rank * values.z : 0; }
+			get { return (rank) ? (int)Global.Rank * Rank : 0; }
 		}
 		
 		public float RankParam
 		{
-			get { return values.z; }
-			set { values.z = value; }
-		}
-		
-		public Vector2 RandomRange
-		{
-			get { return new Vector2(values.x, values.y); }
-			set { values.x = value.x; values.y = value.y; }
+			get { return Rank; }
+			set { Rank = value; }
 		}
 
 		#if UNITY_EDITOR
@@ -419,35 +411,39 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 			}
 
 			EditorGUILayout.BeginHorizontal();
+			EditorGUILayout.LabelField (propName, GUILayout.ExpandWidth(false), GUILayout.Width(60));
 			if (!property.random)
 			{
 				if(isInt)
 				{
-					property.FixedValue = (float)EditorGUILayout.IntField(propName, (int)property.FixedValue);
+					property.FixedValue = (float)EditorGUILayout.IntField((int)property.FixedValue);
 				}
 				else
 				{
-					property.FixedValue = EditorGUILayout.FloatField(propName, property.FixedValue);
+					property.FixedValue = EditorGUILayout.FloatField(property.FixedValue);
 				}
 			} 
 			else
 			{
-				property.RandomRange = EditorGUILayout.Vector2Field(propName + " Range", property.RandomRange);
+				if(isInt)
+				{
+					property.Lower = (float)EditorGUILayout.IntField((int)property.Lower);
+					property.Upper = (float)EditorGUILayout.IntField((int)property.Upper);
+				}
+				else
+				{
+					property.Lower = (float)EditorGUILayout.FloatField(property.Lower);
+					property.Upper = (float)EditorGUILayout.FloatField(property.Upper);
+				}
 			}
+			property.RankParam = EditorGUILayout.FloatField(property.RankParam, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(50));
 			if (isInt)
 			{
 				property.random = false;
 			}
 			else
 			{
-				property.random = EditorGUILayout.Toggle("Randomize", property.random);
-			}
-			EditorGUILayout.EndHorizontal();
-			EditorGUILayout.BeginHorizontal();
-			property.rank = EditorGUILayout.Toggle("Add Rank", property.rank);
-			if (property.rank)
-			{
-				property.RankParam = EditorGUILayout.FloatField("Rank Increase", property.RankParam);
+				property.random = EditorGUILayout.Toggle(property.random, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(10));
 			}
 			EditorGUILayout.EndHorizontal();
 			return property;

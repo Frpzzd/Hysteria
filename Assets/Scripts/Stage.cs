@@ -44,6 +44,7 @@ public class Stage : CachedObject, IActionGroup
 			running = false;
 		}
 		yield return StartCoroutine(StageManager.EndStage (clearBonus));
+		Debug.Log ("Enemy Dead");
 		Destroy (GameObject); //Clean up and destroy all stage related GameObjects, which should be child GameObjects to this one
 	}
 	

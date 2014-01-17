@@ -1,16 +1,23 @@
 VITAL MUST DO
 	-To Do
-		-Enemy Controller
-			-Spline Movement Implementation
-			-Spline Movement Patter Editor
-		-Test Bullet Pattern
-		-Demo Stage
-		-Character Select
 		-Tutorial
-		-Score Popups
 		-Lasers
+		-Assets
+			-
 	-In Progress
 		-Menus
-		-Stage Music Handling
 		-Editors for stage development
+	-Replace
+		-Player Death SFX
+		-Player Graze SFX
+		-Player Pickup SFX
+		-Player Extend SFX
+		-Player Fire SFX
+		-Stage 1 BGM
+		-Boss 1 BGM
+		-Menu BGM
+		-Player Sprite
+		-Player Hitbox Sprite
+		-Player Option Sprite
+		-Menu Background bv
 IDEAS

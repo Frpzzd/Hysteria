@@ -7,17 +7,15 @@ using System.Collections.Generic;
 public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 {
 	public enum State { Normal, AutoCollect, ProximityCollect }
-	public enum Type { Power, Point, PointValue, Life, Bomb }
+	public enum Type { Power, Point, PointValue, Life }
+	[System.NonSerialized]
 	public State state;
 	[System.NonSerialized]
 	public Type type;
+	[System.NonSerialized]
 	public SpriteRenderer render;
-	public float initialVelocity;
 	[System.NonSerialized]
 	public float currentVelocity;
-	public float maximumDownwardVelocity;
-	public float acceleration;
-	public float rotationSpeed;
 
 	public override void Awake()
 	{
@@ -28,7 +26,7 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	public override void Activate (Type param)
 	{
 		state = (param == Type.PointValue) ? State.AutoCollect : Global.defaultPickupState;
-		currentVelocity = initialVelocity;
+		currentVelocity = GameObjectManager.Pickups.InitialVelocity;
 		type = param;
 	}
 
@@ -41,12 +39,12 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 	{
 		float deltat = Time.deltaTime;
 		Transform.position += Vector3.up * currentVelocity * deltat;
-		if(currentVelocity > maximumDownwardVelocity)
+		if(currentVelocity > GameObjectManager.Pickups.MaximumDownwardVelocity)
 		{
-			currentVelocity += acceleration * deltat;
-			if(currentVelocity < maximumDownwardVelocity)
+			currentVelocity += GameObjectManager.Pickups.Acceleration * deltat;
+			if(currentVelocity < GameObjectManager.Pickups.MaximumDownwardVelocity)
 			{
-				currentVelocity = maximumDownwardVelocity;
+				currentVelocity = GameObjectManager.Pickups.MaximumDownwardVelocity;
 			}
 		}
 		if(currentVelocity < 0 || type == Type.PointValue)
@@ -76,7 +74,7 @@ public class Pickup : GameObjectManager.PooledGameObject<Pickup, Pickup.Type>
 			{
 				yield return pause.Current;
 			}
-			rotationAmount += Time.fixedDeltaTime;
+			rotationAmount += ((float)GameObjectManager.Pickups.RotationSpeed / 360f) * Time.fixedDeltaTime;
 			Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
 			yield return new WaitForFixedUpdate();
 		}

@@ -11,8 +11,6 @@ public class EnemyDrops
 	public int power;
 	[SerializeField]
 	public bool life;
-	[SerializeField]
-	public bool bomb;
 }
 
 [System.Serializable]
@@ -167,10 +165,6 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 		if(drop.life)
 		{
 			GameObjectManager.Pickups.Spawn(Transform.position, Pickup.Type.Life);
-		}
-		if(drop.bomb)
-		{
-			GameObjectManager.Pickups.Spawn(Transform.position, Pickup.Type.Bomb);
 		}
 	}
 

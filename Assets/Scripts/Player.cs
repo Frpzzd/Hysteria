@@ -10,9 +10,7 @@ public class Player : StaticGameObject<Player>
 	public float optionDistance;
 
 	public int maxLives = 10;
-	public int maxBombs = 10;
 	public int lives;
-	public int bombs;
 	public float power = 0f;
 	public uint point;
 
@@ -44,12 +42,12 @@ public class Player : StaticGameObject<Player>
 
 	public static int OptionShotDamage
 	{
-		get { return (int)(((Extravert) ? 2f : 1f) * baseOptionShotDamage); }
+		get { return (int)(((Extravert) ? 2f : 1f) * Instance.baseOptionShotDamage); }
 	}
 
-	public static bool MaxPower
+	public static float MaxPower
 	{
-		get { return Power / Instance.options.Length > 1; }
+		get { return Instance.options.Length + 1; }
 	}
 
 	public static int MaxOptions
@@ -139,7 +137,7 @@ public class Player : StaticGameObject<Player>
 		set { Instance.JP = !value; }
 	}
 
-	private bool invincible = false;
+	public bool invincible = false;
 
 	public float deathInvincibilityTime;
 	public float invincibilityFlashInterval;
@@ -158,7 +156,14 @@ public class Player : StaticGameObject<Player>
 	public float baseOptionFireDelay;
 	private float optionFireDelay;
 	private float optionShotTime;
-	public const int baseOptionShotDamage = 1;
+	public int baseOptionShotDamage = 1;
+
+	public GameObject bombPrefab;
+	public float baseBombDuration;
+	[System.NonSerialized]
+	public bool bombDeployed;
+
+	public GameObject optionPrefab;
 
 	//Private Variables
 
@@ -179,13 +184,17 @@ public class Player : StaticGameObject<Player>
 		hitboxRenderer = Transform.FindChild("Death Hitbox").renderer as SpriteRenderer;
 		spriteRenderer = Transform.FindChild ("Sprite").renderer as SpriteRenderer;
 		atMovementLimit = new bool[4];
-		options = Transform.GetComponentsInChildren<Option>();
-		bomb = Transform.GetComponentInChildren<Bomb> ();
-		foreach(Option o in options)
+	}
+
+	public void Initialize(int maxOptions)
+	{
+		options = new Option[maxOptions];
+		for(int i = 0; i < maxOptions; i++)
 		{
-			o.GameObject.SetActive(false);
+			options[i] = ((GameObject)Instantiate(optionPrefab)).GetComponent<Option>();
+			options[i].Transform.parent = Transform;
+			options[i].GameObject.SetActive(i == 0);
 		}
-		bomb.Active = false;
 	}
 
 	private int Sign(float x)
@@ -224,13 +233,13 @@ public class Player : StaticGameObject<Player>
 		Transform.position += movementVector * deltat;
 
 		//Bombing
-		if(!bomb.Active)
+		if(!bombDeployed)
 		{
 			if(Input.GetButtonDown("Bomb"))
 			{
 				//Instantiate Bomb at character location
-				StartCoroutine(Invincibility(false, bomb.Duration, deltat));
-				bomb.Active = true;
+				bomb = ((GameObject)Instantiate (bombPrefab)).GetComponent<Bomb> ();
+				bomb.StartCoroutine(bomb.UseBomb(Transform, baseBombDuration, this));
 			}
 		}
 
@@ -273,7 +282,7 @@ public class Player : StaticGameObject<Player>
 			if(optActive)
 			{
 				float distance = (focused) ? optionDistance * (2f/3f) : optionDistance;
-				float angle = -(Mathf.PI / (Mathf.FloorToInt(power) + 1)) * (i + 1);
+				float angle = -(Mathf.PI / (Mathf.FloorToInt((power <= options.Length) ? power : options.Length) + 1)) * (i + 1);
 				Vector3 position = new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
 				options[i].Transform.localPosition = position;
 			}
@@ -317,6 +326,7 @@ public class Player : StaticGameObject<Player>
 	{
 		if(!invincible && !bullet.grazed)
 		{
+			SoundManager.PlaySoundEffect(GrazeClip);
 			ScoreManager.GrazeBullet();
 			bullet.grazed = true;
 		}
@@ -333,17 +343,8 @@ public class Player : StaticGameObject<Player>
 				ScoreManager.PointValuePickup();
 				break;
 			case global::Pickup.Type.Power:
-				Instance.ChangePower(0.01f);
+				Instance.ChangePower(0.05f);
 				ScoreManager.PowerPickup();
-				break;
-			case global::Pickup.Type.Bomb:
-				Instance.bombs++;
-				if(Instance.bombs > Instance.maxBombs)
-				{
-					Instance.bombs = Instance.maxBombs;
-					ScoreManager.ExtraBomb();
-				}
-				SoundManager.PlaySoundEffect(Instance.BombUpClip, Instance.Transform.position);
 				break;
 			case global::Pickup.Type.Life:
 				Instance.lives++;
@@ -360,7 +361,7 @@ public class Player : StaticGameObject<Player>
 
 	private void ChangePower(float amount)
 	{
-		power = (power + amount < options.Length) ? power + amount : options.Length;
+		power = (power + amount < options.Length + 1) ? power + amount : options.Length + 1;
 	}
 
 	public void Die()

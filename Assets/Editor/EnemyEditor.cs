@@ -167,7 +167,6 @@ public class EnemyEditor : Editor
 					pattern.drops.power = EditorGUILayout.IntField("Power", pattern.drops.power);
 					pattern.drops.point = EditorGUILayout.IntField("Point", pattern.drops.point);
 					pattern.drops.life = EditorGUILayout.Toggle("Life", pattern.drops.life);
-					pattern.drops.bomb = EditorGUILayout.Toggle("Bomb", pattern.drops.bomb);
 					EditorGUI.indentLevel--;
 				}
 				TagGUI(pattern);

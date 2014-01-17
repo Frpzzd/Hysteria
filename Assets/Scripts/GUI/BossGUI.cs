@@ -16,6 +16,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 	public Color splashColor;
 	public float splashTime;
 	public float slideDownStart;
+	public AudioClip BossDeath;
 
 	private List<GameObject> additionalLifeBars;
 
@@ -87,6 +88,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 				}
 				yield return new WaitForEndOfFrame();
 			}
+			SoundManager.PlaySoundEffect(BossDeath);
 			splashLine.enabled = false;
 			splashName.enabled = false;
 			splashTitle.enabled = false;

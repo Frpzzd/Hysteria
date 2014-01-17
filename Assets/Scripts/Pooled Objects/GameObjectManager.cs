@@ -165,6 +165,11 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 		public Color lifeColor;
 		public Color pointValueColor;
 
+		public float InitialVelocity;
+		public float MaximumDownwardVelocity;
+		public float Acceleration;
+		public float RotationSpeed;
+
 		public float AutoCollectSpeed;
 		public float ProximityCollectSpeed;
 
@@ -180,10 +185,6 @@ public class GameObjectManager : StaticGameObject<GameObjectManager>
 				case Pickup.Type.Power:
 					p.render.sprite = powerSprite;
 					p.render.color = powerColor;
-					break;
-				case Pickup.Type.Bomb:
-					p.render.sprite = bombSprite;
-					p.render.color = bombColor;
 					break;
 				case Pickup.Type.Life:
 					p.render.sprite = lifeSprite;

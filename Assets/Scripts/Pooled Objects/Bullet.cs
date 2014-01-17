@@ -56,7 +56,13 @@ public class Bullet : GameObjectManager.PooledGameObject<Bullet, BulletTag>
 			rend.color = sp.color;
 			rend.sprite = sp.sprite;
 		}
+
 		bulletTag = param;
+
+		if(bulletTag.overwriteColor)
+		{
+			rend.color = bulletTag.newColor;
+		}
 	}
 
 	public override void LateActivate ()

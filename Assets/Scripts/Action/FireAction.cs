@@ -52,7 +52,6 @@ public class FireAction : AttackPatternAction<FireAction, FireAction.Type>
 		Enemy master = param[0] as Enemy;
 		AttackPattern attackPattern = param [1] as AttackPattern;
 		float fireTagParam = (float)param [2];
-		Debug.Log (param.Length);
 		RotationWrapper previousRotation = param [3] as RotationWrapper;
 		IEnumerator pause, actionEnumerator;
 		if(attackPattern.currentHealth < 0)
