@@ -1,4 +1,4 @@
-UnityBulletHellBase
+Hysteria
 ===================
 
-Basic toolkit for develloping 2D danmaku or "bullet rain" games within Unity.
+A psychologically based bullet hell game.

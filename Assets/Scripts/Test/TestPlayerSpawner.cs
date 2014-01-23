@@ -12,6 +12,7 @@ public class TestPlayerSpawner : TestScript
 		if(Player.Instance == null)
 		{
 			Player instance = (Player)((GameObject)Instantiate (playerPrefab)).GetComponent<Player>();
+			instance.Initialize((instance.EI) ? 8 : 4);
 			instance.DebugInvincibility(invincible);
 			Player.respawnLocation = GameObject.Find ("Player Respawn Location").transform;
 		}

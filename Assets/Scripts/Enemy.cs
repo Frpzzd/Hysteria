@@ -140,7 +140,7 @@ public class Enemy : CachedObject, NamedObject, TitledObject
 	{
 		float start = Time.time;
 		currentAttackPattern.Initialize(this);
-		yield return currentAttackPattern.Run(this);
+		yield return StartCoroutine(currentAttackPattern.Run(this));
 		Drop (currentAttackPattern.drops);
 		Die ();
 		Debug.Log (Time.time - start + " total seconds.");

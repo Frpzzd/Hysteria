@@ -437,15 +437,16 @@ public class AttackPattern : IActionGroup, NamedObject, TitledObject
 				}
 			}
 			property.RankParam = EditorGUILayout.FloatField(property.RankParam, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(50));
+			EditorGUILayout.EndHorizontal();
 			if (isInt)
 			{
 				property.random = false;
 			}
 			else
 			{
-				property.random = EditorGUILayout.Toggle(property.random, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(10));
+				Debug.Log("Hello");
+				property.random = EditorGUILayout.Toggle("Random:", property.random, GUILayout.ExpandWidth(false), GUILayout.MaxWidth(10));
 			}
-			EditorGUILayout.EndHorizontal();
 			return property;
 		}
 		#endif

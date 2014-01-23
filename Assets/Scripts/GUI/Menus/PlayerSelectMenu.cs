@@ -25,7 +25,7 @@ public class PlayerSelectMenu : Menu
 	{
 		if(i == 4)
 		{
-			playerInEditing.Initialize(4);
+			playerInEditing.Initialize((playerInEditing.EI) ? 8 : 4);
 			playerInEditing.GameObject.SetActive(true);
 			StageManager.StartGame();
 		}

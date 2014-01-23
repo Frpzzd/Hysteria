@@ -237,9 +237,14 @@ public class Player : StaticGameObject<Player>
 		{
 			if(Input.GetButtonDown("Bomb"))
 			{
-				//Instantiate Bomb at character location
-				bomb = ((GameObject)Instantiate (bombPrefab)).GetComponent<Bomb> ();
-				bomb.StartCoroutine(bomb.UseBomb(Transform, baseBombDuration, this));
+				float bombCost = (EI) ? 1.0f : 0.5f;
+				if(power - bombCost >= 0f)
+				{
+					//Instantiate Bomb at character location
+					ChangePower(-bombCost);
+					bomb = ((GameObject)Instantiate (bombPrefab)).GetComponent<Bomb> ();
+					bomb.StartCoroutine(bomb.UseBomb(Transform, baseBombDuration, this));
+				}
 			}
 		}
 
