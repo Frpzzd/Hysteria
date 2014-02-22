@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class PickupBoundary : MonoBehaviour {
 
@@ -9,7 +10,7 @@ public class PickupBoundary : MonoBehaviour {
 		Pickup p = go.GetComponent<Pickup> ();
 		if(p != null)
 		{
-			GameObjectManager.Pickups.Return(p);
+			PickupPool.Return(p);
 		}
 	}
 }

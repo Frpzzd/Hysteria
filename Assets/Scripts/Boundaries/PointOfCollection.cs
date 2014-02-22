@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class PointOfCollection : MonoBehaviour 
 {
@@ -9,10 +10,7 @@ public class PointOfCollection : MonoBehaviour
 		if(p != null)
 		{
 			Global.defaultPickupState = Pickup.State.AutoCollect;
-			foreach(Pickup pickup in GameObjectManager.Pickups.All)
-			{
-				pickup.state = Pickup.State.AutoCollect;
-			}
+			PickupPool.AutoCollectAll();
 		}
 		else
 		{

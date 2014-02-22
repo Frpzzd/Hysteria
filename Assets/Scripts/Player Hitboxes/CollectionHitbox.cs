@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class CollectionHitbox : PlayerHitbox 
 {
@@ -8,8 +9,8 @@ public class CollectionHitbox : PlayerHitbox
 		Pickup p = other.gameObject.GetComponent<Pickup> ();
 		if(p != null)
 		{
-			Player.Pickup (p.type);
-			GameObjectManager.Pickups.Return(p);
+			Player.PickupItem (p.type);
+			PickupPool.Return(p);
 		}
 	}
 }

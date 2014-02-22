@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class StageManager : StaticGameObject<StageManager> 
 {
@@ -20,11 +21,23 @@ public class StageManager : StaticGameObject<StageManager>
 	public static IEnumerator EndStage(int bonus)
 	{
 		Debug.Log ("End Stage");
-		GameObjectManager.Pickups.AutoCollectAll ();
+		PickupPool.AutoCollectAll ();
 		float cachedTimeScale = Time.timeScale;
 		Time.timeScale = Time.timeScale / Instance.postBossSlowdown;
 		IEnumerator pause;
-		while(GameObjectManager.Pickups.TotalActive > 0)
+		float totalTime = 0;
+		while(totalTime <= 1f)
+		{
+			pause = Global.WaitForUnpause();
+			while(pause.MoveNext())
+			{
+				yield return pause.Current;
+			}
+			yield return new WaitForFixedUpdate();
+			totalTime += Time.deltaTime;
+		}
+		Time.timeScale = cachedTimeScale;
+		while(PickupPool.TotalActive > 0)
 		{
 			pause = Global.WaitForUnpause();
 			while(pause.MoveNext())
@@ -33,7 +46,6 @@ public class StageManager : StaticGameObject<StageManager>
 			}
 			yield return new WaitForFixedUpdate();
 		}
-		Time.timeScale = cachedTimeScale;
 		Instance.bonus.text = bonus.ToString ("N0");
 		Instance.label.enabled = true;
 		Instance.bonus.enabled = true;

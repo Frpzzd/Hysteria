@@ -1,5 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class PickupTest : TestScript
 {
@@ -33,7 +34,7 @@ public class PickupTest : TestScript
 				{
 					pt = Pickup.Type.Point;
 				}
-				GameObjectManager.Pickups.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt);
+				PickupPool.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt);
 			}
 			timer = delay;
 		}

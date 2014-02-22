@@ -39,6 +39,11 @@ public class ScoreManager : StaticGameObject<ScoreManager>
 		pointValue = (uint)Instance.defaultPointValue;
 	}
 
+	public static void Continue()
+	{
+		score = 0ul;
+	}
+
 	public override void Awake()
 	{
 		base.Awake ();

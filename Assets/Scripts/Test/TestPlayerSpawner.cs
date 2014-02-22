@@ -6,6 +6,7 @@ public class TestPlayerSpawner : TestScript
 	#if UNITY_EDITOR
 	public GameObject playerPrefab;
 	public bool invincible;
+	public Rank testRank;
 
 	public override void Awake()
 	{
@@ -15,6 +16,7 @@ public class TestPlayerSpawner : TestScript
 			instance.Initialize((instance.EI) ? 8 : 4);
 			instance.DebugInvincibility(invincible);
 			Player.respawnLocation = GameObject.Find ("Player Respawn Location").transform;
+			Global.Rank = testRank;
 		}
 		Destroy (this);
 	}

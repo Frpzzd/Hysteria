@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class PlayerShotBoundary : MonoBehaviour {
 
@@ -9,7 +10,7 @@ public class PlayerShotBoundary : MonoBehaviour {
 		PlayerShot ps = go.GetComponent<PlayerShot> ();
 		if(ps != null)
 		{
-			GameObjectManager.PlayerShots.Return(ps);
+			PlayerShotPool.Return(ps);
 		}
 	}
 }

@@ -12,7 +12,7 @@ public class TagEditorWindow : EditorWindow
 		{
 			if(_instance == null)
 			{
-				_instance = EditorWindow.GetWindow<TagEditorWindow>("Actions");
+				_instance = EditorWindow.GetWindow<TagEditorWindow>("Tag");
 			}
 			return _instance;
 		}
@@ -22,52 +22,43 @@ public class TagEditorWindow : EditorWindow
 			_instance = value;
 		}
 	}
-    private Vector2 scroll;
-	private static IActionGroup actionGroup;
-	public static object[] parameters;
-	public static bool editing = false;
-	public static UnityEngine.Object container;
 
-	[MenuItem("Window/ActionGroup Editor")]
+	private SerializedProperty tag;
+	private Editor origin;
+	private Vector2 scroll;
+
+	[MenuItem("Window/Tag Editor")]
 	public static void ShowWindow()
 	{
-		_instance = EditorWindow.GetWindow<TagEditorWindow> ("Actions");
+		_instance = EditorWindow.GetWindow<TagEditorWindow> ("Tag");
 	}
 
     void OnGUI()
     {
-		if(!editing)
+		if(tag != null)
 		{
-			if(actionGroup != null)
-			{
-				scroll = EditorGUILayout.BeginScrollView(scroll);
-				if (actionGroup != null)
-				{
-					actionGroup.ActionGUI(parameters);
-				}
-				EditorGUILayout.EndScrollView();
-				if(GUI.changed)
-				{
-					EditorUtility.SetDirty(container);
-				}
-			}
+			scroll = EditorGUILayout.BeginScrollView(scroll);
+			EditorGUILayout.PropertyField(tag, true);
+			EditorGUILayout.EndScrollView();
+		}
+		if(origin != null)
+		{
+			origin.Repaint();
+		}
+		if(GUI.changed)
+		{
+			tag.serializedObject.ApplyModifiedProperties();
 		}
     }
 
-	public static void SetActionGroup<T>(T group, UnityEngine.Object obj, params object[] param) where T : IActionGroup
+	public static void SetTag(SerializedProperty tag, Editor origin)
 	{
-		if(group != null)
+		if(tag != null && origin != null)
 		{
-			editing = true;
-			parameters = param;
-			actionGroup = group;
-			container = obj;
-			editing = false;
+			ShowWindow();
+			instance.tag = tag;
+			instance.origin = origin;
 			instance.Repaint();
-		}
-		else
-		{
-			Debug.Log("Null ActionGroup");
 		}
 	}
 }

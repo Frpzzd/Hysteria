@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using JamesLib;
 
 [System.Serializable]
 public abstract class Menu : CachedObject
@@ -10,6 +11,8 @@ public abstract class Menu : CachedObject
 	public MenuOption[] children;
 	[System.NonSerialized]
 	public Menu previousMenu;
+	[HideInInspector]
+	public MenuHandler handler;
 	protected int selectedIndex = 0;
 
 	protected virtual void OnChildSwitchImpl(int i) { }
@@ -152,77 +155,5 @@ public abstract class Menu : CachedObject
 	{
 		children[selectedIndex].ShiftRight();
 		return children[selectedIndex].HasOptions;
-	}
-
-	[System.Serializable]
-	public class ChildMenu
-	{
-		public Menu menu;
-		public string controlName;
-		public Rect screenRect;
-		public bool selection { get { return content.Length > 1; } }
-		public bool useCustomStyle;
-		public GUIStyle customStyle;
-		public GUIContent[] content;
-		public int selected = 0;
-
-		private int originalCustomFontSize;
-
-		public void Initialize()
-		{
-			originalCustomFontSize = customStyle.fontSize;
-		}
-
-		public GUIContent Content
-		{
-			get { return (content.Length >= 1) ? content [selected] : new GUIContent(); }
-		}
-
-		public void ShiftLeft()
-		{
-			if(selection)
-			{
-				selected--;
-				if(selected < 0)
-				{
-					selected = content.Length - 1;
-				}
-			}
-		}
-
-		public void ShiftRight()
-		{
-			if(selection)
-			{
-				selected++;
-				if(selected >= content.Length)
-				{
-					selected = 0;
-				}
-			}
-		}
-
-		public void  Draw(GUIStyle menuStyle)
-		{
-			if(content.Length >= 1)
-			{
-				if(useCustomStyle)
-				{
-					MenuHandler.ScaleTextSize(customStyle, originalCustomFontSize);
-				}
-				GUI.SetNextControlName(controlName);
-				GUI.Button (ScreenRect(screenRect), Content, (useCustomStyle) ? customStyle : menuStyle);
-			}
-		}
-
-		public void Focus()
-		{
-			GUI.FocusControl (controlName);
-		}
-
-		private static Rect ScreenRect(Rect input)
-		{
-			return new Rect (input.x * Screen.width, input.y * Screen.height, input.width * Screen.width, input.height * Screen.height);
-		}
 	}
 }

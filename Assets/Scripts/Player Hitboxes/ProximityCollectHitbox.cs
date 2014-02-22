@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System;
 using System.Collections;
+using DanmakuEngine.Core;
 
 public class ProximityCollectHitbox : MonoBehaviour 
 {

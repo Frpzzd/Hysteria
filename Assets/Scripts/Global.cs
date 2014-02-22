@@ -1,19 +1,21 @@
 using UnityEngine;
 using System;
 using System.Collections;
+using DanmakuEngine.Core;
 
 //Use this class to pass parameters from the menu to the gameplay scene
 public class Global
 {
+	static Global()
+	{
+		GameStateChange (GameState.GameInitialize);
+	}
 	public static Rank Rank;
 
-	private static uint credits;
-	public static uint Credits
-	{
-		get { return credits; }
-	}
+	private const int StartCredits = 3;
+	public static int Credits;
 
-	private static GameState gameState = GameState.MainMenu;
+	private static GameState gameState;
 	public static GameState GameState
 	{
 		get { return gameState; }
@@ -22,6 +24,8 @@ public class Global
 	public static GameType GameType = GameType.Normal;
 
 	public static Pickup.State defaultPickupState = Pickup.State.Normal;
+	
+	private static float cachedTimeScale = 1f;
 
 	public static void GameStateChange(GameState newState)
 	{
@@ -29,17 +33,39 @@ public class Global
 		switch(gameState)
 		{
 			case GameState.GameInitialize:
-				credits = 3;
+				Credits = StartCredits;
 				defaultPickupState = Pickup.State.Normal;
 				GameStateChange(GameState.InGame);
 				return;
-			case GameState.CreditEnd:
+			case GameState.Paused:
+				cachedTimeScale = Time.timeScale;
+				Time.timeScale = 0f;
+				break;
+			case GameState.InGame:
+				Time.timeScale = cachedTimeScale;
+				break;
+			case GameState.ZeroLives:
+				cachedTimeScale = Time.timeScale;
+				Time.timeScale = 0f;
 				if(ScoreManager.CheckHighScore())
 				{
 					GameStateChange(GameState.HighScoreEntry);
-					return;
 				}
-				return;
+				else
+				{
+					GameStateChange(GameState.GameOver);
+				}
+				break;
+			case GameState.GameOver:
+				InGameMenuHandler.ZeroLives();
+				break;
+			case GameState.Continue:
+				Credits--;
+				Time.timeScale = cachedTimeScale;
+				Player.Instance.lives = 3;
+				ScoreManager.Continue();
+				GameStateChange(GameState.InGame);
+				break;
 		}
 	}
 
@@ -52,6 +78,6 @@ public class Global
 	}
 }
 
-public enum GameState { MainMenu, GameInitialize, InGame, Paused, CreditEnd, HighScoreEntry, GameOver }
+public enum GameState { GameInitialize, InGame, Paused, ZeroLives, HighScoreEntry, GameOver, Continue}
 public enum GameType {Normal, StagePractice, AttackPractice}
 public enum Rank : int { Easy = 0, Normal = 1, Hard = 2, Insane = 4 }
