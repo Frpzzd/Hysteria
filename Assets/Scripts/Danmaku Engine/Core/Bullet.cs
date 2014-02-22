@@ -281,6 +281,9 @@ namespace DanmakuEngine.Core
 				case Type.ChangeFake:
 					bullet.fake = fake;
 					break;
+				case Type.Deactivate:
+					bullet.Deactivate();
+					break;
 				}
 			}
 
