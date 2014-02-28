@@ -68,7 +68,7 @@ namespace DanmakuEngine.Core
 			this.parent = parent;
 		}
 
-		public abstract void DrawHandles (Vector3 spawnPosition, bool mirrorMove, Color handlesColor);
+		public abstract void DrawHandles (Vector3 spawnPosition, bool mirrorMoveX, bool mirroMoveY, Color handlesColor);
 		
 		public void Damage(int amount)
 		{

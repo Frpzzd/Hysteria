@@ -22,7 +22,6 @@ namespace DanmakuEngine.Actions
 		
 		public override IEnumerator Execute (params object[] param)
 		{
-			Debug.Log (param [0]);
 			AbstractEnemy master = param[0] as AbstractEnemy;
 			ActionAttackPattern attackPattern = param [1] as ActionAttackPattern;
 			float fireTagParam = (float)param [2];
@@ -74,8 +73,6 @@ namespace DanmakuEngine.Actions
 				parent.StartCoroutine(tag.Run(master, attackPattern, floatParam));
 				break;
 			case Type.Fire:
-				Debug.Log(master);
-				Debug.Log(attackPattern);
 				attackPattern.Fire<FireAction, FireAction.Type>(this, master, master.Transform.position, master.Transform.rotation, fireTagParam, sequence);
 				break;
 			case Type.Wait:

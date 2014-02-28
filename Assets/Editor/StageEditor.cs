@@ -16,7 +16,7 @@ public class StageEditor : Editor
 
 		EditorGUILayout.PropertyField (theme);
 		EditorGUILayout.PropertyField (bonus);
-		DanmakuEditorUtils.ActionGroupField (actions, this, false);
+		DanmakuEditorUtils.ActionGroupField (actions, this, true);
 		stage.ApplyModifiedProperties ();
 	}
 	
