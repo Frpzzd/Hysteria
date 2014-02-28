@@ -9,7 +9,7 @@ namespace DanmakuEngine.Core
 	public class Pickup : PooledGameObject<Pickup, PickupPool>
 	{
 		public enum State { Normal, AutoCollect, ProximityCollect }
-		public enum Type { Power, Point, PointValue, Life }
+		public enum Type : int { Power = 0, Point, PointValue, Life }
 		[System.NonSerialized]
 		public State state;
 		[System.NonSerialized]
@@ -97,7 +97,7 @@ namespace DanmakuEngine.Core
 					yield return pause.Current;
 				}
 				rotationAmount += ((float)PickupPool.PoolInstance.RotationSpeed / 360f) * Time.fixedDeltaTime;
-				Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,360,0)), rotationAmount);
+				Transform.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.Euler(new Vector3(0,179,0)), rotationAmount);
 				yield return new WaitForFixedUpdate();
 			}
 		}

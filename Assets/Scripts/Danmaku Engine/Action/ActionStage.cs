@@ -146,7 +146,6 @@ namespace DanmakuEngine.Actions
 					}
 					else if(instance is Boss)
 					{
-						instance.Spawn();
 						yield return parent.StartCoroutine(BossGUI.Instance.BossBattle(instance as Boss, parent as AbstractStage));
 					}
 					break;

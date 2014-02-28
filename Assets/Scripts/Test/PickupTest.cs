@@ -26,15 +26,8 @@ public class PickupTest : TestScript
 			for(int i = 0; i < number; i++)
 			{
 				Pickup.Type pt;
-				if(Random.value > 0.5)
-				{
-					pt = Pickup.Type.Power;
-				}
-				else
-				{
-					pt = Pickup.Type.Point;
-				}
-				PickupPool.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt);
+				pt = (Pickup.Type)Mathf.FloorToInt(Random.value * 4);
+				PickupPool.Spawn( new Vector3(2 * Random.value * width - width, 40 + 2 * Random.value * height - height), pt).GameObject.SetActive(true);
 			}
 			timer = delay;
 		}
