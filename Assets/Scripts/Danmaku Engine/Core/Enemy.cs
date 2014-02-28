@@ -11,7 +11,9 @@ namespace DanmakuEngine.Core
 		[SerializeField]
 		public string enemyName = "Enemy";
 		[System.NonSerialized]
-		public bool mirrorMovement = false;
+		public bool mirrorMovementX = false;
+		[System.NonSerialized]
+		public bool mirrorMovementY = false;
 
 		public override AbstractAttackPattern currentAttackPattern 
 		{ 
@@ -65,14 +67,14 @@ namespace DanmakuEngine.Core
 //			Debug.Log (Time.time - start + " total seconds.");
 //		}
 
-		public void DrawHandles(Vector3 spawnPosition, bool mirrorMove, Color handleColor)
+		public void DrawHandles(Vector3 spawnPosition, bool mirrorMoveX, bool mirrorMoveY, Color handleColor)
 		{
 			Color oldColor = Handles.color;
 			Handles.color = Color.yellow;
 			Vector3 endLocation = spawnPosition;
 			if(attackPattern != null)
 			{
-				attackPattern.DrawHandles (endLocation, mirrorMove, Color.yellow);
+				attackPattern.DrawHandles (endLocation, mirrorMoveX, mirrorMoveY, Color.yellow);
 			}
 			Handles.color = oldColor;
 		}

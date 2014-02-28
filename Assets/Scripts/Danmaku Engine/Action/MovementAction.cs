@@ -32,7 +32,7 @@ namespace DanmakuEngine.Actions
 		{
 		}
 		
-		public Vector3 DrawHandles(Vector3 previousPosition, bool mirrorMovement, Color handlesColor)
+		public Vector3 DrawHandles(Vector3 previousPosition, bool mirrorMovementX, bool mirrorMovementY, Color handlesColor)
 		{
 			Color oldColor = Handles.color;
 			Handles.color = handlesColor;
@@ -42,11 +42,17 @@ namespace DanmakuEngine.Actions
 				Vector3 target = targetLocation;
 				Vector3 c1 = new Vector3(control1.x, control1.y);
 				Vector3 c2 = new Vector3(control2.x, control2.y);
-				if(mirrorMovement)
+				if(mirrorMovementX)
 				{
 					target.x *= -1;
 					c1.x *= -1;
 					c2.x *= -1;
+				}
+				if(mirrorMovementY)
+				{
+					target.y *= -1;
+					c1.y *= -1;
+					c2.y *= -1;
 				}
 				if(type == Type.Repeat)
 				{
@@ -56,7 +62,7 @@ namespace DanmakuEngine.Actions
 	
 						for(int i = 0; i < nestedActions.Length; i++)
 						{
-							actualLocation = nestedActions[i].DrawHandles(actualLocation, mirrorMovement, handlesColor);
+							actualLocation = nestedActions[i].DrawHandles(actualLocation, mirrorMovementX, mirrorMovementY, handlesColor);
 						}
 	
 						if(temp == actualLocation)
@@ -103,7 +109,8 @@ namespace DanmakuEngine.Actions
 		{
 			Transform transform = param [0] as Transform;
 			ActionAttackPattern attackPattern = param [1] as ActionAttackPattern;
-			bool mirrorMovement = (bool)param [2];
+			bool mirrorMovementX = (bool)param [2];
+			bool mirrorMovementY = (bool)param [3];
 			Vector3 start = Vector3.zero, end = Vector3.zero, c1 = Vector3.zero, c2 = Vector3.zero;
 			float totalTime = wait.Value;
 			float deltat = Time.fixedDeltaTime;
@@ -121,11 +128,17 @@ namespace DanmakuEngine.Actions
 				end = targetLocation;
 				c1 = new Vector3(control1.x, control1.y);
 				c2 = new Vector3(control2.x, control2.y);
-				if(mirrorMovement)
+				if(mirrorMovementX)
 				{
 					end.x *= -1;
 					c1.x *= -1;
 					c2.x *= -1;
+				}
+				if(mirrorMovementY)
+				{
+					end.y *= -1;
+					c1.y *= -1;
+					c2.y *= -1;
 				}
 				if(locationType == LocationType.Relative)
 				{

@@ -13,7 +13,7 @@ public class StageActionDrawer : PropertyDrawer
 
 	public override void OnGUI (Rect position, SerializedProperty property, GUIContent label)
 	{
-		EditorGUILayout.LabelField ("MovementAction");
+		EditorGUILayout.LabelField ("StageAction");
 		SerializedProperty type = property.FindPropertyRelative ("type");
 		SerializedProperty wait = property.FindPropertyRelative ("wait");
 		SerializedProperty repeat = property.FindPropertyRelative ("repeat");
@@ -22,7 +22,8 @@ public class StageActionDrawer : PropertyDrawer
 		SerializedProperty prefab = property.FindPropertyRelative ("prefab");
 		SerializedProperty location = property.FindPropertyRelative ("location");
 		SerializedProperty us = property.FindPropertyRelative ("useSequence");
-		SerializedProperty mm = property.FindPropertyRelative ("mirrorMovement");
+		SerializedProperty mmx = property.FindPropertyRelative ("mirrorMovementX");
+		SerializedProperty mmy = property.FindPropertyRelative ("mirrorMovementY");
 		ActionStage.Action.Type st = CommonActionDrawer.EnumChoice<ActionStage.Action.Type> (type, "Type");
 		representation.stringValue = st.ToString ();
 		usingRepeat.boolValue = st == ActionStage.Action.Type.Repeat;
@@ -38,9 +39,10 @@ public class StageActionDrawer : PropertyDrawer
 				EditorGUILayout.PropertyField(prefab);
 				EditorGUILayout.PropertyField(location);
 				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.PropertyField(us);
-				EditorGUILayout.PropertyField(mm);
+				EditorGUILayout.PropertyField(mmx);
+				EditorGUILayout.PropertyField(mmy);
 				EditorGUILayout.EndHorizontal();
+				EditorGUILayout.PropertyField(us);
 				break;
 		}
 	}

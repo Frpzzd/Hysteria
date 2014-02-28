@@ -29,7 +29,7 @@ public class EnemyEditor : Editor
 	{
 		Enemy e = target as Enemy;
 		Handles.DrawCamera (new Rect (0, 0, Screen.width, Screen.height), Camera.current);
-		e.DrawHandles (e.Transform.position, false, Color.white);
+		e.DrawHandles (e.Transform.position, false, false, Color.white);
 	}
 
 //	public override void OnInspectorGUI() 

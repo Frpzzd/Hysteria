@@ -88,7 +88,9 @@ namespace DanmakuEngine.Actions
 			[SerializeField]
 			public bool useSequence;
 			[SerializeField]
-			public bool mirrorMovement;
+			public bool mirrorMovementX;
+			[SerializeField]
+			public bool mirrorMovementY;
 			
 			protected override void DrawHandlesImpl (Action previous)
 			{
@@ -104,7 +106,7 @@ namespace DanmakuEngine.Actions
 						Enemy e = prefab.GetComponent<Enemy>();
 						if(e != null)
 						{
-							e.DrawHandles(spawnLocation, mirrorMovement, Color.yellow);
+							e.DrawHandles(spawnLocation, mirrorMovementX, mirrorMovementY, Color.yellow);
 						}
 					}
 					Handles.DrawWireDisc(spawnLocation, Vector3.forward, 1);
@@ -138,12 +140,12 @@ namespace DanmakuEngine.Actions
 					if(instance is Enemy)
 					{
 						Enemy e = instance as Enemy;
-						e.mirrorMovement = mirrorMovement;
+						e.mirrorMovementX = mirrorMovementX;
+						e.mirrorMovementY = mirrorMovementY;
 						instance.Spawn();
 					}
 					else if(instance is Boss)
 					{
-						instance.Spawn();
 						yield return parent.StartCoroutine(BossGUI.Instance.BossBattle(instance as Boss, parent as AbstractStage));
 					}
 					break;

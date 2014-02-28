@@ -31,7 +31,7 @@ public class BulletTagDrawer : PropertyDrawer
 		}
 		EditorGUILayout.EndHorizontal();
 		EditorGUI.indentLevel++;
-		DanmakuEditorUtils.ActionGroupField (actions, null, false);
+		DanmakuEditorUtils.ActionGroupField (actions, null, true);
 	}
 }
 

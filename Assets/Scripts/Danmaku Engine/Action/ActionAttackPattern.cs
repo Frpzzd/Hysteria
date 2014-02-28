@@ -78,15 +78,16 @@ namespace DanmakuEngine.Actions
 		private IEnumerator Move()
 		{
 			IEnumerator pause, actionEnumerator;
-			bool mirrorMovement = (parent is Enemy) ? (parent as Enemy).mirrorMovement : false;
-			foreach(Action action in actions)
+			bool mirrorMovementX = (parent is Enemy) ? (parent as Enemy).mirrorMovementX : false;
+			bool mirrorMovementY = (parent is Enemy) ? (parent as Enemy).mirrorMovementY : false;
+			foreach(MovementAction action in actions)
 			{
 				pause = Global.WaitForUnpause();
 				while(pause.MoveNext())
 				{
 					yield return pause.Current;
 				}
-				actionEnumerator = action.Execute(parent.transform, this, mirrorMovement);
+				actionEnumerator = action.Execute(parent.transform, this, mirrorMovementX, mirrorMovementY);
 				while(actionEnumerator.MoveNext())
 				{
 					yield return actionEnumerator.Current;
@@ -94,14 +95,14 @@ namespace DanmakuEngine.Actions
 			}
 		}
 
-		public override void DrawHandles (Vector3 spawnPosition, bool mirrorMove, Color handlesColor)
+		public override void DrawHandles (Vector3 spawnPosition, bool mirrorMoveX, bool mirrorMoveY, Color handlesColor)
 		{
 			Color oldColor = Handles.color;
 			Handles.color = handlesColor;
 			Vector3 endLocation = spawnPosition;
 			for(int i = 0; i < actions.Length; i++)
 			{
-				endLocation = actions[i].DrawHandles(endLocation, mirrorMove, Color.yellow);
+				endLocation = actions[i].DrawHandles(endLocation, mirrorMoveX, mirrorMoveY, Color.yellow);
 			}
 			Handles.color = oldColor;
 		}
