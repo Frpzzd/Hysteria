@@ -93,7 +93,7 @@ namespace DanmakuEngine.Core
 			RaycastHit2D raycastHit = Physics2D.Raycast(Transform.position.XY(), Transform.up.XY(), distance, enemyMask);
 			if(raycastHit)
 			{
-				Enemy enemy = raycastHit.collider.gameObject.GetComponent<Enemy>();
+				AbstractEnemy enemy = raycastHit.collider.gameObject.GetComponent<AbstractEnemy>();
 				if(enemy != null)
 				{
 					if(enemiesHit.Contains(enemy))

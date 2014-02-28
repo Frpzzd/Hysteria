@@ -206,7 +206,7 @@ namespace DanmakuEngine.Actions
 						{
 							return false;
 						}
-						actionEnumerator = action.Execute(param[0], param[1], param[2]);
+						actionEnumerator = action.Execute(param[0], param[1], param[2], param[3]);
 						while(actionEnumerator.MoveNext())
 						{
 							yield return actionEnumerator.Current;

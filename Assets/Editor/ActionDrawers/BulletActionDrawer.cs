@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEditor;
 using DanmakuEngine.Core;
+using DanmakuEngine.Actions;
 
 [CustomPropertyDrawer(typeof(Bullet.Action))]
 public class BulletActionDrawer : PropertyDrawer
@@ -36,7 +37,7 @@ public class BulletActionDrawer : PropertyDrawer
 				EditorGUILayout.PropertyField(repeat);
 				break;
 			case Bullet.Action.Type.ChangeDirection:
-				EditorGUILayout.PropertyField(direction);
+				CommonActionDrawer.EnumChoice<DirectionType>(direction, "Direction");
 				EditorGUILayout.PropertyField(angle);
 				EditorGUILayout.PropertyField(wait);
 				EditorGUILayout.PropertyField(waitForFinish);

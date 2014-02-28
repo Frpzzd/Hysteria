@@ -11,6 +11,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 	public Transform currentHPBar;
 	public GUIText timeout;
 	public GUIText bossName;
+	public GUIText attackName;
 	public GameObject additionalHpBarPrefab;
 	public GameObject adiitionalHpBarContainer;
 	public GUIText splashName;
@@ -80,6 +81,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 		{
 			if(boss.currentAttackPattern != null)
 			{
+				attackName.text = ((boss.currentAttackPattern.Title != "") ? boss.currentAttackPattern.Title + " : "  : "") + boss.currentAttackPattern.Name;
 				Vector3 hpScale = currentHPBar.localScale;
 				hpScale.x = (float)boss.currentAttackPattern.currentHealth / (float)boss.currentAttackPattern.health * 0.99f;
 				currentHPBar.localScale = hpScale;

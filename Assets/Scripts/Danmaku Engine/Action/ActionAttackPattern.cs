@@ -161,9 +161,9 @@ namespace DanmakuEngine.Actions
 			BulletTag bt = bulletTags[action.bulletTagIndex];
 
 			sequence.sourceRadius = action.sourceRadius.Value + ((action.sourceRadius.sequence) ? sequence.sourceRadius : 0f);
-			sequence.sourceTheta = action.sourceRadius.Value + ((action.sourceTheta.sequence) ? sequence.sourceTheta : 0f);
-			
-			sourcePos = GetSourcePosition<T, P>(position, action, sequence) + new Vector3(Mathf.Cos(sequence.sourceTheta), Mathf.Sin(sequence.sourceTheta)) * sequence.sourceRadius;
+			sequence.sourceTheta = action.sourceTheta.Value + ((action.sourceTheta.sequence) ? sequence.sourceTheta : 0f);
+			float stRad = (sequence.sourceTheta + 90f) * (Mathf.PI / 180f);
+			sourcePos = GetSourcePosition<T, P>(position, action, sequence) + new Vector3(Mathf.Cos(stRad), Mathf.Sin(stRad)) * sequence.sourceRadius;
 
 			sequence.angle = (action.useParam) ? param : action.angle.Value + ((action.angle.sequence) ? sequence.angle : 0f);
 			sequence.speed = (action.overwriteBulletSpeed) ? action.speed.Value + ((action.speed.sequence) ? sequence.speed : 0f) : bt.speed.Value;
