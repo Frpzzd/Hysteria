@@ -49,6 +49,7 @@ namespace DanmakuEngine.Actions
 			{
 				yield return new WaitForFixedUpdate();
 			}
+			Debug.Log (parent);
 			if(parent is Boss)
 			{
 				foreach(Bullet bullet in bulletsInPlay.ToArray())
@@ -134,7 +135,7 @@ namespace DanmakuEngine.Actions
 		
 		public override void Initialize(AbstractEnemy parent)
 		{
-			this.parent = parent;
+			base.Initialize (parent);
 			foreach(MovementAction action in actions)
 			{
 				action.Initialize(parent);

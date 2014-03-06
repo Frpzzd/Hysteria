@@ -20,7 +20,6 @@ public class HysteriaDropHandler : DropHandler
 
 	public override void Drop (Vector3 location)
 	{
-		Debug.Log ("Hello");
 		Vector3 pos = transform.position;
 		float angle, distance;
 		for(int i = 0; i < point; i++)
