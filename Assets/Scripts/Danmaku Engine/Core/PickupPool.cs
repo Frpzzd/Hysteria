@@ -21,6 +21,9 @@ namespace DanmakuEngine.Core
 		public Color powerColor;
 		public Color lifeColor;
 		public Color pointValueColor;
+		public Color fullPowerColor;
+
+		public float bigPowerScale;
 		
 		public float InitialVelocity;
 		public float MaximumDownwardVelocity;

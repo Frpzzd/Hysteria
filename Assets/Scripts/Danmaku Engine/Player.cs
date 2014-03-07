@@ -350,6 +350,7 @@ public class Player : StaticGameObject<Player>
 
 	public static void PickupItem(Pickup.Type type)
 	{
+		Debug.Log (type);
 		switch(type)
 		{
 			case Pickup.Type.Point:
@@ -370,6 +371,26 @@ public class Player : StaticGameObject<Player>
 					ScoreManager.ExtraLife();
 				}
 				SoundManager.PlaySoundEffect(Instance.ExtendClip, Instance.Transform.position);
+				break;
+			case Pickup.Type.BigPower:
+				Instance.ChangePower(1.0f);
+				for(int i = 0; i < 20; i++)
+				{
+					ScoreManager.PowerPickup();
+				}
+				break;
+			case Pickup.Type.MaxPower:
+				Instance.ChangePower(MaxPower);
+				for(int i = 0; i < 20; i++)
+				{
+					ScoreManager.PowerPickup();
+				}
+				break;
+			case Pickup.Type.BigPoint:
+				for(int i = 0; i < 20; i++)
+				{
+					ScoreManager.PointPickup();
+				}
 				break;
 		}
 		SoundManager.PlaySoundEffect(Instance.PickupClip, Instance.Transform.position);

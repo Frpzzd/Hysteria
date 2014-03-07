@@ -20,24 +20,36 @@ public class HysteriaDropHandler : DropHandler
 
 	public override void Drop (Vector3 location)
 	{
-		Vector3 pos = transform.position;
-		float angle, distance;
-		for(int i = 0; i < point; i++)
+		int pointTotal = point;
+		int powerTotal = power;
+		for(powerTotal = power; powerTotal >= 20; powerTotal -= 20)
 		{
-			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = dropRadius * UnityEngine.Random.value;
-			PickupPool.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), Pickup.Type.Point).GameObject.SetActive(true);
+			SpawnPickup(Pickup.Type.BigPower);
 		}
-		for(int i = 0; i < power; i++)
+		Debug.Log (powerTotal);
+		for(; powerTotal > 0; powerTotal--)
 		{
-			angle = 2 * Mathf.PI * UnityEngine.Random.value;
-			distance = dropRadius * UnityEngine.Random.value;
-			PickupPool.Spawn(new Vector3(pos.x + Mathf.Cos(angle) * distance, pos.y + Mathf.Sin(angle) * distance), Pickup.Type.Power).GameObject.SetActive(true);
+			SpawnPickup(Pickup.Type.Power);
+		}
+		for(pointTotal = point; pointTotal >= 20; pointTotal -= 20)
+		{
+			SpawnPickup(Pickup.Type.BigPoint);
+		}
+		for(; powerTotal > 0; powerTotal--)
+		{
+			SpawnPickup(Pickup.Type.Point);
 		}
 		if(life)
 		{
 			PickupPool.Spawn(Transform.position, Pickup.Type.Life);
 		}
+	}
+
+	public void SpawnPickup(Pickup.Type type)
+	{
+		float angle = 2 * Mathf.PI * UnityEngine.Random.value;
+		float distance = dropRadius * UnityEngine.Random.value;
+		PickupPool.Spawn(new Vector3(Transform.position.x + Mathf.Cos(angle) * distance, Transform.position.y + Mathf.Sin(angle) * distance), type).GameObject.SetActive(true);
 	}
 }
 
