@@ -45,9 +45,12 @@ public class SoundManager : StaticGameObject<SoundManager>
 		{
 			musicSource = Instance.audio;
 		}
-		musicSource.Stop();
-		musicSource.clip = bgm;
-		musicSource.Play();
+		if(bgm != null)
+		{
+			musicSource.Stop();
+			musicSource.clip = bgm;
+			musicSource.Play();
+		}
 	}
 
 	public static void PauseMusic()

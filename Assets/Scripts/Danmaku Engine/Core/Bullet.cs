@@ -56,7 +56,6 @@ namespace DanmakuEngine.Core
 		void FixedUpdate () 
 		{
 			Vector3 movementVector = Transform.up * velocity.x * Time.fixedDeltaTime;
-			Debug.DrawRay (Transform.position, Transform.up * velocity.x * Time.deltaTime, Color.red);
 			if(useVertical)
 			{
 				movementVector += (Vector3.up * velocity.y * Time.fixedDeltaTime);
@@ -215,7 +214,25 @@ namespace DanmakuEngine.Core
 		public void Cancel()
 		{
 			PickupPool.Spawn (Transform.position, Pickup.Type.PointValue);
-			Deactivate();
+			velocity = Vector2.zero;
+			StopAllCoroutines ();
+			StartCoroutine (BulletFade (0.25f));
+		}
+
+		public IEnumerator BulletFade(float duration)
+		{
+			box.enabled = false;
+			cir.enabled = false;
+			Vector3 start = Transform.localScale;
+			float t = 0;
+
+			while(t < 1)
+			{
+				yield return new WaitForFixedUpdate();
+				Transform.localScale = Vector3.Lerp(start, Vector3.zero, t);
+				t += Time.fixedDeltaTime / duration;
+			}
+			Deactivate ();
 		}
 
 		[System.Serializable]

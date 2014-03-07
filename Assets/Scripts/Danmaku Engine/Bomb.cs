@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using DanmakuEngine.Core;
 using JamesLib;
 
@@ -43,6 +44,8 @@ public class Bomb : CachedObject
 		parent.bombDeployed = true;
 		parent.invincible = true;
 
+		float deltaTheta = rotations * 360 / duration; 
+
 		SoundManager.PlaySoundEffect (bombClip);
 
 		while(lerpValue <= 1f)
@@ -56,6 +59,7 @@ public class Bomb : CachedObject
 			lerpValue += deltat / duration;
 			Transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, (lerpValue == 0f) ? 0f : Mathf.Log(lerpValue) * 0.5f + 1f);
 			Transform.position = Vector3.Lerp(originalPosition, targetPosition, Mathf.Pow(lerpValue, 6f));
+			Transform.rotation = Quaternion.Euler(0,0, Transform.rotation.eulerAngles.z + deltaTheta);
 			rend.color = Color.Lerp(referenceColor, targetColor, Mathf.Pow(lerpValue, 6f));
 		}
 		parent.bombDeployed = false;
@@ -65,7 +69,6 @@ public class Bomb : CachedObject
 
 	void OnTriggerEnter2D(Collider2D col)
 	{
-		Debug.Log ("Bullet Canceled");
 		Bullet bullet = col.gameObject.GetComponent<Bullet> ();
 		if(bullet != null)
 		{
