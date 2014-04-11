@@ -57,7 +57,7 @@ public class Bomb : CachedObject
 			}
 			yield return new WaitForFixedUpdate();
 			lerpValue += deltat / duration;
-			Transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, (lerpValue == 0f) ? 0f : Mathf.Log(lerpValue) * 0.5f + 1f);
+			Transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, (lerpValue == 0f) ? 0f : Mathf.Log(lerpValue) * 0.25f + 1f);
 			Transform.position = Vector3.Lerp(originalPosition, targetPosition, Mathf.Pow(lerpValue, 6f));
 			Transform.rotation = Quaternion.Euler(0,0, Transform.rotation.eulerAngles.z + deltaTheta);
 			rend.color = Color.Lerp(referenceColor, targetColor, Mathf.Pow(lerpValue, 6f));
