@@ -1,7 +1,9 @@
 using UnityEngine;
 using System;
 using System.Collections;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 namespace DanmakuEngine.Actions
 {
@@ -76,6 +78,7 @@ namespace DanmakuEngine.Actions
 
 		public void DrawHandles(T previous, Color handleColor)
 		{
+			#if UNITY_EDITOR
 			//if(drawHandles)
 			//{
 				Color oldColor = Handles.color;
@@ -83,6 +86,7 @@ namespace DanmakuEngine.Actions
 				DrawHandlesImpl(previous);
 				Handles.color = oldColor;
 			//}
+			#endif
 		}
 		
 		protected abstract void DrawHandlesImpl (T previous);

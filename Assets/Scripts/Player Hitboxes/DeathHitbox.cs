@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using DanmakuEngine.Core;
 
 [RequireComponent(typeof(SpriteRenderer))]
 public class DeathHitbox : PlayerHitbox
@@ -12,6 +13,10 @@ public class DeathHitbox : PlayerHitbox
 
 	void OnTriggerEnter2D(Collider2D col)
 	{
-		master.Die ();
+		Bullet b = col.gameObject.GetComponent<Bullet> ();
+		if(b != null && !b.fake)
+		{
+			master.Die ();
+		}
 	}
 }

@@ -2,9 +2,11 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using DanmakuEngine.Core;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 namespace DanmakuEngine.Actions
 {
 	[Serializable]
@@ -41,8 +43,11 @@ namespace DanmakuEngine.Actions
 				Debug.Log(Time.fixedTime - start);
 				running = false;
 			}
+			foreach(AbstractEnemy enemy in FindObjectsOfType<AbstractEnemy>())
+			{
+				Destroy (enemy.GameObject);
+			}
 			yield return StartCoroutine(StageManager.EndStage (bonus));
-			Debug.Log ("Enemy Dead");
 			Destroy (GameObject); //Clean up and destroy all stage related GameObjects, which should be child GameObjects to this one
 		}
 		
@@ -94,6 +99,7 @@ namespace DanmakuEngine.Actions
 			
 			protected override void DrawHandlesImpl (Action previous)
 			{
+				#if UNITY_EDITOR
 				if(type == Type.Repeat)
 				{
 					RepeatHandles(this, Handles.color);
@@ -111,6 +117,7 @@ namespace DanmakuEngine.Actions
 					}
 					Handles.DrawWireDisc(spawnLocation, Vector3.forward, 1);
 				}
+				#endif
 			}
 			
 			private Vector3 GetSpawnLocation()

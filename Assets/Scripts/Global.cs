@@ -47,16 +47,17 @@ public class Global
 			case GameState.ZeroLives:
 				cachedTimeScale = Time.timeScale;
 				Time.timeScale = 0f;
-				if(ScoreManager.CheckHighScore())
-				{
-					GameStateChange(GameState.HighScoreEntry);
-				}
-				else
-				{
+//				if(ScoreManager.CheckHighScore())
+//				{
+//					GameStateChange(GameState.HighScoreEntry);
+//				}
+//				else
+//				{
 					GameStateChange(GameState.GameOver);
-				}
+//				}
 				break;
 			case GameState.GameOver:
+			Debug.Log("hello");
 				InGameMenuHandler.ZeroLives();
 				break;
 			case GameState.Continue:

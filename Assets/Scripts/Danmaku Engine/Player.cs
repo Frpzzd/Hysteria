@@ -350,7 +350,6 @@ public class Player : StaticGameObject<Player>
 
 	public static void PickupItem(Pickup.Type type)
 	{
-		Debug.Log (type);
 		switch(type)
 		{
 			case Pickup.Type.Point:

@@ -1,7 +1,9 @@
 using UnityEngine;
 using System;
 using System.Collections;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 namespace DanmakuEngine.Actions
 {
@@ -34,6 +36,7 @@ namespace DanmakuEngine.Actions
 		
 		public Vector3 DrawHandles(Vector3 previousPosition, bool mirrorMovementX, bool mirrorMovementY, Color handlesColor)
 		{
+			#if UNITY_EDITOR
 			Color oldColor = Handles.color;
 			Handles.color = handlesColor;
 			Vector3 actualLocation = previousPosition;
@@ -103,6 +106,8 @@ namespace DanmakuEngine.Actions
 			}
 			Handles.color = oldColor;
 			return actualLocation;
+			#endif
+			return Vector2.zero;
 		}
 		
 		public override IEnumerator Execute (params object[] param)

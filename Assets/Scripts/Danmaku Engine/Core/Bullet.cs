@@ -213,12 +213,12 @@ namespace DanmakuEngine.Core
 		
 		public void Cancel()
 		{
-			PickupPool.Spawn (Transform.position, Pickup.Type.PointValue);
+			//Pickup pickup = PickupPool.Spawn (Transform.position, Pickup.Type.PointValue);
+			//pickup.GameObject.SetActive (true);
 			velocity = Vector2.zero;
 			StopAllCoroutines ();
 			StartCoroutine (BulletFade (0.25f));
 		}
-
 		public IEnumerator BulletFade(float duration)
 		{
 			box.enabled = false;

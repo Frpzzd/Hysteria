@@ -26,7 +26,6 @@ public class HysteriaDropHandler : DropHandler
 		{
 			SpawnPickup(Pickup.Type.BigPower);
 		}
-		Debug.Log (powerTotal);
 		for(; powerTotal > 0; powerTotal--)
 		{
 			SpawnPickup(Pickup.Type.Power);

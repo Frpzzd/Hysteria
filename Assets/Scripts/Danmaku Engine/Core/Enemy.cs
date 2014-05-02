@@ -1,8 +1,9 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
-
+#endif
 namespace DanmakuEngine.Core
 {
 	[System.Serializable]
@@ -69,6 +70,7 @@ namespace DanmakuEngine.Core
 
 		public void DrawHandles(Vector3 spawnPosition, bool mirrorMoveX, bool mirrorMoveY, Color handleColor)
 		{
+			#if UNITY_EDITOR
 			Color oldColor = Handles.color;
 			Handles.color = Color.yellow;
 			Vector3 endLocation = spawnPosition;
@@ -77,6 +79,7 @@ namespace DanmakuEngine.Core
 				attackPattern.DrawHandles (endLocation, mirrorMoveX, mirrorMoveY, Color.yellow);
 			}
 			Handles.color = oldColor;
+			#endif
 		}
 	}
 }

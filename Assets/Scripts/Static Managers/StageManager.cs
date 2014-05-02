@@ -13,7 +13,7 @@ public class StageManager : StaticGameObject<StageManager>
 	private static int startingScene;
 	public static int StartingStage
 	{
-		get { return startingScene - 1; }
+		get { return startingScene - 1; }	
 		set { startingScene = value + 1; }
 	}
 	private static int currentStage;
@@ -57,7 +57,7 @@ public class StageManager : StaticGameObject<StageManager>
 
 	public static void NextStage()
 	{
-		Debug.Log ("Next Stage");
+		Debug.Log ("Next Stage" + Global.GameType);
 		switch(Global.GameType)
 		{
 			case GameType.Normal:

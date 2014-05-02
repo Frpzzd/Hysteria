@@ -2,8 +2,10 @@ using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using DanmakuEngine.Core;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
+using DanmakuEngine.Core;
 
 namespace DanmakuEngine.Actions
 {
@@ -49,7 +51,6 @@ namespace DanmakuEngine.Actions
 			{
 				yield return new WaitForFixedUpdate();
 			}
-			Debug.Log (parent);
 			if(parent is Boss)
 			{
 				foreach(Bullet bullet in bulletsInPlay.ToArray())
@@ -98,6 +99,7 @@ namespace DanmakuEngine.Actions
 
 		public override void DrawHandles (Vector3 spawnPosition, bool mirrorMoveX, bool mirrorMoveY, Color handlesColor)
 		{
+			#if UNITY_EDITOR
 			Color oldColor = Handles.color;
 			Handles.color = handlesColor;
 			Vector3 endLocation = spawnPosition;
@@ -106,6 +108,7 @@ namespace DanmakuEngine.Actions
 				endLocation = actions[i].DrawHandles(endLocation, mirrorMoveX, mirrorMoveY, Color.yellow);
 			}
 			Handles.color = oldColor;
+			#endif
 		}
 		
 		private IEnumerator Timer()

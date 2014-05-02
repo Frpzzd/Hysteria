@@ -90,7 +90,7 @@ public class BossGUI : StaticGameObject<BossGUI>
 			}
 			yield return new WaitForEndOfFrame();
 		}
-		SoundManager.PlaySoundEffect(BossDeath);
+		//SoundManager.PlaySoundEffect(BossDeath);
 		splashLine.enabled = false;
 		splashName.enabled = false;
 		splashTitle.enabled = false;
